@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-
   static const Color primary = Color(0xFF5E77E8);
-  static const Color secondprimary = Color(0xFFE2ECFD);
-  static const Color lightprimary = Color(0xFFEFF4FE);
-  static const Color bgprimary = Color(0x295E77E8);
-  static const Color disable = Color(0xFF777777);
-  static const Color darkgrey = Color(0xFF9E9E9E);
-  static const Color mediumgrey = Color(0xFF404040);
-  static const Color dark = Color(0xFF191919 );
-  static const Color lightgrey = Color(0xFFE5E5E5);
+  static const Color dark = Color(0xFF1E1F24);
   static const Color white = Color(0xFFFFFFFF);
-    static const Color light = Color(0xFFEFEFEF);
-
+  static const Color background = Color(0xFFEFF0F3);
+  static const Color box = Color(0xFFFCFCFD);
+  static const Color compBg = Color(0xFFE0E1E6);
+  static const Color compGrey = Color(0xFF8B8D98);
+  static const Color textGrey = Color(0xFF62636C);
+  static const Color compLight = Color(0xFFEEF2FD);
 }

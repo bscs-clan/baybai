@@ -25,10 +25,18 @@ dev_dependencies:
 
 flutter:
 
-
   uses-material-design: true
+
   assets:
     - assets/images/
     - assets/icons/
+    - assets/fonts/
+    - assets/Filipino-wordlist.txt
+
+  fonts:
+    - family: Baybayin
+      fonts:
+        - asset: assets/fonts/NotoSansTagalog-Regular.ttf
+  
 
 

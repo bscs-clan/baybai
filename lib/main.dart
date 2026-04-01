@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle(
-          systemNavigationBarColor: AppColors.white,
+          systemNavigationBarColor: AppColors.background,
           systemNavigationBarIconBrightness: Brightness.dark,
         ),
         child: Menu(),

@@ -1,4 +1,5 @@
 import 'package:baybai/components/theme/colors.dart';
+import 'package:baybai/components/theme/text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -10,75 +11,74 @@ class Navbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final List<String> icons = [
-      'assets/icons/home.svg',
-      'assets/icons/learn.svg',
-      'assets/icons/practice.svg',
-      'assets/icons/game.svg',
-      'assets/icons/scan.svg',
+    final items = [
+      {'asset': 'assets/icons/learn.svg', 'label': 'Learn', 'index': 0},
+      {'asset': 'assets/icons/scanner.svg', 'label': 'Scan', 'index': 1},
+      {
+        'asset': 'assets/icons/transliteration.svg',
+        'label': 'Convert',
+        'index': 2,
+      },
     ];
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      decoration: const BoxDecoration(
-        color: AppColors.white,
-        border: Border(
-          top: BorderSide(color: AppColors.lightgrey, width: 1),
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 32,
+              spreadRadius: 8,
+              offset: const Offset(0, -6),
+            ),
+          ],
         ),
+        child: Row(children: items.map((item) => _navItem(item)).toList()),
       ),
-      height: 80,
-      child: Stack(
-        children: [
-          AnimatedAlign(
-            alignment: Alignment(
-              -1.0 + (selectedIndex * 2 / (icons.length - 1)), 
-              0,
-            ),
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.fastLinearToSlowEaseIn,
-            child: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: AppColors.lightprimary,
-                borderRadius: BorderRadius.circular(14),
+    );
+  }
+
+  Widget _navItem(Map<String, dynamic> item) {
+    final int index = item['index'];
+    final String asset = item['asset'];
+    final String label = item['label'];
+    final bool isSelected = selectedIndex == index;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => onTap(index),
+        behavior: HitTestBehavior.opaque,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SvgPicture.asset(
+                asset,
+                width: 24,
+                height: 24,
+                colorFilter: ColorFilter.mode(
+                  isSelected ? AppColors.primary : AppColors.dark,
+                  BlendMode.srcIn,
+                ),
               ),
-            ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.mbody.copyWith(
+                  color: isSelected ? AppColors.primary : AppColors.dark,
+                ),
+              ),
+            ],
           ),
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: List.generate(
-              icons.length,
-              (index) {
-                final bool isSelected = selectedIndex == index;
-                final String iconPath = isSelected
-                    ? icons[index].replaceFirst('.svg', '_bold.svg')
-                    : icons[index];
-
-                return SizedBox(
-                  width: 48,
-                  height: 48,
-                  child: IconButton(
-                    onPressed: () => onTap(index),
-                    icon: SvgPicture.asset(
-                      iconPath,
-                      width: 24,
-                      height: 24,
-                      colorFilter: ColorFilter.mode(
-                        isSelected ? AppColors.primary : AppColors.mediumgrey,
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                    splashColor: Colors.transparent,
-                    highlightColor: Colors.transparent,
-                    hoverColor: Colors.transparent,
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
