@@ -1,9 +1,8 @@
-import 'package:baybai/components/theme/colors.dart';
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import "package:baybai/core/configs/theme/colors.dart";
+import "package:flutter/material.dart";
+import "package:google_fonts/google_fonts.dart";
 
 class AppTextStyles {
-
   static TextStyle heading = GoogleFonts.poppins(
     fontSize: 24,
     fontWeight: FontWeight.w600,
@@ -30,15 +29,9 @@ class AppTextStyles {
     fontWeight: FontWeight.w400,
     color: AppColors.white,
   );
-  
+
   static TextStyle mbody = GoogleFonts.poppins(
     fontSize: 12,
-     fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.w400,
   );
-
-
-
-
-
-
 }

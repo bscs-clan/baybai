@@ -1,10 +1,10 @@
-import 'package:baybai/components/theme/colors.dart';
-import 'package:baybai/components/theme/text.dart';
-import 'package:baybai/utils/baybayin_library.dart';
+import "package:baybai/core/configs/theme/colors.dart";
+import "package:baybai/core/configs/theme/text.dart";
+import "package:baybai/core/utils/baybayin_library.dart";
 
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import "package:flutter/material.dart";
+import "package:flutter/services.dart";
+import "package:flutter_svg/flutter_svg.dart";
 
 class TransliterateCard extends StatefulWidget {
   const TransliterateCard({super.key});
@@ -15,8 +15,8 @@ class TransliterateCard extends StatefulWidget {
 
 class _TransliterateCardState extends State<TransliterateCard> {
   bool isFilipinoToBaybayin = true;
-  String inputText = '';
-  String _resultText = '';
+  String inputText = "";
+  String _resultText = "";
   final TextEditingController _inputController = TextEditingController();
 
   @override
@@ -35,8 +35,8 @@ class _TransliterateCardState extends State<TransliterateCard> {
     setState(() {
       isFilipinoToBaybayin = !isFilipinoToBaybayin;
       _inputController.clear();
-      inputText = '';
-      _resultText = '';
+      inputText = "";
+      _resultText = "";
     });
   }
 
@@ -44,7 +44,7 @@ class _TransliterateCardState extends State<TransliterateCard> {
     setState(() {
       inputText = text;
       if (text.isEmpty) {
-        _resultText = '';
+        _resultText = "";
         return;
       }
 
@@ -58,8 +58,8 @@ class _TransliterateCardState extends State<TransliterateCard> {
 
   @override
   Widget build(BuildContext context) {
-    final sourceLanguage = isFilipinoToBaybayin ? 'Filipino' : 'Baybayin';
-    final targetLanguage = isFilipinoToBaybayin ? 'Baybayin' : 'Filipino';
+    final sourceLanguage = isFilipinoToBaybayin ? "Filipino" : "Baybayin";
+    final targetLanguage = isFilipinoToBaybayin ? "Baybayin" : "Filipino";
 
     return Column(
       children: [
@@ -77,8 +77,8 @@ class _TransliterateCardState extends State<TransliterateCard> {
           onClear: () {
             setState(() {
               _inputController.clear();
-              inputText = '';
-              _resultText = '';
+              inputText = "";
+              _resultText = "";
             });
           },
           isBaybayin: !isFilipinoToBaybayin,
@@ -135,7 +135,7 @@ class LanguageSwitch extends StatelessWidget {
             ),
             child: Center(
               child: SvgPicture.asset(
-                'assets/icons/switch.svg',
+                "assets/icons/switch.svg",
                 width: 24,
                 height: 24,
                 colorFilter: const ColorFilter.mode(
@@ -201,7 +201,7 @@ class _TranslationCard extends StatelessWidget {
     final TextStyle baseStyle = AppTextStyles.bigbody;
 
     final TextStyle displayStyle = isBaybayin
-        ? baseStyle.copyWith(fontFamily: 'Baybayin', height: 1.44)
+        ? baseStyle.copyWith(fontFamily: "Baybayin", height: 1.44)
         : baseStyle;
 
     return Container(
@@ -231,7 +231,7 @@ class _TranslationCard extends StatelessWidget {
                     expands: true,
                     textAlignVertical: TextAlignVertical.top,
                     decoration: InputDecoration(
-                      hintText: 'Type here',
+                      hintText: "Type here",
                       hintStyle: AppTextStyles.bigbody.copyWith(
                         color: AppColors.compGrey,
                       ),
@@ -239,7 +239,7 @@ class _TranslationCard extends StatelessWidget {
                     ),
                   )
                 : SingleChildScrollView(
-                    child: Text(resultText ?? '', style: displayStyle),
+                    child: Text(resultText ?? "", style: displayStyle),
                   ),
           ),
           Align(
@@ -248,7 +248,7 @@ class _TranslationCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 _CardActionIcon(
-                  iconPath: 'assets/icons/copy.svg',
+                  iconPath: "assets/icons/copy.svg",
                   onTap: () {
                     final textToCopy = isInput ? controller?.text : resultText;
                     if (textToCopy != null && textToCopy.isNotEmpty) {
@@ -259,8 +259,8 @@ class _TranslationCard extends StatelessWidget {
                 const SizedBox(width: 6),
                 _CardActionIcon(
                   iconPath: isInput
-                      ? 'assets/icons/delete.svg'
-                      : 'assets/icons/share.svg',
+                      ? "assets/icons/delete.svg"
+                      : "assets/icons/share.svg",
                   onTap: isInput ? (onClear ?? () {}) : (onShare ?? () {}),
                 ),
               ],

@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:baybai/components/button.dart';
-import 'package:baybai/components/theme/colors.dart';
-import 'package:baybai/components/theme/text.dart';
+import "package:flutter/material.dart";
+import "package:baybai/core/configs/theme/colors.dart";
+import "package:baybai/core/configs/theme/text.dart";
+import "package:baybai/common/components/button.dart";
 
 class LearnCard extends StatelessWidget {
   const LearnCard({super.key});
@@ -21,15 +21,15 @@ class LearnCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Getting Started',
+            "Getting Started",
             style: AppTextStyles.body.copyWith(color: AppColors.textGrey),
           ),
           const SizedBox(height: 6),
-          Text('Learn the Characters', style: AppTextStyles.bigbody),
+          Text("Learn the Characters", style: AppTextStyles.bigbody),
           const SizedBox(height: 24),
           Button(
-            label: 'Start Lesson',
-            iconPath: 'assets/icons/arrow-right-up.svg',
+            label: "Start Lesson",
+            iconPath: "assets/icons/arrow-right-up.svg",
             onTap: () {},
             type: ButtonType.primary,
           ),

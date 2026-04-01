@@ -1,6 +1,6 @@
-import 'package:baybai/components/theme/colors.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import "package:baybai/core/configs/theme/colors.dart";
+import "package:flutter/material.dart";
+import "package:flutter_svg/flutter_svg.dart";
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({super.key});
@@ -34,9 +34,9 @@ class _ProfileButton extends StatelessWidget {
       width: _size,
       height: _size,
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
-     child: ClipRSuperellipse( 
+      child: ClipRSuperellipse(
         borderRadius: BorderRadius.circular(16),
-        child: Image.asset('assets/images/profile.jpg', fit: BoxFit.cover),
+        child: Image.asset("assets/images/profile.jpg", fit: BoxFit.cover),
       ),
     );
   }
@@ -52,12 +52,12 @@ class _SettingsButton extends StatelessWidget {
     return Container(
       width: _size,
       height: _size,
-     decoration: ShapeDecoration(
+      decoration: ShapeDecoration(
         color: AppColors.box,
         shape: RoundedSuperellipseBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-            shadows: [
+        shadows: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 4,
@@ -67,7 +67,7 @@ class _SettingsButton extends StatelessWidget {
       ),
       child: IconButton(
         icon: SvgPicture.asset(
-          'assets/icons/setting.svg',
+          "assets/icons/setting.svg",
           width: 24,
           height: 24,
           colorFilter: const ColorFilter.mode(AppColors.dark, BlendMode.srcIn),

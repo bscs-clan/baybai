@@ -1,6 +1,6 @@
-import 'package:baybai/components/theme/colors.dart';
-import 'package:baybai/components/transliteratecard.dart';
-import 'package:flutter/material.dart';
+import "package:baybai/core/configs/theme/colors.dart";
+import "package:baybai/presentation/transliteration/widgets/transliteratecard.dart";
+import "package:flutter/material.dart";
 
 class Convert extends StatefulWidget {
   const Convert({super.key});

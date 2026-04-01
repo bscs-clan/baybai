@@ -1,9 +1,9 @@
-import 'package:baybai/components/appbar.dart';
-import 'package:baybai/components/navbar.dart';
-import 'package:baybai/screens/convert.dart';
-import 'package:baybai/screens/home.dart';
-import 'package:baybai/screens/scan.dart';
-import 'package:flutter/material.dart';
+import "package:baybai/presentation/menu/widgets/appbar.dart";
+import "package:baybai/presentation/menu/widgets/navbar.dart";
+import "package:baybai/presentation/transliteration/pages/convert_page.dart";
+import "package:baybai/presentation/home/pages/home_page.dart";
+import "package:baybai/presentation/scanner/pages/scan_page.dart";
+import "package:flutter/material.dart";
 
 class Menu extends StatefulWidget {
   const Menu({super.key});

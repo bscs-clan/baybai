@@ -1,7 +1,7 @@
-import 'package:baybai/components/theme/colors.dart';
-import 'package:baybai/components/theme/text.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import "package:baybai/core/configs/theme/colors.dart";
+import "package:baybai/core/configs/theme/text.dart";
+import "package:flutter/material.dart";
+import "package:flutter_svg/flutter_svg.dart";
 
 enum ButtonType { primary, outline }
 

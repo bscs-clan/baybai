@@ -1,5 +1,5 @@
-import 'package:baybai/components/theme/colors.dart';
-import 'package:flutter/material.dart';
+import "package:baybai/core/configs/theme/colors.dart";
+import "package:flutter/material.dart";
 
 class Scan extends StatefulWidget {
   const Scan({super.key});

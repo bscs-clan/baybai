@@ -1,7 +1,7 @@
-import 'package:baybai/components/theme/colors.dart';
-import 'package:baybai/components/theme/text.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import "package:baybai/core/configs/theme/colors.dart";
+import "package:baybai/core/configs/theme/text.dart";
+import "package:flutter/material.dart";
+import "package:flutter_svg/flutter_svg.dart";
 
 class Navbar extends StatelessWidget {
   final int selectedIndex;
@@ -12,12 +12,12 @@ class Navbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      {'asset': 'assets/icons/learn.svg', 'label': 'Learn', 'index': 0},
-      {'asset': 'assets/icons/scanner.svg', 'label': 'Scan', 'index': 1},
+      {"asset": "assets/icons/learn.svg", "label": "Learn", "index": 0},
+      {"asset": "assets/icons/scanner.svg", "label": "Scan", "index": 1},
       {
-        'asset': 'assets/icons/transliteration.svg',
-        'label': 'Convert',
-        'index': 2,
+        "asset": "assets/icons/transliteration.svg",
+        "label": "Convert",
+        "index": 2,
       },
     ];
 
@@ -43,9 +43,9 @@ class Navbar extends StatelessWidget {
   }
 
   Widget _navItem(Map<String, dynamic> item) {
-    final int index = item['index'];
-    final String asset = item['asset'];
-    final String label = item['label'];
+    final int index = item["index"];
+    final String asset = item["asset"];
+    final String label = item["label"];
     final bool isSelected = selectedIndex == index;
 
     return Expanded(

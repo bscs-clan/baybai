@@ -1,8 +1,8 @@
-import 'package:baybai/components/theme/colors.dart';
-import 'package:baybai/screens/menu.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import "package:flutter/material.dart";
+import "package:flutter_dotenv/flutter_dotenv.dart";
+import "package:flutter/services.dart";
+import "package:baybai/core/configs/theme/colors.dart";
+import "package:baybai/presentation/menu/pages/menu_page.dart";
 
 void main() async {
   await dotenv.load(fileName: ".env");
@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: "Flutter Demo",
       theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.deepPurple)),
       debugShowCheckedModeBanner: false,
       home: AnnotatedRegion<SystemUiOverlayStyle>(

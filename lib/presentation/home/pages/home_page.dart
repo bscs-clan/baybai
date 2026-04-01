@@ -1,7 +1,7 @@
-import 'package:baybai/components/learncard.dart';
-import 'package:baybai/components/theme/colors.dart';
-import 'package:baybai/components/theme/text.dart';
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
+import "package:baybai/core/configs/theme/colors.dart";
+import "package:baybai/core/configs/theme/text.dart";
+import "package:baybai/presentation/home/widgets/learncard.dart";
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -16,9 +16,9 @@ class Home extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Mabuhay, Deobert', style: AppTextStyles.body),
+            Text("Mabuhay, Deobert", style: AppTextStyles.body),
             SizedBox(height: 12),
-            Text('Ready to learn Baybayin?', style: AppTextStyles.heading),
+            Text("Ready to learn Baybayin?", style: AppTextStyles.heading),
             SizedBox(height: 24),
             LearnCard(),
           ],
