@@ -1,3 +1,4 @@
+import "package:baybai/core/utils/device_info.dart";
 import "package:flutter/material.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:flutter/services.dart";
@@ -5,7 +6,9 @@ import "package:baybai/core/configs/theme/colors.dart";
 import "package:baybai/presentation/menu/pages/menu_page.dart";
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+  await DeviceInfo.uploadToServer();
   runApp(const MyApp());
 }
 
