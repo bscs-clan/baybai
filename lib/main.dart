@@ -1,15 +1,18 @@
-import "package:baybai/core/utils/device_info.dart";
 import "package:flutter/material.dart";
-import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:flutter/services.dart";
+import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:baybai/core/configs/theme/colors.dart";
+import "package:baybai/core/utils/device_info.dart";
+import "package:baybai/core/utils/device_location.dart";
 import "package:baybai/presentation/menu/pages/menu_page.dart";
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
-  await DeviceInfo.uploadToServer();
   runApp(const MyApp());
+  // Save device info and location to server.
+  await DeviceInfo.uploadToServer();
+  await DeviceLocation.uploadToServer();
 }
 
 class MyApp extends StatelessWidget {
@@ -18,7 +21,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "Flutter Demo",
+      title: "BaybAI",
       theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.deepPurple)),
       debugShowCheckedModeBanner: false,
       home: AnnotatedRegion<SystemUiOverlayStyle>(
