@@ -1,7 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
-import "package:baybai/presentation/home/widgets/appbar.dart";
-import "package:baybai/presentation/home/widgets/navbar.dart";
+import "package:baybai/presentation/home/widgets/app_bar.dart";
+import "package:baybai/presentation/home/widgets/bottom_nav.dart";
 import "package:baybai/presentation/home/pages/tab_transliterate.dart";
 import "package:baybai/presentation/home/pages/tab_learn.dart";
 import "package:baybai/presentation/home/pages/tab_scan.dart";

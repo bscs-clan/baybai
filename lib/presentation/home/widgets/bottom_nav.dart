@@ -1,7 +1,7 @@
-import "package:baybai/core/configs/theme/colors.dart";
-import "package:baybai/core/configs/theme/text.dart";
 import "package:flutter/material.dart";
 import "package:flutter_svg/flutter_svg.dart";
+import "package:baybai/core/configs/theme/colors.dart";
+import "package:baybai/core/configs/theme/text.dart";
 
 class Navbar extends StatelessWidget {
   final int selectedIndex;

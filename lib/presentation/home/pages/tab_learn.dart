@@ -1,7 +1,7 @@
 import "package:flutter/material.dart";
 import "package:baybai/core/configs/theme/colors.dart";
 import "package:baybai/core/configs/theme/text.dart";
-import "package:baybai/presentation/home/widgets/learncard.dart";
+import "package:baybai/presentation/home/widgets/learn_card.dart";
 
 class TabLearn extends StatelessWidget {
   const TabLearn({super.key});

@@ -1,6 +1,6 @@
-import "package:baybai/core/configs/theme/colors.dart";
 import "package:flutter/material.dart";
 import "package:flutter_svg/flutter_svg.dart";
+import "package:baybai/core/configs/theme/colors.dart";
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({super.key});
@@ -36,7 +36,7 @@ class _ProfileButton extends StatelessWidget {
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
       child: ClipRSuperellipse(
         borderRadius: BorderRadius.circular(16),
-        child: Image.asset("assets/images/profile.jpg", fit: BoxFit.cover),
+        child: Image.asset("assets/images/img_profile.jpg", fit: BoxFit.cover),
       ),
     );
   }

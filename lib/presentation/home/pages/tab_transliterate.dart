@@ -1,6 +1,6 @@
-import "package:baybai/core/configs/theme/colors.dart";
-import "package:baybai/presentation/home/widgets/transliteratecard.dart";
 import "package:flutter/material.dart";
+import "package:baybai/core/configs/theme/colors.dart";
+import "package:baybai/presentation/home/widgets/transliterate_card.dart";
 
 class TabTransliterate extends StatefulWidget {
   const TabTransliterate({super.key});

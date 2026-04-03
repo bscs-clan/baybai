@@ -1,5 +1,5 @@
-import "package:baybai/core/configs/theme/colors.dart";
 import "package:flutter/material.dart";
+import "package:baybai/core/configs/theme/colors.dart";
 
 class TabScan extends StatefulWidget {
   const TabScan({super.key});
