@@ -1,9 +1,10 @@
+import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:baybai/presentation/menu/widgets/appbar.dart";
 import "package:baybai/presentation/menu/widgets/navbar.dart";
 import "package:baybai/presentation/transliteration/pages/convert_page.dart";
 import "package:baybai/presentation/home/pages/home_page.dart";
 import "package:baybai/presentation/scanner/pages/scan_page.dart";
-import "package:flutter/material.dart";
 
 class Menu extends StatefulWidget {
   const Menu({super.key});
@@ -24,15 +25,20 @@ class _HomeState extends State<Menu> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
       appBar: CustomAppBar(),
       body: _pages[_selectedIndex],
 
-      bottomNavigationBar: Navbar(
-        selectedIndex: _selectedIndex,
-        onTap: _onNavbarTap,
+      bottomNavigationBar: SafeArea(
+        child: Navbar(selectedIndex: _selectedIndex, onTap: _onNavbarTap),
       ),
     );
   }
