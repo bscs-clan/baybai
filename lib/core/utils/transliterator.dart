@@ -1,7 +1,7 @@
 import "dart:convert";
 import "package:flutter/services.dart" show rootBundle;
 
-class BaybayinTransliterator {
+class Transliterator {
   // Baybayin diacritics and virama
   static const String kudlitI = "\u1712";
   static const String kudlitU = "\u1713";

@@ -3,7 +3,7 @@ import "package:flutter/services.dart";
 import "package:flutter_svg/flutter_svg.dart";
 import "package:baybai/core/configs/theme/colors.dart";
 import "package:baybai/core/configs/theme/text.dart";
-import "package:baybai/core/utils/baybayin_library.dart";
+import "package:baybai/core/utils/transliterator.dart";
 
 class TransliterateCard extends StatefulWidget {
   const TransliterateCard({super.key});
@@ -21,7 +21,7 @@ class _TransliterateCardState extends State<TransliterateCard> {
   @override
   void initState() {
     super.initState();
-    BaybayinTransliterator.ensureInitialized();
+    Transliterator.ensureInitialized();
   }
 
   @override
@@ -48,9 +48,9 @@ class _TransliterateCardState extends State<TransliterateCard> {
       }
 
       if (isFilipinoToBaybayin) {
-        _resultText = BaybayinTransliterator.toBaybayinMap(text);
+        _resultText = Transliterator.toBaybayinMap(text);
       } else {
-        _resultText = BaybayinTransliterator.toFilipino(text);
+        _resultText = Transliterator.toFilipino(text);
       }
     });
   }
