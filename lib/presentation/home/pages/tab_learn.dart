@@ -3,8 +3,8 @@ import "package:baybai/core/configs/theme/colors.dart";
 import "package:baybai/core/configs/theme/text.dart";
 import "package:baybai/presentation/home/widgets/learncard.dart";
 
-class Home extends StatelessWidget {
-  const Home({super.key});
+class TabLearn extends StatelessWidget {
+  const TabLearn({super.key});
 
   @override
   Widget build(BuildContext context) {

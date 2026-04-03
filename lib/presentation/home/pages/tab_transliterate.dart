@@ -1,15 +1,15 @@
 import "package:baybai/core/configs/theme/colors.dart";
-import "package:baybai/presentation/transliteration/widgets/transliteratecard.dart";
+import "package:baybai/presentation/home/widgets/transliteratecard.dart";
 import "package:flutter/material.dart";
 
-class Convert extends StatefulWidget {
-  const Convert({super.key});
+class TabTransliterate extends StatefulWidget {
+  const TabTransliterate({super.key});
 
   @override
-  State<Convert> createState() => _ConvertState();
+  State<TabTransliterate> createState() => _TabTransliterateState();
 }
 
-class _ConvertState extends State<Convert> {
+class _TabTransliterateState extends State<TabTransliterate> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(

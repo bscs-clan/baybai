@@ -3,7 +3,7 @@ import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:baybai/core/utils/device_info.dart";
 import "package:baybai/core/utils/device_location.dart";
 import "package:baybai/presentation/splash/pages/splash.dart";
-import "package:baybai/presentation/menu/pages/menu_page.dart";
+import "package:baybai/presentation/home/pages/home.dart";
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
       initialRoute: "/splash",
       routes: {
         "/splash": (context) => const SplashScreen(),
-        "/": (context) => const Menu(),
+        "/": (context) => const HomeScreen(),
       },
     );
   }
