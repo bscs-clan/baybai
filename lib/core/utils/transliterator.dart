@@ -1,4 +1,5 @@
 import "dart:convert";
+import "package:flutter/foundation.dart";
 import "package:flutter/services.dart" show rootBundle;
 
 class Transliterator {
@@ -323,13 +324,17 @@ class Transliterator {
         }
       }
 
-      print(
-        "  External dictionary loaded: +${dictionary.length - before} words "
-        "(total: ${dictionary.length})\n",
-      );
+      if (kDebugMode) {
+        print(
+          "  External dictionary loaded: +${dictionary.length - before} words "
+          "(total: ${dictionary.length})\n",
+        );
+      }
     } catch (e) {
-      print("  No external dictionary found at: assets/Filipino-wordlist.txt");
-      print("  Using built-in dictionary (${dictionary.length} words).\n");
+      if (kDebugMode) {
+        print("  No external dictionary found.");
+        print("  Using built-in dictionary (${dictionary.length} words).\n");
+      }
     }
   }
 
@@ -378,10 +383,11 @@ class Transliterator {
       final String consonant =
           (c == "n" && i + 1 < text.length && text[i + 1] == "g") ? "ng" : c;
 
-      if (consonant == "ng")
+      if (consonant == "ng") {
         i += 2;
-      else
+      } else {
         i++;
+      }
 
       final baseChar = toBaybayin[consonant];
       if (baseChar == null) {
@@ -587,7 +593,9 @@ class Transliterator {
 
     for (final stem in getStemCandidates(lower)) {
       if (dictionary.contains(stem)) {
-        print("  (root word: $stem)");
+        if (kDebugMode) {
+          print("  (root word: $stem)");
+        }
         return;
       }
     }
@@ -644,14 +652,18 @@ class Transliterator {
     if (knownWords.length == 1) {
       final found = knownWords[0];
       if (dictionary.contains(found.toLowerCase())) {
-        print("\n  Dictionary match: \"$found\" — selected automatically.");
+        if (kDebugMode) {
+          print("\n  Dictionary match: \"$found\" — selected automatically.");
+        }
       } else {
         final stem = getStemCandidates(
           found.toLowerCase(),
         ).firstWhere((s) => dictionary.contains(s), orElse: () => "?");
-        print(
-          "\n  Stem match: \"$found\" (root: $stem) — selected automatically.",
-        );
+        if (kDebugMode) {
+          print(
+            "\n  Stem match: \"$found\" (root: $stem) — selected automatically.",
+          );
+        }
       }
       return found;
     }
@@ -660,7 +672,9 @@ class Transliterator {
     if (knownWords.length > 1) {
       for (final word in knownWords) {
         if (builtInWords.contains(word.toLowerCase())) {
-          print("\n  Best match: \"$word\" — selected automatically.");
+          if (kDebugMode) {
+            print("\n  Best match: \"$word\" — selected automatically.");
+          }
           return word;
         }
       }
@@ -671,7 +685,9 @@ class Transliterator {
 
     if (options.isNotEmpty) {
       final selected = options[0];
-      print("  Auto-selected option 1: \"$selected\" (non-interactive mode)");
+      if (kDebugMode) {
+        print("  Auto-selected option 1: \"$selected\" (non-interactive mode)");
+      }
       return selected;
     }
 

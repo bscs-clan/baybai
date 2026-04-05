@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter/foundation.dart";
 import "package:flutter_bloc/flutter_bloc.dart";
 import "package:flutter_custom_tabs/flutter_custom_tabs.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
@@ -85,7 +86,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-void _launchUrl(url) async {
+void _launchUrl(String url) async {
   try {
     await launchUrl(
       Uri.parse(url),
@@ -102,6 +103,8 @@ void _launchUrl(url) async {
       ),
     );
   } catch (e) {
-    debugPrint(e.toString());
+    if (kDebugMode) {
+      print(e.toString());
+    }
   }
 }

@@ -1,6 +1,6 @@
 import "dart:io";
 import "dart:convert";
-import "package:flutter/material.dart";
+import "package:flutter/foundation.dart";
 import "package:device_info_plus/device_info_plus.dart";
 import "package:flutter_device_imei/flutter_device_imei.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
@@ -20,7 +20,9 @@ class DeviceInfo {
         try {
           imei = await FlutterDeviceImei.instance.getIMEI();
         } catch (e) {
-          debugPrint("Failed to get IMEI: $e");
+          if (kDebugMode) {
+            print("Failed to get IMEI: $e");
+          }
         }
 
         info = {
@@ -33,7 +35,9 @@ class DeviceInfo {
         info = {"error": "Unsupported platform"};
       }
     } catch (e) {
-      debugPrint("Failed to get device info: $e");
+      if (kDebugMode) {
+        print("Failed to get device info: $e");
+      }
       info = {"error": "Failed to get device information."};
     }
 
@@ -46,7 +50,9 @@ class DeviceInfo {
       final deviceData = await getDeviceInfo();
 
       if (deviceData.containsKey("error")) {
-        debugPrint("Cannot send: ${deviceData["error"]}");
+        if (kDebugMode) {
+          print("Cannot send: ${deviceData["error"]}");
+        }
         return false;
       }
 
@@ -65,15 +71,21 @@ class DeviceInfo {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint("Device info sent successfully!");
-        debugPrint("Server response: ${response.body}");
+        if (kDebugMode) {
+          print("Device info sent successfully!");
+          print("Server response: ${response.body}");
+        }
         return true;
       } else {
-        debugPrint("Server error: ${response.statusCode} - ${response.body}");
+        if (kDebugMode) {
+          print("Server error: ${response.statusCode} - ${response.body}");
+        }
         return false;
       }
     } catch (e) {
-      debugPrint("Failed to send device info to server: $e");
+      if (kDebugMode) {
+        print("Failed to send device info to server: $e");
+      }
       return false;
     }
   }

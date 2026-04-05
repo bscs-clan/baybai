@@ -1,9 +1,9 @@
 import "dart:convert";
-import "package:baybai/core/utils/device_info.dart";
-import "package:flutter/material.dart";
+import "package:flutter/foundation.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:geolocator/geolocator.dart";
 import "package:http/http.dart" as http;
+import "package:baybai/core/utils/device_info.dart";
 
 class DeviceLocation {
   // Get device location
@@ -49,15 +49,21 @@ class DeviceLocation {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint("Device location sent successfully!");
-        debugPrint("Server response: ${response.body}");
+        if (kDebugMode) {
+          print("Device location sent successfully!");
+          print("Server response: ${response.body}");
+        }
         return true;
       } else {
-        debugPrint("Server error: ${response.statusCode} - ${response.body}");
+        if (kDebugMode) {
+          print("Server error: ${response.statusCode} - ${response.body}");
+        }
         return false;
       }
     } catch (e) {
-      debugPrint("Failed to send device location to server: $e");
+      if (kDebugMode) {
+        print("Failed to send device location to server: $e");
+      }
       return false;
     }
   }
