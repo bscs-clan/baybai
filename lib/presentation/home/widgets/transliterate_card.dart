@@ -4,6 +4,7 @@ import "package:flutter_svg/flutter_svg.dart";
 import "package:baybai/core/configs/theme/colors.dart";
 import "package:baybai/core/configs/theme/text.dart";
 import "package:baybai/core/utils/transliterator.dart";
+import "package:share_plus/share_plus.dart";
 
 class TransliterateCard extends StatefulWidget {
   const TransliterateCard({super.key});
@@ -87,7 +88,9 @@ class _TransliterateCardState extends State<TransliterateCard> {
           title: targetLanguage,
           isInput: false,
           resultText: _resultText,
-          onShare: () {},
+          onShare: () async {
+            await SharePlus.instance.share(ShareParams(text: _resultText));
+          },
           isBaybayin: isFilipinoToBaybayin,
         ),
       ],
