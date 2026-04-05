@@ -8,11 +8,13 @@ class LearnCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: ShapeDecoration(
-        color: AppColors.box,
+        color: isDarkMode ? AppColors.darkBox : AppColors.box,
         shape: RoundedSuperellipseBorder(
           borderRadius: BorderRadius.circular(32),
         ),
@@ -22,10 +24,17 @@ class LearnCard extends StatelessWidget {
         children: [
           Text(
             "Getting Started",
-            style: AppTextStyles.body.copyWith(color: AppColors.textGrey),
+            style: AppTextStyles.body.copyWith(
+              color: isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey,
+            ),
           ),
           const SizedBox(height: 6),
-          Text("Learn the Characters", style: AppTextStyles.bigbody),
+          Text(
+            "Learn the Characters",
+            style: AppTextStyles.bigbody.copyWith(
+              color: isDarkMode ? AppColors.darkText : AppColors.text,
+            ),
+          ),
           const SizedBox(height: 24),
           Button(
             label: "Start Lesson",

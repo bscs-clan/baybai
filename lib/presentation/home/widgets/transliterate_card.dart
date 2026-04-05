@@ -159,16 +159,24 @@ class _LangBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       height: 48,
       decoration: ShapeDecoration(
-        color: AppColors.compBg,
+        color: isDarkMode ? AppColors.darkCompBg : AppColors.compBg,
         shape: RoundedSuperellipseBorder(
           borderRadius: BorderRadius.circular(16),
         ),
       ),
       alignment: Alignment.center,
-      child: Text(label, style: AppTextStyles.body),
+      child: Text(
+        label,
+        style: AppTextStyles.body.copyWith(
+          color: isDarkMode ? AppColors.darkText : AppColors.text,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 }
@@ -196,18 +204,22 @@ class _TranslationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    //custom font for baybayin character
-    final TextStyle baseStyle = AppTextStyles.bigbody;
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
+    final TextStyle baseStyle = AppTextStyles.bigbody;
     final TextStyle displayStyle = isBaybayin
-        ? baseStyle.copyWith(fontFamily: "Baybayin", height: 1.44)
+        ? baseStyle.copyWith(
+            fontFamily: "Baybayin",
+            height: 1.44,
+            color: isDarkMode ? AppColors.darkText : AppColors.text,
+          )
         : baseStyle;
 
     return Container(
       height: 224,
       padding: const EdgeInsets.all(24),
       decoration: ShapeDecoration(
-        color: AppColors.box,
+        color: isDarkMode ? AppColors.darkBox : AppColors.box,
         shape: RoundedSuperellipseBorder(
           borderRadius: BorderRadius.circular(34),
         ),
@@ -217,7 +229,9 @@ class _TranslationCard extends StatelessWidget {
         children: [
           Text(
             title,
-            style: AppTextStyles.body.copyWith(color: AppColors.textGrey),
+            style: AppTextStyles.body.copyWith(
+              color: isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey,
+            ),
           ),
           const SizedBox(height: 8),
           Expanded(
@@ -225,7 +239,9 @@ class _TranslationCard extends StatelessWidget {
                 ? TextField(
                     controller: controller,
                     onChanged: onChanged,
-                    style: displayStyle,
+                    style: TextStyle(
+                      color: isDarkMode ? AppColors.darkText : AppColors.text,
+                    ),
                     maxLines: null,
                     expands: true,
                     textAlignVertical: TextAlignVertical.top,
@@ -279,11 +295,13 @@ class _CardActionIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       width: 48,
       height: 48,
       decoration: ShapeDecoration(
-        color: AppColors.compLight,
+        color: isDarkMode ? AppColors.darkCompLight : AppColors.compLight,
         shape: RoundedSuperellipseBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -294,7 +312,10 @@ class _CardActionIcon extends StatelessWidget {
           iconPath,
           width: 24,
           height: 24,
-          colorFilter: const ColorFilter.mode(AppColors.dark, BlendMode.srcIn),
+          colorFilter: ColorFilter.mode(
+            isDarkMode ? AppColors.darkIcon : AppColors.icon,
+            BlendMode.srcIn,
+          ),
         ),
         onPressed: onTap,
         splashColor: Colors.transparent,

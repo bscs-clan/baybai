@@ -11,6 +11,8 @@ class Navbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     final items = [
       {"asset": "assets/icons/learn.svg", "label": "Learn", "index": 0},
       {"asset": "assets/icons/scanner.svg", "label": "Scan", "index": 1},
@@ -27,7 +29,7 @@ class Navbar extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
         decoration: BoxDecoration(
-          color: AppColors.background,
+          color: isDarkMode ? AppColors.darkBox : AppColors.box,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.08),
@@ -37,16 +39,24 @@ class Navbar extends StatelessWidget {
             ),
           ],
         ),
-        child: Row(children: items.map((item) => _navItem(item)).toList()),
+        child: Row(
+          children: items.map((item) => _navItem(context, item)).toList(),
+        ),
       ),
     );
   }
 
-  Widget _navItem(Map<String, dynamic> item) {
+  Widget _navItem(BuildContext context, Map<String, dynamic> item) {
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     final int index = item["index"];
     final String asset = item["asset"];
     final String label = item["label"];
     final bool isSelected = selectedIndex == index;
+
+    final Color iconColor = isSelected
+        ? AppColors.primary
+        : (isDarkMode ? AppColors.darkIcon : AppColors.icon);
 
     return Expanded(
       child: GestureDetector(
@@ -61,10 +71,7 @@ class Navbar extends StatelessWidget {
                 asset,
                 width: 24,
                 height: 24,
-                colorFilter: ColorFilter.mode(
-                  isSelected ? AppColors.primary : AppColors.dark,
-                  BlendMode.srcIn,
-                ),
+                colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
               ),
               const SizedBox(height: 4),
               Text(
@@ -72,9 +79,7 @@ class Navbar extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style: AppTextStyles.mbody.copyWith(
-                  color: isSelected ? AppColors.primary : AppColors.dark,
-                ),
+                style: AppTextStyles.mbody.copyWith(color: iconColor),
               ),
             ],
           ),

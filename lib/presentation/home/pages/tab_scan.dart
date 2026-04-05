@@ -1,5 +1,4 @@
 import "package:flutter/material.dart";
-import "package:baybai/core/configs/theme/colors.dart";
 
 class TabScan extends StatefulWidget {
   const TabScan({super.key});
@@ -11,6 +10,6 @@ class TabScan extends StatefulWidget {
 class _TabScanState extends State<TabScan> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(backgroundColor: AppColors.background);
+    return Scaffold();
   }
 }

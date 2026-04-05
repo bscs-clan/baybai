@@ -21,6 +21,8 @@ class Button extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     final bool isPrimary = type == ButtonType.primary;
 
     return GestureDetector(
@@ -53,7 +55,10 @@ class Button extends StatelessWidget {
             Text(
               label,
               style: AppTextStyles.wbody.copyWith(
-                color: isPrimary ? AppColors.white : AppColors.dark,
+                color: isPrimary
+                    ? (isDarkMode ? AppColors.text : AppColors.darkText)
+                    : AppColors.darkText,
+                fontWeight: FontWeight.bold,
               ),
             ),
             if (iconPath != null) ...[
@@ -63,7 +68,9 @@ class Button extends StatelessWidget {
                 width: 24,
                 height: 24,
                 colorFilter: ColorFilter.mode(
-                  isPrimary ? AppColors.white : AppColors.dark,
+                  isPrimary
+                      ? (isDarkMode ? AppColors.text : AppColors.darkText)
+                      : AppColors.darkText,
                   BlendMode.srcIn,
                 ),
               ),

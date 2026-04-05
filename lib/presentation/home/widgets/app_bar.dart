@@ -8,7 +8,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: AppColors.background,
       automaticallyImplyLeading: false,
       elevation: 0,
       surfaceTintColor: Colors.transparent,
@@ -49,33 +48,37 @@ class _SettingsButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: _size,
-      height: _size,
-      decoration: ShapeDecoration(
-        color: AppColors.box,
-        shape: RoundedSuperellipseBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        shadows: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(context, '/settings'),
+      child: Container(
+        width: _size,
+        height: _size,
+        decoration: ShapeDecoration(
+          color: isDarkMode ? AppColors.darkBox : AppColors.box,
+          shape: RoundedSuperellipseBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-        ],
-      ),
-      child: IconButton(
-        icon: SvgPicture.asset(
-          "assets/icons/setting.svg",
-          width: 24,
-          height: 24,
-          colorFilter: const ColorFilter.mode(AppColors.dark, BlendMode.srcIn),
+          shadows: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        onPressed: () {},
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        hoverColor: Colors.transparent,
+        child: Center(
+          child: SvgPicture.asset(
+            "assets/icons/setting.svg",
+            width: 24,
+            height: 24,
+            colorFilter: ColorFilter.mode(
+              isDarkMode ? AppColors.darkIcon : AppColors.icon,
+              BlendMode.srcIn,
+            ),
+          ),
+        ),
       ),
     );
   }

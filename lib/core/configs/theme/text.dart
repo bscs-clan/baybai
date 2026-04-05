@@ -1,6 +1,6 @@
-import "package:baybai/core/configs/theme/colors.dart";
 import "package:flutter/material.dart";
 import "package:google_fonts/google_fonts.dart";
+import "package:baybai/core/configs/theme/colors.dart";
 
 class AppTextStyles {
   static TextStyle heading = GoogleFonts.poppins(
