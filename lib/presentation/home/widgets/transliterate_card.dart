@@ -209,13 +209,19 @@ class _TranslationCard extends StatelessWidget {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     final TextStyle baseStyle = AppTextStyles.bigbody;
+
     final TextStyle displayStyle = isBaybayin
         ? baseStyle.copyWith(
             fontFamily: "Baybayin",
+            fontFamilyFallback: const ["Roboto", "NotoSans", "sans-serif"],
             height: 1.44,
             color: isDarkMode ? AppColors.darkText : AppColors.text,
           )
-        : baseStyle;
+        : baseStyle.copyWith(
+            // Ensure good Latin rendering when showing Filipino text
+            fontFamilyFallback: const ["Roboto", "NotoSans", "sans-serif"],
+            color: isDarkMode ? AppColors.darkText : AppColors.text,
+          );
 
     return Container(
       height: 224,

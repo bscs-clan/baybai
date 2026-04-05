@@ -31,7 +31,7 @@ Follow the following steps to setup and run the app:
 - Build for Android
 
   ```bash
-  flutter build apk --release
+  flutter build apk --release --obfuscate --split-debug-info=build/debug-info
   ```
 
 ## License
