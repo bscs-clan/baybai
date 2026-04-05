@@ -56,8 +56,8 @@ class Button extends StatelessWidget {
               label,
               style: AppTextStyles.wbody.copyWith(
                 color: isPrimary
-                    ? (isDarkMode ? AppColors.text : AppColors.darkText)
-                    : AppColors.darkText,
+                    ? (isDarkMode ? AppColors.text : AppColors.white)
+                    : AppColors.white,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -69,8 +69,8 @@ class Button extends StatelessWidget {
                 height: 24,
                 colorFilter: ColorFilter.mode(
                   isPrimary
-                      ? (isDarkMode ? AppColors.text : AppColors.darkText)
-                      : AppColors.darkText,
+                      ? (isDarkMode ? AppColors.text : AppColors.white)
+                      : AppColors.white,
                   BlendMode.srcIn,
                 ),
               ),

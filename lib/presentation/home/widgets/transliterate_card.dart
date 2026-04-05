@@ -109,6 +109,8 @@ class LanguageSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Row(
       children: [
         Expanded(child: _LangBox(label: sourceLanguage)),
@@ -137,8 +139,8 @@ class LanguageSwitch extends StatelessWidget {
                 "assets/icons/switch.svg",
                 width: 24,
                 height: 24,
-                colorFilter: const ColorFilter.mode(
-                  Colors.white,
+                colorFilter: ColorFilter.mode(
+                  isDarkMode ? AppColors.icon : AppColors.white,
                   BlendMode.srcIn,
                 ),
               ),
