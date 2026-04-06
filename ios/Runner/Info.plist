@@ -66,5 +66,12 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs access to your camera to scan Baybayin script.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs access to your microphone (required by camera plugin).</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs access to your gallery to upload images for scanning.</string>
 </dict>
+
 </plist>

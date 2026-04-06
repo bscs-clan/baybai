@@ -9,9 +9,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       automaticallyImplyLeading: false,
+      backgroundColor: Colors.transparent,
       elevation: 0,
       surfaceTintColor: Colors.transparent,
-      scrolledUnderElevation: 1,
+      scrolledUnderElevation: 0,
       toolbarHeight: 64,
       actionsPadding: const EdgeInsets.symmetric(horizontal: 24),
       actions: const [_ProfileButton(), SizedBox(width: 8), _SettingsButton()],

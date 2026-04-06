@@ -24,6 +24,9 @@ dependencies:
   flutter_custom_tabs: ^2.5.0
   share_plus: ^12.0.2
   flutter_security_checker: ^3.2.1
+  camera: ^0.12.0+1
+  bottom_sheet: ^4.0.4
+  image_picker: ^1.2.1
 
 dev_dependencies:
   flutter_test:

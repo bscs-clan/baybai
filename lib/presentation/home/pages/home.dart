@@ -62,6 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
+      extendBodyBehindAppBar: _selectedIndex == 1,
       appBar: CustomAppBar(),
       body: _pages[_selectedIndex],
 
