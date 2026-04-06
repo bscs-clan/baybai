@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:baybai/core/utils/app_security.dart";
 import "package:baybai/presentation/home/widgets/app_bar.dart";
 import "package:baybai/presentation/home/widgets/bottom_nav.dart";
 import "package:baybai/presentation/home/pages/tab_transliterate.dart";
@@ -26,6 +27,35 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    AppSecurity.isAppSecured().then((isAppSecured) {
+      showSecurityDialog(isAppSecured);
+    });
+  }
+
+  Future<void> showSecurityDialog(bool isAppSecured) async {
+    await showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Unsecured app detected!"),
+          content: const Text(
+            "You might be using an emulator, a rooted device, or have installed the app from an untrusted source.",
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text("Got It"),
+            ),
+          ],
+        );
+      },
+    );
+    if (!isAppSecured) {
+      SystemNavigator.pop();
+    }
   }
 
   @override

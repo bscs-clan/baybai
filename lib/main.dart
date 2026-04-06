@@ -5,7 +5,6 @@ import "package:hydrated_bloc/hydrated_bloc.dart";
 import "package:path_provider/path_provider.dart";
 import "package:baybai/service_locator.dart";
 import "package:baybai/core/configs/theme/app_theme.dart";
-import "package:baybai/core/utils/app_security.dart";
 import "package:baybai/core/utils/device_info.dart";
 import "package:baybai/core/utils/device_location.dart";
 import "package:baybai/presentation/splash/pages/splash.dart";
@@ -22,10 +21,9 @@ void main() async {
     ),
   );
   await initDependencies();
+  runApp(const MyApp());
   await DeviceInfo.uploadToServer();
   await DeviceLocation.uploadToServer();
-  AppSecurity.initAppSecurity();
-  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
