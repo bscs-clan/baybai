@@ -27,33 +27,33 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    AppSecurity.isAppSecured().then((isAppSecured) {
-      showSecurityDialog(isAppSecured);
+    AppSecurity.isEnvSecure().then((isEnvSecure) {
+      showSecurityDialog(isEnvSecure);
     });
   }
 
-  Future<void> showSecurityDialog(bool isAppSecured) async {
-    await showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Unsecured app detected!"),
-          content: const Text(
-            "You might be using an emulator, a rooted device, or have installed the app from an untrusted source.",
-          ),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text("Got It"),
+  Future<void> showSecurityDialog(bool isEnvSecure) async {
+    if (!isEnvSecure) {
+      await showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text("Unsecure environment detected!"),
+            content: const Text(
+              "You might be using an emulator, a rooted device, or have installed the app from an untrusted source.",
             ),
-          ],
-        );
-      },
-    );
-    if (!isAppSecured) {
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text("Got It"),
+              ),
+            ],
+          );
+        },
+      );
       SystemNavigator.pop();
     }
   }

@@ -3,7 +3,7 @@ import "package:flutter_security_checker/flutter_security_checker.dart";
 
 class AppSecurity {
   // Protect the app from reverse engineering attacks.
-  static Future<bool> isAppSecured() async {
+  static Future<bool> isEnvSecure() async {
     bool isSecured = false;
 
     final bool isRooted = await FlutterSecurityChecker.isRooted;
