@@ -304,7 +304,7 @@ class Transliterator {
   static Future<void> loadDictionary() async {
     try {
       final String content = await rootBundle.loadString(
-        "assets/Filipino-wordlist.txt",
+        "assets/docs/filipino-wordlist.txt",
       );
       final lines = LineSplitter.split(content);
       final before = dictionary.length;

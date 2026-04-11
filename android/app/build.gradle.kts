@@ -6,6 +6,10 @@ plugins {
 }
 
 android {
+    aaptOptions {
+        noCompress += listOf("tflite")
+    }
+
     namespace = "com.baybaiteam.baybai.baybai"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion

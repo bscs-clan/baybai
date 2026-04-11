@@ -1,5 +1,7 @@
 import 'package:baybai/common/components/icon_button.dart';
+import 'package:baybai/core/models/detection.dart';
 import 'package:baybai/presentation/home/widgets/camera.dart';
+
 import 'package:baybai/presentation/home/widgets/expand_bottom_sheet.dart';
 import 'package:baybai/service_camera.dart';
 import 'package:flutter/material.dart';
@@ -17,10 +19,20 @@ class _TabScanState extends State<TabScan> {
   bool _isFlashOn = false;
   final ImagePicker _picker = ImagePicker();
 
+  /// Detection results published by [CameraPreviewWidget] via its notifier.
+  final ValueNotifier<List<Detection>> _detectionNotifier =
+      ValueNotifier(<Detection>[]);
+
+  @override
+  void dispose() {
+    _detectionNotifier.dispose();
+    super.dispose();
+  }
+
   Future<void> _pickImage() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
-      debugPrint("Picked image: ${image.path}");
+      debugPrint('Picked image: ${image.path}');
     }
   }
 
@@ -28,13 +40,15 @@ class _TabScanState extends State<TabScan> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
+        // ── Camera feed ──────────────────────────────────────────────────────
         CameraPreviewWidget(
+          detectionNotifier: _detectionNotifier,
           onInitialized: () {
-            setState(() {
-              _isCameraReady = true;
-            });
+            setState(() => _isCameraReady = true);
           },
         ),
+
+        // ── Controls ─────────────────────────────────────────────────────────
         if (_isCameraReady)
           Positioned(
             left: 24,
@@ -49,12 +63,10 @@ class _TabScanState extends State<TabScan> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       CustomIconButton(
-                        svgAsset: "assets/icons/light.svg",
+                        svgAsset: 'assets/icons/light.svg',
                         isActive: _isFlashOn,
                         onPressed: () {
-                          setState(() {
-                            _isFlashOn = !_isFlashOn;
-                          });
+                          setState(() => _isFlashOn = !_isFlashOn);
                           CameraService().toggleFlash(_isFlashOn);
                         },
                         width: 48,
@@ -62,7 +74,7 @@ class _TabScanState extends State<TabScan> {
                       ),
                       const SizedBox(height: 8),
                       CustomIconButton(
-                        svgAsset: "assets/icons/upload.svg",
+                        svgAsset: 'assets/icons/upload.svg',
                         onPressed: _pickImage,
                         width: 48,
                         height: 48,
@@ -72,7 +84,7 @@ class _TabScanState extends State<TabScan> {
                 ),
                 const SizedBox(height: 40),
                 CustomIconButton(
-                  svgAsset: "assets/icons/expand.svg",
+                  svgAsset: 'assets/icons/expand.svg',
                   onPressed: () => showScanDetailsBottomSheet(context),
                   width: 64,
                   height: 64,
