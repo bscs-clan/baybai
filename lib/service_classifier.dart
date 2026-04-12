@@ -1,49 +1,57 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:isolate';
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:baybai/core/models/detection.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
 
 // ─── Constants (matching Python script) ───────────────────────────────────────
 
 const int _kInputSize = 128;
 const int _kMinContourArea = 500;
-const double _kConfidenceThreshold = 0.50; // 50% threshold
+const double _kConfidenceThreshold = 0.50;
 const int _kBoxPadding = 10;
-const int _kDownscaleMax = 640; // Max allowed camera feed length for processing
+const int _kDownscaleMax = 640;
 
 // ─── Isolate Data Structures ──────────────────────────────────────────────────
 
+class _PlaneData {
+  final Uint8List bytes;
+  final int bytesPerRow;
+  final int? bytesPerPixel;
+
+  _PlaneData({
+    required this.bytes,
+    required this.bytesPerRow,
+    this.bytesPerPixel,
+  });
+}
+
 class _InferenceRequest {
-  final Uint8List rgbBytes; // raw JPEG scaled frame
-  final int frameW;
-  final int frameH;
-  final double scaleFactor; // Downscale factor vs original frame
-  final Map<String, String> classNames;
-  final Uint8List modelBytes;
+  final List<_PlaneData> planes;
+  final int camWidth;
+  final int camHeight;
+  final ImageFormatGroup formatGroup;
 
   _InferenceRequest({
-    required this.rgbBytes,
-    required this.frameW,
-    required this.frameH,
-    required this.scaleFactor,
-    required this.classNames,
-    required this.modelBytes,
+    required this.planes,
+    required this.camWidth,
+    required this.camHeight,
+    required this.formatGroup,
   });
 }
 
 class _Blob {
-  int minX = 999999, minY = 999999, maxX = -1, maxY = -1, area = 0;
+  int minX = 999999, minY = 999999, maxX = -1, maxY = -1;
   void add(int x, int y) {
     if (x < minX) minX = x;
     if (x > maxX) maxX = x;
     if (y < minY) minY = y;
     if (y > maxY) maxY = y;
-    area++;
   }
 }
 
@@ -57,256 +65,264 @@ class ClassifierService {
   bool _isReady = false;
   bool get isReady => _isReady;
 
-  late Uint8List _modelBytes;
-  late Map<String, String> _classNames;
+  late SendPort _sendPort;
+  final ReceivePort _receivePort = ReceivePort();
+  Completer<List<Detection>>? _completer;
 
   Future<void> init() async {
     if (_isReady) return;
-    debugPrint('[ClassifierService] Initializing models...');
+    debugPrint('[ClassifierService] Initializing models & isolate...');
 
     final modelData =
         await rootBundle.load('assets/models/baybai_ai_model.tflite');
-    _modelBytes = modelData.buffer.asUint8List();
+    final modelBytes = modelData.buffer.asUint8List();
 
     final jsonStr =
         await rootBundle.loadString('assets/models/class_names.json');
     final raw = json.decode(jsonStr) as Map<String, dynamic>;
-    _classNames = raw.map((k, v) => MapEntry(k, v.toString()));
+    final classNames = raw.map((k, v) => MapEntry(k, v.toString()));
 
-    _isReady = true;
-    debugPrint('[ClassifierService] Ready with ${_classNames.length} classes');
+    await Isolate.spawn(_isolateEntry, _receivePort.sendPort);
+
+    final initCompleter = Completer<void>();
+
+    _receivePort.listen((message) {
+      if (message is SendPort) {
+        _sendPort = message;
+        _sendPort.send({
+          'type': 'INIT',
+          'modelBytes': modelBytes,
+          'classNames': classNames,
+        });
+      } else if (message is Map && message['type'] == 'INIT_DONE') {
+        _isReady = true;
+        initCompleter.complete();
+        debugPrint('[ClassifierService] Ready with ${classNames.length} classes on bg isolate.');
+      } else if (message is List<Detection>) {
+        _completer?.complete(message);
+        _completer = null;
+      } else if (message is Map && message['type'] == 'ERROR') {
+        _completer?.completeError(Exception(message['error']));
+        _completer = null;
+      }
+    });
+
+    await initCompleter.future;
   }
 
   Future<List<Detection>> detectInImage(CameraImage image) async {
-    if (!_isReady) return [];
+    if (!_isReady || _completer != null) return [];
 
-    img.Image? rgbImage = _cameraImageToRgb(image);
-    if (rgbImage == null) return [];
-
-    // Android models rotated 90 deg clockwise by default on typical sensors.
-    rgbImage = img.copyRotate(rgbImage, angle: 90);
-
-    // Scaling speeds up contour detection. Keep factor to scale box constraints.
-    final originalLongEdge =
-        rgbImage.width > rgbImage.height ? rgbImage.width : rgbImage.height;
-    final scaleFactor =
-        originalLongEdge > _kDownscaleMax ? _kDownscaleMax / originalLongEdge : 1.0;
-
-    final scaled = _fitToMax(rgbImage, _kDownscaleMax);
-    final bytes = scaled.getBytes();
+    final planes = image.planes
+        .map((p) => _PlaneData(
+              bytes: p.bytes,
+              bytesPerRow: p.bytesPerRow,
+              bytesPerPixel: p.bytesPerPixel,
+            ))
+        .toList();
 
     final request = _InferenceRequest(
-      rgbBytes: bytes,
-      frameW: scaled.width,
-      frameH: scaled.height,
-      scaleFactor: scaleFactor,
-      classNames: _classNames,
-      modelBytes: _modelBytes,
+      planes: planes,
+      camWidth: image.width,
+      camHeight: image.height,
+      formatGroup: image.format.group,
     );
 
-    return compute(_runInference, request);
-  }
+    _completer = Completer<List<Detection>>();
+    _sendPort.send(request);
 
-  // ── Camera Pixel Decoders ───────────────────────────────────────────────────
-
-  static img.Image? _cameraImageToRgb(CameraImage camImg) {
-    try {
-      if (camImg.format.group == ImageFormatGroup.yuv420) {
-        return _convertYuv420(camImg);
-      } else if (camImg.format.group == ImageFormatGroup.bgra8888) {
-        return _convertBgra8888(camImg);
-      } else if (camImg.format.group == ImageFormatGroup.nv21) {
-        return _convertNv21(camImg);
-      }
-      return null;
-    } catch (e) {
-      debugPrint('Decoder err: $e');
-      return null;
-    }
-  }
-
-  static img.Image _convertYuv420(CameraImage camImg) {
-    final int width = camImg.width;
-    final int height = camImg.height;
-    final yPlane = camImg.planes[0];
-    final uPlane = camImg.planes[1];
-    final vPlane = camImg.planes[2];
-
-    final image = img.Image(width: width, height: height);
-    final int uvRowStride = uPlane.bytesPerRow;
-    final int uvPixelStride = uPlane.bytesPerPixel!;
-
-    for (int y = 0; y < height; y++) {
-      for (int x = 0; x < width; x++) {
-        final yValue = yPlane.bytes[y * yPlane.bytesPerRow + x];
-        final uvIndex = (y ~/ 2) * uvRowStride + (x ~/ 2) * uvPixelStride;
-        final uValue = uPlane.bytes[uvIndex];
-        final vValue = vPlane.bytes[uvIndex];
-
-        final r = (yValue + 1.402 * (vValue - 128)).clamp(0, 255).toInt();
-        final g = (yValue - 0.344136 * (uValue - 128) - 0.714136 * (vValue - 128))
-            .clamp(0, 255)
-            .toInt();
-        final b = (yValue + 1.772 * (uValue - 128)).clamp(0, 255).toInt();
-
-        image.setPixelRgb(x, y, r, g, b);
-      }
-    }
-    return image;
-  }
-
-  static img.Image _convertBgra8888(CameraImage camImg) {
-    return img.Image.fromBytes(
-      width: camImg.width,
-      height: camImg.height,
-      bytes: camImg.planes[0].bytes.buffer,
-      order: img.ChannelOrder.bgra,
-    );
-  }
-
-  static img.Image _convertNv21(CameraImage camImg) {
-    final int width = camImg.width;
-    final int height = camImg.height;
-    final yPlane = camImg.planes[0];
-    final uvPlane = camImg.planes[1];
-
-    final image = img.Image(width: width, height: height);
-
-    for (int y = 0; y < height; y++) {
-      for (int x = 0; x < width; x++) {
-        final yValue = yPlane.bytes[y * width + x];
-        final uvIdx = (y ~/ 2) * width + (x & ~1);
-        final vValue = uvPlane.bytes[uvIdx];
-        final uValue = uvPlane.bytes[uvIdx + 1];
-
-        final r = (yValue + 1.402 * (vValue - 128)).clamp(0, 255).toInt();
-        final g = (yValue - 0.344136 * (uValue - 128) - 0.714136 * (vValue - 128))
-            .clamp(0, 255)
-            .toInt();
-        final b = (yValue + 1.772 * (uValue - 128)).clamp(0, 255).toInt();
-
-        image.setPixelRgb(x, y, r, g, b);
-      }
-    }
-    return image;
-  }
-
-  static img.Image _fitToMax(img.Image src, int maxSize) {
-    if (src.width <= maxSize && src.height <= maxSize) return src;
-    final scale = maxSize / (src.width > src.height ? src.width : src.height);
-    return img.copyResize(src,
-        width: (src.width * scale).round(),
-        height: (src.height * scale).round());
+    return _completer!.future;
   }
 }
 
+// ─── Zero-Allocation Memory Buffers (Resident Isolate) ────────────────────────
+
+const int _kMaxPixels = _kDownscaleMax * _kDownscaleMax;
+final Uint8List _grayBuf = Uint8List(_kMaxPixels);
+final Int32List _integralBuf = Int32List(_kMaxPixels);
+final Uint8List _binaryBuf = Uint8List(_kMaxPixels);
+final Uint8List _dilatedBuf = Uint8List(_kMaxPixels);
+final Uint8List _visitedBuf = Uint8List(_kMaxPixels);
+final Int32List _bfsQueue = Int32List(_kMaxPixels);
+
+late Interpreter _interpreter;
+late Map<String, String> _classNames;
+late List<List<List<List<double>>>> _tfliteInputBuffer;
+late List<List<double>> _tfliteOutputBuffer;
+
 // ─── Isolate Entry (Background Thread) ────────────────────────────────────────
 
-List<Detection> _runInference(_InferenceRequest req) {
-  final w = req.frameW;
-  final h = req.frameH;
+void _isolateEntry(SendPort sendPort) {
+  final receivePort = ReceivePort();
+  sendPort.send(receivePort.sendPort);
 
-  final frame = img.Image.fromBytes(
-    width: w,
-    height: h,
-    bytes: req.rgbBytes.buffer,
-    numChannels: 3, 
-  );
+  receivePort.listen((message) {
+    try {
+      if (message is Map && message['type'] == 'INIT') {
+        _interpreter = Interpreter.fromBuffer(message['modelBytes']);
+        _classNames = message['classNames'];
+        
+        final outShape = _interpreter.getOutputTensor(0).shape;
+        _tfliteOutputBuffer = [List<double>.filled(outShape.last, 0.0)];
+        _tfliteInputBuffer = List.generate(
+            1, (_) => List.generate(
+                1, (_) => List.generate(
+                    _kInputSize, (_) => List.filled(_kInputSize, 0.0))));
 
-  // 1. Grayscale buffer
-  final gray = Uint8List(w * h);
+        sendPort.send({'type': 'INIT_DONE'});
+      } else if (message is _InferenceRequest) {
+        final detections = _processFrame(message);
+        sendPort.send(detections);
+      }
+    } catch (e) {
+      sendPort.send({'type': 'ERROR', 'error': e.toString()});
+    }
+  });
+}
+
+List<Detection> _processFrame(_InferenceRequest req) {
+  // 1. Calculate Bounds & Wipe Memory Pools
+  int rotW = req.camHeight;
+  int rotH = req.camWidth;
+
+  final scale = rotW > rotH
+      ? (rotW > _kDownscaleMax ? _kDownscaleMax / rotW : 1.0)
+      : (rotH > _kDownscaleMax ? _kDownscaleMax / rotH : 1.0);
+
+  int w = (rotW * scale).round();
+  int h = (rotH * scale).round();
+  int pixelCount = w * h;
+
+  _visitedBuf.fillRange(0, pixelCount, 0);
+
+  // 2. Map Image to Grayscale in place without extra layers
+  if (req.formatGroup == ImageFormatGroup.yuv420 ||
+      req.formatGroup == ImageFormatGroup.nv21) {
+    final yPlane = req.planes[0].bytes;
+    final rowStride = req.planes[0].bytesPerRow;
+    for (int y = 0; y < h; y++) {
+      for (int x = 0; x < w; x++) {
+        int sxRot = (x / scale).round().clamp(0, rotW - 1);
+        int syRot = (y / scale).round().clamp(0, rotH - 1);
+        int srcX = syRot; // applying generic 90 degree transpose
+        int srcY = req.camHeight - 1 - sxRot;
+        _grayBuf[y * w + x] = yPlane[srcY * rowStride + srcX];
+      }
+    }
+  } else if (req.formatGroup == ImageFormatGroup.bgra8888) {
+    final bgra = req.planes[0].bytes;
+    final rowStride = req.planes[0].bytesPerRow;
+    for (int y = 0; y < h; y++) {
+      for (int x = 0; x < w; x++) {
+        int sxRot = (x / scale).round().clamp(0, rotW - 1);
+        int syRot = (y / scale).round().clamp(0, rotH - 1);
+        int srcX = syRot;
+        int srcY = req.camHeight - 1 - sxRot;
+        int idx = srcY * rowStride + srcX * 4;
+        int b = bgra[idx];
+        int g = bgra[idx + 1];
+        int r = bgra[idx + 2];
+        _grayBuf[y * w + x] = (0.299 * r + 0.587 * g + 0.114 * b).round().clamp(0, 255);
+      }
+    }
+  } else {
+    return [];
+  }
+
+  // 3. Fast Integral Image for Adaptive Thresholding
   for (int y = 0; y < h; y++) {
+    int sum = 0;
     for (int x = 0; x < w; x++) {
-      final p = frame.getPixel(x, y);
-      // luminance
-      gray[y * w + x] =
-          (0.299 * p.r + 0.587 * p.g + 0.114 * p.b).round().clamp(0, 255);
+      sum += _grayBuf[y * w + x];
+      if (y == 0) {
+        _integralBuf[y * w + x] = sum;
+      } else {
+        _integralBuf[y * w + x] = _integralBuf[(y - 1) * w + x] + sum;
+      }
     }
   }
 
-  // 2. Adaptive Gaussian Thresholding (simulated via local mean approximation)
-  // Blocks of 11x11, C=2
   final int blockSize = 11;
   final int halfBlock = blockSize ~/ 2;
   const int C = 2;
-  final binary = Uint8List(w * h);
 
   for (int y = 0; y < h; y++) {
+    int yy1 = y - halfBlock;
+    int yy2 = y + halfBlock;
     for (int x = 0; x < w; x++) {
-      int sum = 0, count = 0;
-      int yyStart = y - halfBlock < 0 ? 0 : y - halfBlock;
-      int yyEnd = y + halfBlock >= h ? h - 1 : y + halfBlock;
-      int xxStart = x - halfBlock < 0 ? 0 : x - halfBlock;
-      int xxEnd = x + halfBlock >= w ? w - 1 : x + halfBlock;
+      int xx1 = x - halfBlock;
+      int xx2 = x + halfBlock;
 
-      // Note: for production velocity, use integral images. Small matrix allows naive summing.
-      for (int yy = yyStart; yy <= yyEnd; yy++) {
-        for (int xx = xxStart; xx <= xxEnd; xx++) {
-          sum += gray[yy * w + xx];
-          count++;
-        }
-      }
-      final mean = sum / count;
-      // Threshold Inverse logic (THRESH_BINARY_INV):
-      if (gray[y * w + x] <= (mean - C)) {
-        binary[y * w + x] = 1; // Object (1)
+      int sum = _getIntegralSum(w, h, xx1, yy1, xx2, yy2);
+
+      int actualX1 = xx1 < 0 ? 0 : xx1;
+      int actualY1 = yy1 < 0 ? 0 : yy1;
+      int actualX2 = xx2 >= w ? w - 1 : xx2;
+      int actualY2 = yy2 >= h ? h - 1 : yy2;
+      int count = (actualX2 - actualX1 + 1) * (actualY2 - actualY1 + 1);
+
+      double mean = sum / count;
+
+      if (_grayBuf[y * w + x] <= (mean - C)) {
+        _binaryBuf[y * w + x] = 1;
       } else {
-        binary[y * w + x] = 0; // Background (0)
+        _binaryBuf[y * w + x] = 0;
       }
     }
   }
 
-  // 3. Morphological Dilation (3x3 rect kernel - 1 iteration)
-  final dilated = Uint8List(w * h);
+  // 4. Morphological Dilation (3x3 kernel limit check)
   for (int y = 0; y < h; y++) {
     for (int x = 0; x < w; x++) {
-      if (binary[y * w + x] == 1) {
-        dilated[y * w + x] = 1;
+      if (_binaryBuf[y * w + x] == 1) {
+        _dilatedBuf[y * w + x] = 1;
       } else {
         bool neighborHas1 = false;
-        for (int dy = -1; dy <= 1 && !neighborHas1; dy++) {
-          for (int dx = -1; dx <= 1 && !neighborHas1; dx++) {
-            if (dx == 0 && dy == 0) continue;
-            final nx = x + dx, ny = y + dy;
-            if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
-              if (binary[ny * w + nx] == 1) neighborHas1 = true;
-            }
+        int yMin = y > 0 ? -1 : 0;
+        int yMax = y < h - 1 ? 1 : 0;
+        int xMin = x > 0 ? -1 : 0;
+        int xMax = x < w - 1 ? 1 : 0;
+        for (int dy = yMin; dy <= yMax && !neighborHas1; dy++) {
+          int offset = (y + dy) * w + x;
+          for (int dx = xMin; dx <= xMax && !neighborHas1; dx++) {
+            if (_binaryBuf[offset + dx] == 1) neighborHas1 = true;
           }
         }
-        dilated[y * w + x] = neighborHas1 ? 1 : 0;
+        _dilatedBuf[y * w + x] = neighborHas1 ? 1 : 0;
       }
     }
   }
 
-  // 4. Find Contours (Connected-Component Labeling via BFS)
-  final visited = Uint8List(w * h);
+  // 5. Zero-allocation Connected-Component Labeling via Flat Int List BFS
   final blobs = <_Blob>[];
-
   for (int y = 0; y < h; y++) {
     for (int x = 0; x < w; x++) {
-      if (dilated[y * w + x] == 1 && visited[y * w + x] == 0) {
-        // Flood fill to gather blob bounds
+      if (_dilatedBuf[y * w + x] == 1 && _visitedBuf[y * w + x] == 0) {
         final blob = _Blob();
-        final List<int> queue = [y * w + x];
-        visited[y * w + x] = 1;
+        
+        int qHead = 0;
+        int qTail = 0;
+        _bfsQueue[qTail++] = y * w + x;
+        _visitedBuf[y * w + x] = 1;
 
-        while (queue.isNotEmpty) {
-          final idx = queue.removeLast();
+        while (qHead < qTail) {
+          final idx = _bfsQueue[qHead++];
           final cy = idx ~/ w;
           final cx = idx % w;
           blob.add(cx, cy);
 
-          // Neighbors 8-way
-          for (int dy = -1; dy <= 1; dy++) {
-            for (int dx = -1; dx <= 1; dx++) {
-              if (dx == 0 && dy == 0) continue;
-              final nx = cx + dx, ny = cy + dy;
-              if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
-                final nIdx = ny * w + nx;
-                if (dilated[nIdx] == 1 && visited[nIdx] == 0) {
-                  visited[nIdx] = 1;
-                  queue.add(nIdx);
-                }
+          int yMin = cy > 0 ? -1 : 0;
+          int yMax = cy < h - 1 ? 1 : 0;
+          int xMin = cx > 0 ? -1 : 0;
+          int xMax = cx < w - 1 ? 1 : 0;
+
+          for (int dy = yMin; dy <= yMax; dy++) {
+            int offset = (cy + dy) * w + cx;
+            for (int dx = xMin; dx <= xMax; dx++) {
+              int nIdx = offset + dx;
+              if (_dilatedBuf[nIdx] == 1 && _visitedBuf[nIdx] == 0) {
+                _visitedBuf[nIdx] = 1;
+                _bfsQueue[qTail++] = nIdx;
               }
             }
           }
@@ -316,68 +332,59 @@ List<Detection> _runInference(_InferenceRequest req) {
     }
   }
 
-  // 5. Build Valid ROIs using scaled thresholds
-  final double scaledMinArea = _kMinContourArea * req.scaleFactor * req.scaleFactor;
-  // Increase max area to allow scanning prominent characters comfortably, capping at 80% of image
-  final double scaledMaxArea = w * h * 0.8; 
-  final int scaledPadding = (_kBoxPadding * req.scaleFactor).round();
+  // 6. Build Valid ROIs using thresholds
+  final double scaledMinArea = _kMinContourArea * scale * scale;
+  final double scaledMaxArea = w * h * 0.8;
+  final int scaledPadding = (_kBoxPadding * scale).round();
 
-  final validRegions = <Rect>[];
+  final validBlobs = <_Blob>[];
   for (final blob in blobs) {
-    final bw = blob.maxX - blob.minX;
-    final bh = blob.maxY - blob.minY;
+    int bw = blob.maxX - blob.minX;
+    int bh = blob.maxY - blob.minY;
     if (bh <= 0 || bw <= 0) continue;
 
-    final double bboxArea = (bw * bh).toDouble();
+    double bboxArea = (bw * bh).toDouble();
 
-    // Check bboxArea instead of blob.area (ink pixel count) 
-    // to prevent thin noise from creating full-screen bounding boxes
     if (bboxArea > scaledMinArea && bboxArea < scaledMaxArea) {
-      final aspectRatio = bw / bh.toDouble();
-      // Valid Baybayin aspect ratios between 0.2 and 5.0
+      double aspectRatio = bw / bh.toDouble();
       if (aspectRatio > 0.2 && aspectRatio < 5.0) {
-        int x1 = (blob.minX - scaledPadding).clamp(0, w - 1);
-        int y1 = (blob.minY - scaledPadding).clamp(0, h - 1);
-        int x2 = (blob.maxX + scaledPadding).clamp(0, w);
-        int y2 = (blob.maxY + scaledPadding).clamp(0, h);
-        if ((x2 - x1) > 0 && (y2 - y1) > 0) {
-          validRegions.add(Rect.fromLTRB(x1.toDouble(), y1.toDouble(), x2.toDouble(), y2.toDouble()));
-        }
+        validBlobs.add(blob);
       }
+    }
+  }
+
+  // 7. Safety Limit - Extremely dense noise artifacts cause TFLite flood 
+  validBlobs.sort((a, b) {
+    int areaA = (a.maxX - a.minX) * (a.maxY - a.minY);
+    int areaB = (b.maxX - b.minX) * (b.maxY - b.minY);
+    return areaB.compareTo(areaA); 
+  });
+
+  // Only take top 20 visible elements to secure real-time inference loop constraints.
+  final inferBlobs = validBlobs.take(20).toList();
+
+  final validRegions = <Rect>[];
+  for (final blob in inferBlobs) {
+    int x1 = (blob.minX - scaledPadding).clamp(0, w - 1);
+    int y1 = (blob.minY - scaledPadding).clamp(0, h - 1);
+    int x2 = (blob.maxX + scaledPadding).clamp(0, w);
+    int y2 = (blob.maxY + scaledPadding).clamp(0, h);
+    if ((x2 - x1) > 0 && (y2 - y1) > 0) {
+      validRegions.add(Rect.fromLTRB(x1.toDouble(), y1.toDouble(), x2.toDouble(), y2.toDouble()));
     }
   }
 
   if (validRegions.isEmpty) return [];
 
-  // 6. Run TFLite Prediction on Valid ROIs
-  late Interpreter interpreter;
-  try {
-    interpreter = Interpreter.fromBuffer(req.modelBytes);
-  } catch (_) {
-    return [];
-  }
-
+  // 8. Run TFLite Prediction dynamically pushing into singleton bounds
   final detections = <Detection>[];
-  final outputShape = interpreter.getOutputTensor(0).shape;
-  final numClasses = outputShape.last;
 
   for (final rect in validRegions) {
-    // Crop region directly from the frame (retaining its RGB qualities, but converting to grayscale logic as training did)
-    final roi = img.copyCrop(frame,
-        x: rect.left.toInt(),
-        y: rect.top.toInt(),
-        width: rect.width.toInt(),
-        height: rect.height.toInt());
-
-    final resized = img.copyResize(roi, width: _kInputSize, height: _kInputSize);
+    _fillTFLiteInput(w, h, rect, _kInputSize);
     
-    // Convert to Tensor [-1.0 ... 1.0] grayscale format like PyTorch transform
-    final inputFloat = _imageToFloat32Input(resized);
+    _interpreter.run(_tfliteInputBuffer, _tfliteOutputBuffer);
 
-    final output = [List<double>.filled(numClasses, 0.0)];
-    interpreter.run(inputFloat, output);
-
-    final probs = _softmax(output[0]);
+    final probs = _softmax(_tfliteOutputBuffer[0]);
     double maxConf = 0.0;
     int maxIdx = 0;
 
@@ -389,7 +396,7 @@ List<Detection> _runInference(_InferenceRequest req) {
     }
 
     if (maxConf >= _kConfidenceThreshold) {
-      final label = req.classNames['$maxIdx'] ?? '$maxIdx';
+      final label = _classNames['$maxIdx'] ?? '$maxIdx';
       detections.add(Detection(
         box: Rect.fromLTRB(
           rect.left / w,
@@ -403,36 +410,43 @@ List<Detection> _runInference(_InferenceRequest req) {
     }
   }
 
-  interpreter.close();
-  return detections; // Overlay resolves duplicates natively if required, else minimal intersections exist
+  return detections;
 }
 
-// ── Torch-like Transforms ─────────────────────────────────────────────────────
+// ── Torch-like Transforms & Fast Index Utils ──────────────────────────────────
 
-List<List<List<List<double>>>> _imageToFloat32Input(img.Image image) {
-  final w = image.width;
-  final h = image.height;
-  // [Batch, Channel, Height, Width] explicitly mapping PyTorch's NCHW format
-  final input = List.generate(
-    1, // Batch (index 0) = 1
-    (_) => List.generate(
-      1, // Channel (index 1) = 1 (Grayscale)
-      (_) => List.generate(
-        h, // Height (index 2) = 128
-        (y) => List.generate(
-          w, // Width (index 3) = 128
-          (x) {
-            final p = image.getPixel(x, y);
-            // 1. Grayscale mapping
-            final luma = (0.299 * p.r + 0.587 * p.g + 0.114 * p.b);
-            // 2. Normalize to [-1.0, 1.0]: (x / 127.5) - 1.0
-            return (luma / 127.5) - 1.0;
-          },
-        ),
-      ),
-    ),
-  );
-  return input;
+@pragma('vm:prefer-inline')
+int _getIntegralSum(int w, int h, int x1, int y1, int x2, int y2) {
+  x1 = x1 < 0 ? 0 : x1;
+  y1 = y1 < 0 ? 0 : y1;
+  x2 = x2 >= w ? w - 1 : x2;
+  y2 = y2 >= h ? h - 1 : y2;
+
+  int A = (x1 > 0 && y1 > 0) ? _integralBuf[(y1 - 1) * w + (x1 - 1)] : 0;
+  int B = (y1 > 0) ? _integralBuf[(y1 - 1) * w + x2] : 0;
+  int C = (x1 > 0) ? _integralBuf[y2 * w + (x1 - 1)] : 0;
+  int D = _integralBuf[y2 * w + x2];
+  return D - B - C + A;
+}
+
+void _fillTFLiteInput(int frameW, int frameH, Rect rect, int targetSize) {
+  int rx = rect.left.toInt();
+  int ry = rect.top.toInt();
+  int rw = rect.width.toInt();
+  int rh = rect.height.toInt();
+
+  for (int ty = 0; ty < targetSize; ty++) {
+    final row = _tfliteInputBuffer[0][0][ty];
+    for (int tx = 0; tx < targetSize; tx++) {
+      int sx = rx + (tx * rw ~/ targetSize);
+      int sy = ry + (ty * rh ~/ targetSize);
+
+      sx = sx.clamp(0, frameW - 1);
+      sy = sy.clamp(0, frameH - 1);
+
+      row[tx] = (_grayBuf[sy * frameW + sx] / 127.5) - 1.0;
+    }
+  }
 }
 
 List<double> _softmax(List<double> logits) {
