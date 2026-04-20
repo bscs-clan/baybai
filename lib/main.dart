@@ -8,6 +8,7 @@ import "package:baybai/core/configs/theme/app_theme.dart";
 import "package:baybai/core/utils/device_info.dart";
 import "package:baybai/core/utils/device_location.dart";
 import "package:baybai/presentation/splash/pages/splash.dart";
+import "package:baybai/presentation/onboarding/pages/onboarding.dart";
 import "package:baybai/presentation/home/pages/home.dart";
 import "package:baybai/presentation/settings/bloc/theme_cubit.dart";
 import "package:baybai/presentation/settings/pages/settings.dart";
@@ -42,6 +43,7 @@ class MyApp extends StatelessWidget {
           initialRoute: "/",
           routes: {
             "/": (context) => const SplashScreen(),
+            "/onboarding": (context) => const OnboardingScreen(),
             "/home": (context) => const HomeScreen(),
             "/settings": (context) => const SettingsScreen(),
           },
