@@ -52,7 +52,7 @@ class _SettingsButton extends StatelessWidget {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
-      onTap: () => Navigator.pushNamed(context, '/settings'),
+      onTap: () => Navigator.pushNamed(context, "/settings"),
       child: Container(
         width: _size,
         height: _size,

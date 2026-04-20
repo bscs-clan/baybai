@@ -1,5 +1,5 @@
-import 'package:camera/camera.dart';
-import 'package:flutter/foundation.dart';
+import "package:camera/camera.dart";
+import "package:flutter/foundation.dart";
 
 class CameraService {
   static final CameraService _instance = CameraService._internal();

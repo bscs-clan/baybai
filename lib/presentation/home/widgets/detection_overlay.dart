@@ -1,5 +1,5 @@
-import 'package:baybai/core/models/detection.dart';
-import 'package:flutter/material.dart';
+import "package:baybai/core/models/detection.dart";
+import "package:flutter/material.dart";
 
 // ─── confidence-based colours ───────────────────────────────────────────────────
 
@@ -69,7 +69,7 @@ class _DetectionPainter extends CustomPainter {
 
       // ── Draw label pill ──
       final labelText =
-          '${det.label} ${(det.confidence * 100).toStringAsFixed(0)}%';
+          "${det.label} ${(det.confidence * 100).toStringAsFixed(0)}%";
       final textSpan = TextSpan(
         text: labelText,
         style: const TextStyle(

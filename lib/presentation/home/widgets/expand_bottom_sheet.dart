@@ -1,7 +1,7 @@
-import 'package:baybai/core/configs/theme/colors.dart';
-import 'package:baybai/core/configs/theme/text.dart';
-import 'package:bottom_sheet/bottom_sheet.dart';
-import 'package:flutter/material.dart';
+import "package:baybai/core/configs/theme/colors.dart";
+import "package:baybai/core/configs/theme/text.dart";
+import "package:bottom_sheet/bottom_sheet.dart";
+import "package:flutter/material.dart";
 
 Future<void> showScanDetailsBottomSheet(BuildContext context) {
   return showFlexibleBottomSheet(

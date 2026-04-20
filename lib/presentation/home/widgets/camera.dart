@@ -1,16 +1,14 @@
-import 'package:baybai/core/models/detection.dart';
-import 'package:baybai/presentation/home/widgets/detection_overlay.dart';
-import 'package:baybai/service_camera.dart';
-import 'package:baybai/service_classifier.dart';
-import 'package:camera/camera.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import "package:baybai/core/configs/theme/colors.dart";
+import "package:flutter/material.dart";
+import "package:camera/camera.dart";
+import "package:baybai/core/models/detection.dart";
+import "package:baybai/service_camera.dart";
+import "package:baybai/service_classifier.dart";
+import "package:baybai/presentation/home/widgets/detection_overlay.dart";
+import "package:loading_animation_widget/loading_animation_widget.dart";
 
 class CameraPreviewWidget extends StatefulWidget {
   final VoidCallback? onInitialized;
-
-  /// Notifier that emits a fresh detection list after each inference pass.
-  /// Listeners (e.g. TabScan) rebuild whenever new detections arrive.
   final ValueNotifier<List<Detection>> detectionNotifier;
 
   CameraPreviewWidget({
@@ -29,7 +27,6 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
 
   bool _isInitialized = false;
 
-  /// Prevents queueing a second inference while one is already running.
   bool _isProcessingFrame = false;
 
   @override
@@ -39,11 +36,7 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
   }
 
   Future<void> _initAll() async {
-    // Initialise classifier and camera in parallel.
-    await Future.wait([
-      _classifier.init(),
-      _initCamera(),
-    ]);
+    await Future.wait([_classifier.init(), _initCamera()]);
   }
 
   Future<void> _initCamera() async {
@@ -52,16 +45,15 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
 
       if (!mounted) return;
 
-      // Start live-stream for inference.
       await _cameraService.controller!.startImageStream(_onCameraImage);
 
       setState(() => _isInitialized = true);
       widget.onInitialized?.call();
     } on CameraException catch (e) {
-      if (e.code == 'CameraAccessDenied') {
-        debugPrint('[Camera] Access denied');
+      if (e.code == "CameraAccessDenied") {
+        debugPrint("[Camera] Access denied");
       } else {
-        debugPrint('[Camera] Error: ${e.code}');
+        debugPrint("[Camera] Error: ${e.code}");
       }
     }
   }
@@ -70,15 +62,19 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
     if (_isProcessingFrame || !_classifier.isReady) return;
     _isProcessingFrame = true;
 
-    _classifier.detectInImage(image).then((detections) {
-      if (mounted) {
-        widget.detectionNotifier.value = detections;
-      }
-    }).catchError((e) {
-      debugPrint('[Camera] Inference error: $e');
-    }).whenComplete(() {
-      _isProcessingFrame = false;
-    });
+    _classifier
+        .detectInImage(image)
+        .then((detections) {
+          if (mounted) {
+            widget.detectionNotifier.value = detections;
+          }
+        })
+        .catchError((e) {
+          debugPrint("[Camera] Inference error: $e");
+        })
+        .whenComplete(() {
+          _isProcessingFrame = false;
+        });
   }
 
   @override
@@ -90,11 +86,17 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
   @override
   Widget build(BuildContext context) {
     if (!_isInitialized || _cameraService.controller == null) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(
+        child: LoadingAnimationWidget.threeArchedCircle(
+          color: AppColors.primary,
+          size: 40,
+        ),
+      );
     }
 
     final controller = _cameraService.controller!;
-    if (!controller.value.isInitialized || controller.value.previewSize == null) {
+    if (!controller.value.isInitialized ||
+        controller.value.previewSize == null) {
       return const Center(child: CircularProgressIndicator());
     }
 

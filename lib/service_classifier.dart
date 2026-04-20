@@ -1,13 +1,13 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:isolate';
-import 'dart:math' as math;
-import 'dart:typed_data';
-import 'package:baybai/core/models/detection.dart';
-import 'package:camera/camera.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
-import 'package:tflite_flutter/tflite_flutter.dart';
+import "dart:async";
+import "dart:convert";
+import "dart:isolate";
+import "dart:math" as math;
+import "dart:typed_data";
+import "package:baybai/core/models/detection.dart";
+import "package:camera/camera.dart";
+import "package:flutter/foundation.dart";
+import "package:flutter/services.dart";
+import "package:tflite_flutter/tflite_flutter.dart";
 
 // ─── Constants (matching Python script) ───────────────────────────────────────
 
@@ -71,14 +71,16 @@ class ClassifierService {
 
   Future<void> init() async {
     if (_isReady) return;
-    debugPrint('[ClassifierService] Initializing models & isolate...');
+    debugPrint("[ClassifierService] Initializing models & isolate...");
 
-    final modelData =
-        await rootBundle.load('assets/models/baybai_ai_model.tflite');
+    final modelData = await rootBundle.load(
+      "assets/models/baybai_ai_model.tflite",
+    );
     final modelBytes = modelData.buffer.asUint8List();
 
-    final jsonStr =
-        await rootBundle.loadString('assets/models/class_names.json');
+    final jsonStr = await rootBundle.loadString(
+      "assets/models/class_names.json",
+    );
     final raw = json.decode(jsonStr) as Map<String, dynamic>;
     final classNames = raw.map((k, v) => MapEntry(k, v.toString()));
 
@@ -90,19 +92,21 @@ class ClassifierService {
       if (message is SendPort) {
         _sendPort = message;
         _sendPort.send({
-          'type': 'INIT',
-          'modelBytes': modelBytes,
-          'classNames': classNames,
+          "type": "INIT",
+          "modelBytes": modelBytes,
+          "classNames": classNames,
         });
-      } else if (message is Map && message['type'] == 'INIT_DONE') {
+      } else if (message is Map && message["type"] == "INIT_DONE") {
         _isReady = true;
         initCompleter.complete();
-        debugPrint('[ClassifierService] Ready with ${classNames.length} classes on bg isolate.');
+        debugPrint(
+          "[ClassifierService] Ready with ${classNames.length} classes on bg isolate.",
+        );
       } else if (message is List<Detection>) {
         _completer?.complete(message);
         _completer = null;
-      } else if (message is Map && message['type'] == 'ERROR') {
-        _completer?.completeError(Exception(message['error']));
+      } else if (message is Map && message["type"] == "ERROR") {
+        _completer?.completeError(Exception(message["error"]));
         _completer = null;
       }
     });
@@ -114,11 +118,13 @@ class ClassifierService {
     if (!_isReady || _completer != null) return [];
 
     final planes = image.planes
-        .map((p) => _PlaneData(
-              bytes: p.bytes,
-              bytesPerRow: p.bytesPerRow,
-              bytesPerPixel: p.bytesPerPixel,
-            ))
+        .map(
+          (p) => _PlaneData(
+            bytes: p.bytes,
+            bytesPerRow: p.bytesPerRow,
+            bytesPerPixel: p.bytesPerPixel,
+          ),
+        )
         .toList();
 
     final request = _InferenceRequest(
@@ -158,24 +164,30 @@ void _isolateEntry(SendPort sendPort) {
 
   receivePort.listen((message) {
     try {
-      if (message is Map && message['type'] == 'INIT') {
-        _interpreter = Interpreter.fromBuffer(message['modelBytes']);
-        _classNames = message['classNames'];
-        
+      if (message is Map && message["type"] == "INIT") {
+        _interpreter = Interpreter.fromBuffer(message["modelBytes"]);
+        _classNames = message["classNames"];
+
         final outShape = _interpreter.getOutputTensor(0).shape;
         _tfliteOutputBuffer = [List<double>.filled(outShape.last, 0.0)];
         _tfliteInputBuffer = List.generate(
-            1, (_) => List.generate(
-                1, (_) => List.generate(
-                    _kInputSize, (_) => List.filled(_kInputSize, 0.0))));
+          1,
+          (_) => List.generate(
+            1,
+            (_) => List.generate(
+              _kInputSize,
+              (_) => List.filled(_kInputSize, 0.0),
+            ),
+          ),
+        );
 
-        sendPort.send({'type': 'INIT_DONE'});
+        sendPort.send({"type": "INIT_DONE"});
       } else if (message is _InferenceRequest) {
         final detections = _processFrame(message);
         sendPort.send(detections);
       }
     } catch (e) {
-      sendPort.send({'type': 'ERROR', 'error': e.toString()});
+      sendPort.send({"type": "ERROR", "error": e.toString()});
     }
   });
 }
@@ -222,7 +234,10 @@ List<Detection> _processFrame(_InferenceRequest req) {
         int b = bgra[idx];
         int g = bgra[idx + 1];
         int r = bgra[idx + 2];
-        _grayBuf[y * w + x] = (0.299 * r + 0.587 * g + 0.114 * b).round().clamp(0, 255);
+        _grayBuf[y * w + x] = (0.299 * r + 0.587 * g + 0.114 * b).round().clamp(
+          0,
+          255,
+        );
       }
     }
   } else {
@@ -299,7 +314,7 @@ List<Detection> _processFrame(_InferenceRequest req) {
     for (int x = 0; x < w; x++) {
       if (_dilatedBuf[y * w + x] == 1 && _visitedBuf[y * w + x] == 0) {
         final blob = _Blob();
-        
+
         int qHead = 0;
         int qTail = 0;
         _bfsQueue[qTail++] = y * w + x;
@@ -353,11 +368,11 @@ List<Detection> _processFrame(_InferenceRequest req) {
     }
   }
 
-  // 7. Safety Limit - Extremely dense noise artifacts cause TFLite flood 
+  // 7. Safety Limit - Extremely dense noise artifacts cause TFLite flood
   validBlobs.sort((a, b) {
     int areaA = (a.maxX - a.minX) * (a.maxY - a.minY);
     int areaB = (b.maxX - b.minX) * (b.maxY - b.minY);
-    return areaB.compareTo(areaA); 
+    return areaB.compareTo(areaA);
   });
 
   // Only take top 20 visible elements to secure real-time inference loop constraints.
@@ -370,7 +385,14 @@ List<Detection> _processFrame(_InferenceRequest req) {
     int x2 = (blob.maxX + scaledPadding).clamp(0, w);
     int y2 = (blob.maxY + scaledPadding).clamp(0, h);
     if ((x2 - x1) > 0 && (y2 - y1) > 0) {
-      validRegions.add(Rect.fromLTRB(x1.toDouble(), y1.toDouble(), x2.toDouble(), y2.toDouble()));
+      validRegions.add(
+        Rect.fromLTRB(
+          x1.toDouble(),
+          y1.toDouble(),
+          x2.toDouble(),
+          y2.toDouble(),
+        ),
+      );
     }
   }
 
@@ -381,7 +403,7 @@ List<Detection> _processFrame(_InferenceRequest req) {
 
   for (final rect in validRegions) {
     _fillTFLiteInput(w, h, rect, _kInputSize);
-    
+
     _interpreter.run(_tfliteInputBuffer, _tfliteOutputBuffer);
 
     final probs = _softmax(_tfliteOutputBuffer[0]);
@@ -396,17 +418,19 @@ List<Detection> _processFrame(_InferenceRequest req) {
     }
 
     if (maxConf >= _kConfidenceThreshold) {
-      final label = _classNames['$maxIdx'] ?? '$maxIdx';
-      detections.add(Detection(
-        box: Rect.fromLTRB(
-          rect.left / w,
-          rect.top / h,
-          rect.right / w,
-          rect.bottom / h,
+      final label = _classNames["$maxIdx"] ?? "$maxIdx";
+      detections.add(
+        Detection(
+          box: Rect.fromLTRB(
+            rect.left / w,
+            rect.top / h,
+            rect.right / w,
+            rect.bottom / h,
+          ),
+          label: label,
+          confidence: maxConf,
         ),
-        label: label,
-        confidence: maxConf,
-      ));
+      );
     }
   }
 
@@ -415,7 +439,7 @@ List<Detection> _processFrame(_InferenceRequest req) {
 
 // ── Torch-like Transforms & Fast Index Utils ──────────────────────────────────
 
-@pragma('vm:prefer-inline')
+@pragma("vm:prefer-inline")
 int _getIntegralSum(int w, int h, int x1, int y1, int x2, int y2) {
   x1 = x1 < 0 ? 0 : x1;
   y1 = y1 < 0 ? 0 : y1;

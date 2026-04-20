@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
 /// A single object detection result, with all coordinates normalised to 0..1
 /// relative to the source image dimensions.
