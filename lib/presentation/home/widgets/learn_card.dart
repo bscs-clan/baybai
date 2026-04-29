@@ -23,14 +23,14 @@ class LearnCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Getting Started",
+            "Lesson 1",
             style: AppTextStyles.body.copyWith(
               color: isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey,
             ),
           ),
           const SizedBox(height: 6),
           Text(
-            "Learn the Characters",
+            "Baybayin Basics",
             style: AppTextStyles.bigbody.copyWith(
               color: isDarkMode ? AppColors.darkText : AppColors.text,
             ),
@@ -38,9 +38,11 @@ class LearnCard extends StatelessWidget {
           const SizedBox(height: 24),
           Button(
             label: "Start Lesson",
-            iconPath: "assets/icons/arrow-right-up.svg",
-            onTap: () {},
+            onTap: () {
+              Navigator.pushNamed(context, "/lesson");
+            },
             type: ButtonType.primary,
+            rightIconPath: "assets/icons/arrow-right-up.svg",
           ),
         ],
       ),

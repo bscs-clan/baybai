@@ -1,0 +1,278 @@
+import "package:flutter/gestures.dart";
+import "package:flutter/material.dart";
+import "package:flutter_svg/flutter_svg.dart";
+import "package:baybai/core/configs/theme/colors.dart";
+import "package:baybai/core/configs/theme/text.dart";
+import "package:baybai/presentation/lessons/models/lesson_content.dart";
+
+class LessonSlide extends StatefulWidget {
+  final LessonContent lesson;
+  final Function(bool)? onAnswered;
+
+  const LessonSlide({super.key, required this.lesson, this.onAnswered});
+
+  @override
+  State<LessonSlide> createState() => _LessonSlideState();
+}
+
+class _LessonSlideState extends State<LessonSlide> {
+  final List<TapGestureRecognizer> _recognizers = [];
+  int? _selectedIndex;
+
+  @override
+  void dispose() {
+    for (final recognizer in _recognizers) {
+      recognizer.dispose();
+    }
+    super.dispose();
+  }
+
+  String _getOptionLabel(String option) {
+    switch (option) {
+      case "\u1700":
+        return "A";
+      case "\u1701":
+        return "I / E";
+      case "\u1702":
+        return "O / U";
+      case "\u1703":
+        return "KA";
+      case "\u170A":
+        return "BA";
+      case "\u170B":
+        return "MA";
+      default:
+        return "";
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final descriptionStyle = AppTextStyles.body.copyWith(
+      color: isDarkMode ? AppColors.white : AppColors.dark,
+      height: 1.5,
+    );
+
+    // Clear old recognizers before building new ones
+    for (final recognizer in _recognizers) {
+      recognizer.dispose();
+    }
+    _recognizers.clear();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: widget.lesson.imageWidth ?? double.infinity,
+            height: widget.lesson.imageHeight,
+            child: widget.lesson.image != null
+                ? Image.asset(widget.lesson.image!, fit: widget.lesson.imageFit)
+                : Icon(
+                    Icons.image_outlined,
+                    size: 64,
+                    color: isDarkMode
+                        ? AppColors.darkTextGrey
+                        : AppColors.textGrey,
+                  ),
+          ),
+          const SizedBox(height: 48),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (widget.lesson.iconPath != null) ...[
+                SvgPicture.asset(
+                  widget.lesson.iconPath!,
+                  colorFilter: ColorFilter.mode(
+                    isDarkMode ? AppColors.darkText : AppColors.text,
+                    BlendMode.srcIn,
+                  ),
+                  width: 28,
+                  height: 28,
+                ),
+                const SizedBox(width: 8),
+              ],
+              Text(
+                widget.lesson.title,
+                style: AppTextStyles.bigbody.copyWith(
+                  color: isDarkMode ? AppColors.darkText : AppColors.text,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text.rich(
+            TextSpan(
+              children: _parseDescription(
+                widget.lesson.description,
+                descriptionStyle,
+                context,
+                isDarkMode,
+              ),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          if (widget.lesson.baybayinText.isNotEmpty) ...[
+            const SizedBox(height: 32),
+            Text(
+              widget.lesson.baybayinText,
+              style: TextStyle(
+                fontFamily: 'Baybayin',
+                fontSize: 40,
+                color: isDarkMode ? AppColors.darkText : AppColors.text,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+          if (widget.lesson.options != null &&
+              widget.lesson.options!.isNotEmpty) ...[
+            const SizedBox(height: 48),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: List.generate(widget.lesson.options!.length, (index) {
+                final option = widget.lesson.options![index];
+                final isSelected = _selectedIndex == index;
+                final isCorrect = option == widget.lesson.correctOption;
+
+                Color getBgColor() {
+                  if (!isSelected) {
+                    return isDarkMode
+                        ? AppColors.dark.withValues(alpha: 0.5)
+                        : AppColors.white;
+                  }
+                  return isCorrect ? Colors.green : Colors.red;
+                }
+
+                return Column(
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        setState(() {
+                          _selectedIndex = index;
+                        });
+                        widget.onAnswered?.call(true);
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        width: 84,
+                        height: 84,
+                        decoration: ShapeDecoration(
+                          color: getBgColor(),
+                          shape: RoundedSuperellipseBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            option,
+                            style: TextStyle(
+                              fontFamily: 'Baybayin',
+                              fontSize: 32,
+                              color: isSelected
+                                  ? Colors.white
+                                  : (isDarkMode
+                                        ? AppColors.white
+                                        : AppColors.dark),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (isSelected) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        _getOptionLabel(option),
+                        style: AppTextStyles.body.copyWith(
+                          color: isCorrect ? Colors.green : Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ],
+                );
+              }),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  List<InlineSpan> _parseDescription(
+    String text,
+    TextStyle baseStyle,
+    BuildContext context,
+    bool isDarkMode,
+  ) {
+    List<InlineSpan> spans = [];
+    final regex = RegExp(r'\*\*(.*?)\*\*|\[(.*?)\]');
+    int lastIndex = 0;
+
+    for (final match in regex.allMatches(text)) {
+      if (match.start > lastIndex) {
+        spans.add(
+          TextSpan(
+            text: text.substring(lastIndex, match.start),
+            style: baseStyle,
+          ),
+        );
+      }
+
+      if (match.group(1) != null) {
+        // Bold text: **text**
+        spans.add(
+          TextSpan(
+            text: match.group(1),
+            style: baseStyle.copyWith(
+              fontWeight: FontWeight.bold,
+              color: baseStyle.color,
+            ),
+          ),
+        );
+      } else if (match.group(2) != null) {
+        // Link text: [text]
+        final linkText = match.group(2)!;
+        final recognizer = TapGestureRecognizer()
+          ..onTap = () {
+            Navigator.pushNamed(context, "/characters");
+          };
+        _recognizers.add(recognizer);
+
+        spans.add(
+          TextSpan(
+            text: linkText,
+            style: baseStyle.copyWith(
+              fontWeight: FontWeight.bold,
+              color: isDarkMode ? AppColors.white : AppColors.dark,
+            ),
+            recognizer: recognizer,
+          ),
+        );
+        spans.add(
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 2.0),
+              child: Icon(
+                Icons.north_east_rounded,
+                size: 16,
+                color: isDarkMode ? AppColors.white : AppColors.dark,
+              ),
+            ),
+          ),
+        );
+      }
+      lastIndex = match.end;
+    }
+
+    if (lastIndex < text.length) {
+      spans.add(TextSpan(text: text.substring(lastIndex), style: baseStyle));
+    }
+
+    return spans;
+  }
+}
