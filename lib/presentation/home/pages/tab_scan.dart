@@ -1,10 +1,7 @@
 import "package:flutter/material.dart";
-import "package:image_picker/image_picker.dart";
-import "package:baybai/core/models/detection.dart";
-import "package:baybai/service_camera.dart";
 import "package:baybai/common/components/icon_button.dart";
+import "package:baybai/core/models/detection.dart";
 import "package:baybai/presentation/home/widgets/camera.dart";
-import "package:baybai/presentation/home/widgets/expand_bottom_sheet.dart";
 
 class TabScan extends StatefulWidget {
   const TabScan({super.key});
@@ -15,8 +12,6 @@ class TabScan extends StatefulWidget {
 
 class _TabScanState extends State<TabScan> {
   bool _isCameraReady = false;
-  bool _isFlashOn = false;
-  final ImagePicker _picker = ImagePicker();
 
   /// Detection results published by [CameraPreviewWidget] via its notifier.
   final ValueNotifier<List<Detection>> _detectionNotifier = ValueNotifier(
@@ -27,13 +22,6 @@ class _TabScanState extends State<TabScan> {
   void dispose() {
     _detectionNotifier.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      debugPrint("Picked image: ${image.path}");
-    }
   }
 
   @override
@@ -48,46 +36,39 @@ class _TabScanState extends State<TabScan> {
           },
         ),
 
-        // ── Controls ─────────────────────────────────────────────────────────
+        // ── Scanner Overlay ──────────────────────────────────────────────────
+        if (_isCameraReady)
+          Positioned.fill(
+            child: ColorFiltered(
+              colorFilter: ColorFilter.mode(
+                Colors.black.withValues(alpha: 0.5),
+                BlendMode.srcOut,
+              ),
+              child: Center(
+                child: Container(
+                  height: 100,
+                  width: double.infinity,
+                  decoration: const BoxDecoration(color: Colors.black),
+                ),
+              ),
+            ),
+          ),
+
+        // ── Camera Capture ─────────────────────────────────────────────────────────
         if (_isCameraReady)
           Positioned(
             left: 24,
             right: 24,
-            bottom: 136,
+            bottom: 145,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CustomIconButton(
-                        svgAsset: "assets/icons/light.svg",
-                        isActive: _isFlashOn,
-                        onPressed: () {
-                          setState(() => _isFlashOn = !_isFlashOn);
-                          CameraService().toggleFlash(_isFlashOn);
-                        },
-                        width: 48,
-                        height: 48,
-                      ),
-                      const SizedBox(height: 8),
-                      CustomIconButton(
-                        svgAsset: "assets/icons/upload.svg",
-                        onPressed: _pickImage,
-                        width: 48,
-                        height: 48,
-                      ),
-                    ],
-                  ),
-                ),
                 const SizedBox(height: 40),
                 CustomIconButton(
-                  svgAsset: "assets/icons/expand.svg",
-                  onPressed: () => showScanDetailsBottomSheet(context),
+                  onPressed: () {},
                   width: 64,
                   height: 64,
+                  isActive: true,
                 ),
               ],
             ),
