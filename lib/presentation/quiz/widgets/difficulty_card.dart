@@ -117,7 +117,7 @@ class ModeCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     info.title,
-                    style: AppTextStyles.title.copyWith(
+                    style: AppTextStyles.bigbody.copyWith(
                       color: isDarkMode ? AppColors.darkText : AppColors.text,
                     ),
                   ),
@@ -129,7 +129,7 @@ class ModeCard extends StatelessWidget {
             Text(
               info.description,
               style: AppTextStyles.mbody.copyWith(
-                color: isDarkMode ? AppColors.white : AppColors.text,
+                color: isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey,
                 height: 1.4,
               ),
             ),
@@ -190,7 +190,7 @@ class _InfoChip extends StatelessWidget {
             width: 12,
             height: 12,
             colorFilter: ColorFilter.mode(
-              isDarkMode ? AppColors.white : AppColors.dark,
+              isDarkMode ? AppColors.darkIcon : AppColors.icon,
               BlendMode.srcIn,
             ),
           ),
@@ -199,8 +199,8 @@ class _InfoChip extends StatelessWidget {
             label,
             style: AppTextStyles.mbody.copyWith(
               fontSize: 12,
-              color: isDarkMode ? AppColors.white : AppColors.text,
-              fontWeight: FontWeight.w500,
+              color: isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],

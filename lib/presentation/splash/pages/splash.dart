@@ -1,3 +1,4 @@
+import "package:baybai/core/configs/theme/colors.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:shared_preferences/shared_preferences.dart";
@@ -34,7 +35,10 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
+      backgroundColor: isDarkMode ? AppColors.darkBackground : AppColors.white,
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -53,9 +57,15 @@ class _SplashScreenState extends State<SplashScreen> {
             style: TextStyle(
               fontSize: Theme.of(context).textTheme.headlineSmall!.fontSize,
               fontWeight: FontWeight.bold,
+              color: isDarkMode ? AppColors.darkText : AppColors.text,
             ),
           ),
-          Text("Scan, Transliterate, Learn"),
+          Text(
+            "Scan, Transliterate, Learn",
+            style: TextStyle(
+              color: isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey,
+            ),
+          ),
           SizedBox(height: 64),
         ],
       ),

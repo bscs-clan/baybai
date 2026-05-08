@@ -22,7 +22,7 @@ class AppColors {
   static const Color darkBox = Color(0xFF1C1E25);
   static const Color darkCompBg = Color(0xFF252830);
   static const Color darkCompGrey = Color(0xFF9CA3AF);
-  static const Color darkText = Color(0xFFBBBBBB);
+  static const Color darkText = Color(0xFF999999);
   static const Color darkTextGrey = Color(0xFF9CA3AF);
   static const Color darkCompLight = Color(0xFF2F333D);
   static const Color darkIcon = Color(0xFF888888);

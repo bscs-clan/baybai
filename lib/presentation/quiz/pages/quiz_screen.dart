@@ -99,13 +99,22 @@ class _QuizScreenState extends State<QuizScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                Text("Hint", style: AppTextStyles.bigbody),
+                Text(
+                  "Hint",
+                  style: AppTextStyles.bigbody.copyWith(
+                    color: isDarkMode ? AppColors.darkText : AppColors.text,
+                  ),
+                ),
 
                 const SizedBox(height: 10),
 
                 Text(
                   question.hint,
-                  style: AppTextStyles.body,
+                  style: AppTextStyles.body.copyWith(
+                    color: isDarkMode
+                        ? AppColors.darkTextGrey
+                        : AppColors.textGrey,
+                  ),
                   textAlign: TextAlign.center,
                 ),
 
@@ -184,13 +193,22 @@ class _QuizScreenState extends State<QuizScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                Text("Quiz Completed!", style: AppTextStyles.bigbody),
+                Text(
+                  "Quiz Completed!",
+                  style: AppTextStyles.bigbody.copyWith(
+                    color: isDarkMode ? AppColors.darkText : AppColors.text,
+                  ),
+                ),
 
                 const SizedBox(height: 10),
 
                 Text(
                   "Score: $_score / ${sampleQuestions.length}",
-                  style: AppTextStyles.body,
+                  style: AppTextStyles.body.copyWith(
+                    color: isDarkMode
+                        ? AppColors.darkTextGrey
+                        : AppColors.textGrey,
+                  ),
                 ),
 
                 const SizedBox(height: 30),
@@ -273,12 +291,16 @@ class _QuizScreenState extends State<QuizScreen> {
                 children: [
                   Text(
                     "Question ${_currentQuestionIndex + 1}/${sampleQuestions.length}",
-                    style: AppTextStyles.body,
+                    style: AppTextStyles.body.copyWith(
+                      color: isDarkMode ? AppColors.darkText : AppColors.text,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   Text(
                     widget.mode.hasTimer ? _formatTime() : "--:--",
-                    style: AppTextStyles.body,
+                    style: AppTextStyles.body.copyWith(
+                      color: isDarkMode ? AppColors.darkText : AppColors.text,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -291,7 +313,9 @@ class _QuizScreenState extends State<QuizScreen> {
                 children: [
                   Text(
                     "What is this symbol?",
-                    style: AppTextStyles.bigbody,
+                    style: AppTextStyles.bigbody.copyWith(
+                      color: isDarkMode ? AppColors.darkText : AppColors.text,
+                    ),
                     textAlign: TextAlign.center,
                   ),
 
@@ -356,7 +380,11 @@ class _QuizScreenState extends State<QuizScreen> {
                                 Center(
                                   child: Text(
                                     option,
-                                    style: AppTextStyles.body,
+                                    style: AppTextStyles.body.copyWith(
+                                      color: isDarkMode
+                                          ? AppColors.darkText
+                                          : AppColors.text,
+                                    ),
                                   ),
                                 ),
                                 if (_isAnswered)
