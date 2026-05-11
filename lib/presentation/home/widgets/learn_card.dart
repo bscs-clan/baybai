@@ -4,7 +4,18 @@ import "package:baybai/core/configs/theme/text.dart";
 import "package:baybai/common/components/button.dart";
 
 class LearnCard extends StatelessWidget {
-  const LearnCard({super.key});
+  final String lessonNumber;
+  final String title;
+  final int? lessonId;
+  final VoidCallback? onTap;
+
+  const LearnCard({
+    super.key,
+    required this.lessonNumber,
+    required this.title,
+    this.lessonId,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -23,14 +34,14 @@ class LearnCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Lesson 1",
+            lessonNumber,
             style: AppTextStyles.body.copyWith(
               color: isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey,
             ),
           ),
           const SizedBox(height: 6),
           Text(
-            "Baybayin Basics",
+            title,
             style: AppTextStyles.bigbody.copyWith(
               color: isDarkMode ? AppColors.darkText : AppColors.text,
             ),
@@ -38,9 +49,14 @@ class LearnCard extends StatelessWidget {
           const SizedBox(height: 24),
           Button(
             label: "Start Lesson",
-            onTap: () {
-              Navigator.pushNamed(context, "/lesson");
-            },
+            onTap: onTap ??
+                () {
+                  Navigator.pushNamed(
+                    context,
+                    "/lesson",
+                    arguments: lessonId ?? 1,
+                  );
+                },
             type: ButtonType.primary,
             rightIconPath: "assets/icons/arrow-right-up.svg",
           ),

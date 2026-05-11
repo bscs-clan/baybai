@@ -17,7 +17,23 @@ class TabLearn extends StatelessWidget {
           children: [
             LearnHeader(userName: "Deobert"),
             SizedBox(height: 24),
-            LearnCard(),
+            LearnCard(
+              lessonNumber: "Lesson 1",
+              title: "Baybayin Basics",
+              lessonId: 1,
+            ),
+            SizedBox(height: 16),
+            LearnCard(
+              lessonNumber: "Lesson 2",
+              title: "Understanding Sounds",
+              lessonId: 2,
+            ),
+            SizedBox(height: 16),
+            LearnCard(
+              lessonNumber: "Lesson 3",
+              title: "The Kudlit Mark",
+              lessonId: 3,
+            ),
             SizedBox(height: 32),
             ExploreSection(),
           ],

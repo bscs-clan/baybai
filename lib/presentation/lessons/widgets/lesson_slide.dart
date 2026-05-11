@@ -1,6 +1,7 @@
 import "package:flutter/gestures.dart";
 import "package:flutter/material.dart";
 import "package:flutter_svg/flutter_svg.dart";
+import "package:google_fonts/google_fonts.dart";
 import "package:baybai/core/configs/theme/colors.dart";
 import "package:baybai/core/configs/theme/text.dart";
 import "package:baybai/presentation/lessons/models/lesson_content.dart";
@@ -29,30 +30,44 @@ class _LessonSlideState extends State<LessonSlide> {
 
   String _getOptionLabel(String option) {
     switch (option) {
-      case "\u1700":
-        return "A";
-      case "\u1701":
-        return "I / E";
-      case "\u1702":
-        return "O / U";
-      case "\u1703":
-        return "KA";
-      case "\u170A":
-        return "BA";
-      case "\u170B":
-        return "MA";
-      default:
-        return "";
+      // Baybayin to Roman
+      case "\u1700": return "A";
+      case "\u1701": return "I / E";
+      case "\u1702": return "O / U";
+      case "\u1703": return "KA";
+      case "\u170A": return "BA";
+      case "\u170B": return "MA";
+      // Roman to Baybayin
+      case "A": return "\u1700";
+      case "I": return "\u1701";
+      case "E": return "\u1701";
+      case "O": return "\u1702";
+      case "U": return "\u1702";
+      case "KA": return "\u1703";
+      case "BA": return "\u170A";
+      case "MA": return "\u170B";
+      case "MI": return "\u170B\u1732";
+      case "MO": return "\u170B\u1733";
+      default: return "";
     }
   }
 
   @override
   Widget build(BuildContext context) {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final descriptionStyle = AppTextStyles.body.copyWith(
-      color: isDarkMode ? AppColors.white : AppColors.dark,
-      height: 1.5,
-    );
+    final descriptionStyle = (widget.lesson.descriptionFontFamily != null &&
+            widget.lesson.descriptionFontFamily != 'Baybayin')
+        ? GoogleFonts.getFont(
+            widget.lesson.descriptionFontFamily!,
+            fontSize: widget.lesson.descriptionFontSize ?? 14,
+            color: isDarkMode ? AppColors.white : AppColors.dark,
+            height: 1.5,
+          )
+        : AppTextStyles.body.copyWith(
+            color: isDarkMode ? AppColors.white : AppColors.dark,
+            fontSize: widget.lesson.descriptionFontSize,
+            height: 1.5,
+          );
 
     // Clear old recognizers before building new ones
     for (final recognizer in _recognizers) {
@@ -96,9 +111,18 @@ class _LessonSlideState extends State<LessonSlide> {
               ],
               Text(
                 widget.lesson.title,
-                style: AppTextStyles.bigbody.copyWith(
-                  color: isDarkMode ? AppColors.darkText : AppColors.text,
-                ),
+                style: (widget.lesson.titleFontFamily != null &&
+                        widget.lesson.titleFontFamily != 'Baybayin')
+                    ? GoogleFonts.getFont(
+                        widget.lesson.titleFontFamily!,
+                        fontSize: widget.lesson.titleFontSize ?? 18,
+                        fontWeight: FontWeight.w600,
+                        color: isDarkMode ? AppColors.darkText : AppColors.text,
+                      )
+                    : AppTextStyles.bigbody.copyWith(
+                        color: isDarkMode ? AppColors.darkText : AppColors.text,
+                        fontSize: widget.lesson.titleFontSize,
+                      ),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -119,11 +143,18 @@ class _LessonSlideState extends State<LessonSlide> {
             const SizedBox(height: 32),
             Text(
               widget.lesson.baybayinText,
-              style: TextStyle(
-                fontFamily: 'Baybayin',
-                fontSize: 40,
-                color: isDarkMode ? AppColors.darkText : AppColors.text,
-              ),
+              style: (widget.lesson.baybayinFontFamily != null &&
+                      widget.lesson.baybayinFontFamily != 'Baybayin')
+                  ? GoogleFonts.getFont(
+                      widget.lesson.baybayinFontFamily!,
+                      fontSize: widget.lesson.baybayinFontSize ?? 40,
+                      color: isDarkMode ? AppColors.darkText : AppColors.text,
+                    )
+                  : TextStyle(
+                      fontFamily: widget.lesson.baybayinFontFamily ?? 'Baybayin',
+                      fontSize: widget.lesson.baybayinFontSize ?? 40,
+                      color: isDarkMode ? AppColors.darkText : AppColors.text,
+                    ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -169,15 +200,28 @@ class _LessonSlideState extends State<LessonSlide> {
                         child: Center(
                           child: Text(
                             option,
-                            style: TextStyle(
-                              fontFamily: 'Baybayin',
-                              fontSize: 32,
-                              color: isSelected
-                                  ? Colors.white
-                                  : (isDarkMode
-                                        ? AppColors.white
-                                        : AppColors.dark),
-                            ),
+                            style: (widget.lesson.optionFontFamily != null &&
+                                    widget.lesson.optionFontFamily != 'Baybayin')
+                                ? GoogleFonts.getFont(
+                                    widget.lesson.optionFontFamily!,
+                                    fontSize: widget.lesson.optionFontSize ?? 32,
+                                    fontWeight: FontWeight.bold,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : (isDarkMode
+                                              ? AppColors.white
+                                              : AppColors.dark),
+                                  )
+                                : TextStyle(
+                                    fontFamily: widget.lesson.optionFontFamily ?? 'Baybayin',
+                                    fontSize: widget.lesson.optionFontSize ?? 32,
+                                    fontWeight: FontWeight.bold,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : (isDarkMode
+                                              ? AppColors.white
+                                              : AppColors.dark),
+                                  ),
                           ),
                         ),
                       ),
@@ -185,11 +229,25 @@ class _LessonSlideState extends State<LessonSlide> {
                     if (isSelected) ...[
                       const SizedBox(height: 8),
                       Text(
-                        _getOptionLabel(option),
-                        style: AppTextStyles.body.copyWith(
-                          color: isCorrect ? Colors.green : Colors.red,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        (widget.lesson.optionLabels != null &&
+                                widget.lesson.optionLabels!.length ==
+                                    widget.lesson.options!.length)
+                            ? widget.lesson.optionLabels![index]
+                            : _getOptionLabel(option),
+                        style: (widget.lesson.labelFontFamily != null &&
+                                widget.lesson.labelFontFamily != 'Baybayin')
+                            ? GoogleFonts.getFont(
+                                widget.lesson.labelFontFamily!,
+                                fontSize: widget.lesson.labelFontSize ?? 14,
+                                color: isCorrect ? Colors.green : Colors.red,
+                                fontWeight: FontWeight.bold,
+                              )
+                            : AppTextStyles.body.copyWith(
+                                color: isCorrect ? Colors.green : Colors.red,
+                                fontWeight: FontWeight.bold,
+                                fontSize: widget.lesson.labelFontSize,
+                                fontFamily: widget.lesson.labelFontFamily ?? 'Poppins',
+                              ),
                       ),
                     ],
                   ],
