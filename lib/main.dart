@@ -17,6 +17,7 @@ import "package:baybai/presentation/settings/pages/settings.dart";
 import "package:baybai/presentation/lessons/pages/lesson_page.dart";
 import "package:baybai/presentation/characters/pages/characters_page.dart";
 import "package:baybai/presentation/practice/pages/practice_page.dart";
+import "package:baybai/presentation/ocr/pages/ocr_page.dart";
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -56,6 +57,7 @@ class MyApp extends StatelessWidget {
             "/flashcard": (context) => const FlashcardPage(),
             "/characters": (context) => const CharactersPage(),
             "/practice": (context) => const PracticePage(),
+            "/ocr": (context) => const OCRPage(),
           },
         ),
       ),

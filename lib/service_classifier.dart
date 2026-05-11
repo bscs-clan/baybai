@@ -428,6 +428,7 @@ List<Detection> _processFrame(_InferenceRequest req) {
             rect.bottom / h,
           ),
           label: label,
+          transliteratedText: label, // For characters, same as label
           confidence: maxConf,
         ),
       );

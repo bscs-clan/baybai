@@ -3,31 +3,35 @@ import "package:flutter/material.dart";
 import "package:camera/camera.dart";
 import "package:baybai/core/models/detection.dart";
 import "package:baybai/service_camera.dart";
-import "package:baybai/service_classifier.dart";
+import "package:baybai/service_ocr.dart";
 import "package:baybai/presentation/home/widgets/detection_overlay.dart";
 import "package:loading_animation_widget/loading_animation_widget.dart";
 
 class CameraPreviewWidget extends StatefulWidget {
   final VoidCallback? onInitialized;
   final ValueNotifier<List<Detection>> detectionNotifier;
+  final bool liveEnabled;
 
   CameraPreviewWidget({
     super.key,
     this.onInitialized,
+    this.liveEnabled = true,
     ValueNotifier<List<Detection>>? detectionNotifier,
   }) : detectionNotifier = detectionNotifier ?? ValueNotifier([]);
 
   @override
-  State<CameraPreviewWidget> createState() => _CameraPreviewWidgetState();
+  State<CameraPreviewWidget> createState() => CameraPreviewWidgetState();
 }
 
-class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
+class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
   final CameraService _cameraService = CameraService();
-  final ClassifierService _classifier = ClassifierService();
+  final OCRService _ocrService = OCRService();
 
   bool _isInitialized = false;
 
   bool _isProcessingFrame = false;
+  bool _isStreaming = false;
+  DateTime? _lastProcessTime;
 
   @override
   void initState() {
@@ -36,7 +40,7 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
   }
 
   Future<void> _initAll() async {
-    await Future.wait([_classifier.init(), _initCamera()]);
+    await Future.wait([_ocrService.initialize(), _initCamera()]);
   }
 
   Future<void> _initCamera() async {
@@ -45,7 +49,7 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
 
       if (!mounted) return;
 
-      await _cameraService.controller!.startImageStream(_onCameraImage);
+      await _startStream();
 
       setState(() => _isInitialized = true);
       widget.onInitialized?.call();
@@ -58,12 +62,46 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
     }
   }
 
-  void _onCameraImage(CameraImage image) {
-    if (_isProcessingFrame || !_classifier.isReady) return;
-    _isProcessingFrame = true;
+  Future<void> _startStream() async {
+    final controller = _cameraService.controller;
+    if (controller == null ||
+        !controller.value.isInitialized ||
+        controller.value.isStreamingImages) {
+      _isStreaming = controller?.value.isStreamingImages ?? false;
+      return;
+    }
 
-    _classifier
-        .detectInImage(image)
+    await controller.startImageStream(_onCameraImage);
+    _isStreaming = true;
+  }
+
+  Future<void> _stopStream() async {
+    final controller = _cameraService.controller;
+    if (controller == null ||
+        !controller.value.isInitialized ||
+        !controller.value.isStreamingImages) {
+      _isStreaming = false;
+      return;
+    }
+
+    await controller.stopImageStream();
+    _isStreaming = false;
+  }
+
+  void _onCameraImage(CameraImage image) {
+    if (!widget.liveEnabled) return;
+
+    final now = DateTime.now();
+    if (_isProcessingFrame ||
+        (_lastProcessTime != null &&
+            now.difference(_lastProcessTime!).inMilliseconds < 250)) {
+      return;
+    }
+    _isProcessingFrame = true;
+    _lastProcessTime = now;
+
+    _ocrService
+        .processFrame(image)
         .then((detections) {
           if (mounted) {
             widget.detectionNotifier.value = detections;
@@ -77,9 +115,48 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
         });
   }
 
+  Future<void> capturePhoto() async {
+    final controller = _cameraService.controller;
+    if (!_isInitialized ||
+        controller == null ||
+        !controller.value.isInitialized ||
+        controller.value.isTakingPicture) {
+      return;
+    }
+
+    final wasStreaming = _isStreaming || controller.value.isStreamingImages;
+    if (wasStreaming) await _stopStream();
+
+    try {
+      final file = await controller.takePicture();
+      final detections = await _ocrService.processPhoto(file.path);
+      if (mounted) {
+        widget.detectionNotifier.value = detections;
+      }
+    } catch (e) {
+      debugPrint("[Camera] Capture OCR error: $e");
+    } finally {
+      if (mounted && wasStreaming) {
+        await _startStream();
+      }
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant CameraPreviewWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.liveEnabled != widget.liveEnabled) {
+      _isProcessingFrame = false;
+      if (!widget.liveEnabled) {
+        widget.detectionNotifier.value = [];
+      }
+    }
+  }
+
   @override
   void dispose() {
     _cameraService.dispose();
+    _ocrService.dispose();
     super.dispose();
   }
 
@@ -110,16 +187,29 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
             fit: StackFit.expand,
             children: [
               CameraPreview(controller),
-              ValueListenableBuilder<List<Detection>>(
-                valueListenable: widget.detectionNotifier,
-                builder: (context, detections, _) {
-                  return DetectionOverlay(detections: detections);
-                },
+              DetectionOverlayLayer(
+                detectionNotifier: widget.detectionNotifier,
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class DetectionOverlayLayer extends StatelessWidget {
+  final ValueNotifier<List<Detection>> detectionNotifier;
+
+  const DetectionOverlayLayer({super.key, required this.detectionNotifier});
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<List<Detection>>(
+      valueListenable: detectionNotifier,
+      builder: (context, detections, _) {
+        return DetectionOverlay(detections: detections);
+      },
     );
   }
 }
