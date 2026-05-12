@@ -1,3 +1,4 @@
+import "dart:math" as math;
 import "dart:ui" as ui;
 
 import "package:baybai/core/models/detection.dart";
@@ -27,8 +28,6 @@ class _DetectionPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     for (final det in detections) {
-      if (det.confidence <= 0.7) continue;
-
       final rect = Rect.fromLTRB(
         det.box.left * size.width,
         det.box.top * size.height,
@@ -64,13 +63,23 @@ class _DetectionPainter extends CustomPainter {
         Paint()..color = Colors.black.withValues(alpha: 0.48),
       );
 
-      final painter = TextPainter(
-        text: _buildDebugText(det),
-        textAlign: TextAlign.center,
-        textDirection: TextDirection.ltr,
-        maxLines: 3,
-        ellipsis: "...",
-      )..layout(maxWidth: (rect.width - 12).clamp(1.0, double.infinity));
+      final horizontalInset = math.max(8.0, rect.width * 0.04);
+      final baybayinFontSize = math.max(14.0, rect.height * 0.30);
+      final latinFontSize = math.max(12.0, rect.height * 0.23);
+
+      final painter =
+          TextPainter(
+            text: _buildDebugText(det, baybayinFontSize, latinFontSize),
+            textAlign: TextAlign.center,
+            textDirection: TextDirection.ltr,
+            maxLines: 3,
+            ellipsis: "...",
+          )..layout(
+            maxWidth: (rect.width - horizontalInset * 2).clamp(
+              1.0,
+              double.infinity,
+            ),
+          );
 
       painter.paint(
         canvas,
@@ -84,7 +93,11 @@ class _DetectionPainter extends CustomPainter {
     }
   }
 
-  TextSpan _buildDebugText(Detection det) {
+  TextSpan _buildDebugText(
+    Detection det,
+    double baybayinFontSize,
+    double latinFontSize,
+  ) {
     final transliterated = det.transliteratedText.isNotEmpty
         ? det.transliteratedText
         : det.label;
@@ -96,16 +109,15 @@ class _DetectionPainter extends CustomPainter {
           style: const TextStyle(
             color: Colors.white,
             fontFamily: "Baybayin",
-            fontSize: 20,
             fontWeight: FontWeight.w700,
             height: 1.05,
-          ),
+          ).copyWith(fontSize: baybayinFontSize),
         ),
         TextSpan(
           text: "\n$transliterated",
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
-            fontSize: 16,
+            fontSize: latinFontSize,
             fontWeight: FontWeight.w800,
             height: 1.15,
           ),

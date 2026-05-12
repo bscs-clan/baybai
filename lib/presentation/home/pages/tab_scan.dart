@@ -21,6 +21,7 @@ class _TabScanState extends State<TabScan> {
 
   bool _isCameraReady = false;
   bool _isCapturing = false;
+  bool _isViewingCapture = false;
   _ScanMode _mode = _ScanMode.live;
 
   @override
@@ -40,31 +41,45 @@ class _TabScanState extends State<TabScan> {
           onInitialized: () {
             setState(() => _isCameraReady = true);
           },
+          onPhotoPreviewChanged: (isViewingCapture) {
+            if (!mounted || _isViewingCapture == isViewingCapture) return;
+            setState(() => _isViewingCapture = isViewingCapture);
+          },
         ),
-        if (_isCameraReady)
+        if (_isCameraReady && !_isViewingCapture)
+          Positioned(
+            left: 24,
+            right: 24,
+            top: MediaQuery.paddingOf(context).top + 14,
+            child: Center(
+              child: _ModeSwitch(
+                mode: _mode,
+                onChanged: (mode) {
+                  if (_mode == mode) return;
+                  setState(() => _mode = mode);
+                },
+              ),
+            ),
+          ),
+        if (_isCameraReady && !_isViewingCapture && _mode == _ScanMode.photo)
           Positioned(
             left: 24,
             right: 24,
             bottom: 145,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _ModeSwitch(
-                  mode: _mode,
-                  onChanged: (mode) {
-                    if (_mode == mode) return;
-                    setState(() => _mode = mode);
-                  },
-                ),
-                const SizedBox(height: 40),
-                CustomIconButton(
-                  onPressed: _handleCapture,
-                  width: 64,
-                  height: 64,
-                  isActive: !_isCapturing,
-                ),
-              ],
+            child: Center(
+              child: CustomIconButton(
+                onPressed: _handleCapture,
+                width: 64,
+                height: 64,
+                isActive: !_isCapturing,
+              ),
             ),
+          ),
+        if (_isCameraReady && _isViewingCapture)
+          Positioned(
+            top: MediaQuery.paddingOf(context).top + 14,
+            left: 20,
+            child: _CloseCaptureButton(onPressed: _handleCloseCapture),
           ),
       ],
     );
@@ -81,6 +96,38 @@ class _TabScanState extends State<TabScan> {
         setState(() => _isCapturing = false);
       }
     }
+  }
+
+  Future<void> _handleCloseCapture() async {
+    await _cameraKey.currentState?.closeCapturedPhoto();
+    if (mounted && _isViewingCapture) {
+      setState(() => _isViewingCapture = false);
+    }
+  }
+}
+
+class _CloseCaptureButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const _CloseCaptureButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        color: Colors.black.withValues(alpha: 0.55),
+        shape: RoundedSuperellipseBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+      child: IconButton(
+        onPressed: onPressed,
+        icon: const Icon(Icons.close),
+        color: Colors.white,
+        iconSize: 24,
+        tooltip: "Close photo",
+      ),
+    );
   }
 }
 

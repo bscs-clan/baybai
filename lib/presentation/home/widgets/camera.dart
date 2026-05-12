@@ -13,12 +13,14 @@ import "package:loading_animation_widget/loading_animation_widget.dart";
 
 class CameraPreviewWidget extends StatefulWidget {
   final VoidCallback? onInitialized;
+  final ValueChanged<bool>? onPhotoPreviewChanged;
   final ValueNotifier<List<Detection>> detectionNotifier;
   final bool liveEnabled;
 
   CameraPreviewWidget({
     super.key,
     this.onInitialized,
+    this.onPhotoPreviewChanged,
     this.liveEnabled = true,
     ValueNotifier<List<Detection>>? detectionNotifier,
   }) : detectionNotifier = detectionNotifier ?? ValueNotifier([]);
@@ -38,6 +40,8 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
   DateTime? _lastProcessTime;
   String? _capturedPhotoPath;
   Size? _capturedPhotoSize;
+
+  bool get isShowingCapturedPhoto => _capturedPhotoPath != null;
 
   @override
   void initState() {
@@ -141,11 +145,12 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
           _capturedPhotoPath = file.path;
           _capturedPhotoSize = photoSize;
         });
+        widget.onPhotoPreviewChanged?.call(true);
         widget.detectionNotifier.value = [];
       }
 
       final detections = await _ocrService.processPhoto(file.path);
-      if (mounted) {
+      if (mounted && _capturedPhotoPath == file.path) {
         widget.detectionNotifier.value = detections;
       }
     } catch (e) {
@@ -154,6 +159,23 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
       if (mounted && wasStreaming && widget.liveEnabled) {
         await _startStream();
       }
+    }
+  }
+
+  Future<void> closeCapturedPhoto() async {
+    if (_capturedPhotoPath == null) return;
+
+    if (mounted) {
+      setState(() {
+        _capturedPhotoPath = null;
+        _capturedPhotoSize = null;
+      });
+      widget.onPhotoPreviewChanged?.call(false);
+      widget.detectionNotifier.value = [];
+    }
+
+    if (widget.liveEnabled) {
+      await _startStream();
     }
   }
 
@@ -187,6 +209,7 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
           _capturedPhotoPath = null;
           _capturedPhotoSize = null;
         });
+        widget.onPhotoPreviewChanged?.call(false);
       }
       await _startStream();
     } else {

@@ -5,10 +5,12 @@ const int _detInputSize = 640;
 const double _detConfThreshold = 0.3;
 const double _detNmsThreshold = 0.3;
 const int _detMinArea = 24;
-const double _detInlinePaddingRatio = 0.22;
-const double _detCrossPaddingRatio = 0.55;
-const double _detMinPaddingPx = 20;
-const double _detMaxPaddingPx = 84;
+const double _detInlinePaddingRatio = 0.9;
+const double _detCrossPaddingRatio = 0.65;
+const double _detMinInlinePaddingPx = 36;
+const double _detMaxInlinePaddingPx = 180;
+const double _detMinCrossPaddingPx = 24;
+const double _detMaxCrossPaddingPx = 110;
 const double _detRotationDeadZoneRadians = 0.05235987755982989; // 3 deg
 const double _detMinElongationForRotation = 1.25;
 const List<double> _detMean = [0.485, 0.456, 0.406];
@@ -629,10 +631,10 @@ class _OcrWorker {
 
     final lineHeight = math.max(rawHeight, 1.0);
     final inlinePadding = (lineHeight * _detInlinePaddingRatio)
-        .clamp(_detMinPaddingPx, _detMaxPaddingPx)
+        .clamp(_detMinInlinePaddingPx, _detMaxInlinePaddingPx)
         .toDouble();
     final crossPadding = (lineHeight * _detCrossPaddingRatio)
-        .clamp(_detMinPaddingPx, _detMaxPaddingPx)
+        .clamp(_detMinCrossPaddingPx, _detMaxCrossPaddingPx)
         .toDouble();
 
     final centerU = (minU + maxU) / 2;
