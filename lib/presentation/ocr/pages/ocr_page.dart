@@ -67,9 +67,7 @@ class _OCRPageState extends State<OCRPage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     if (_controller == null || !_controller!.value.isInitialized) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -93,19 +91,22 @@ class _OCRPageState extends State<OCRPage> with WidgetsBindingObserver {
       top: detection.box.top * MediaQuery.of(context).size.height,
       width: detection.box.width * MediaQuery.of(context).size.width,
       height: detection.box.height * MediaQuery.of(context).size.height,
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.red, width: 2),
-          color: Colors.red.withValues(alpha: 0.3),
-        ),
-        child: Align(
-          alignment: Alignment.bottomCenter,
-          child: Container(
-            color: Colors.black.withValues(alpha: 0.7),
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-            child: Text(
-              detection.transliteratedText,
-              style: const TextStyle(color: Colors.white, fontSize: 12),
+      child: Transform.rotate(
+        angle: detection.rotation,
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.red, width: 2),
+            color: Colors.red.withValues(alpha: 0.3),
+          ),
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              color: Colors.black.withValues(alpha: 0.7),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              child: Text(
+                detection.transliteratedText,
+                style: const TextStyle(color: Colors.white, fontSize: 12),
+              ),
             ),
           ),
         ),

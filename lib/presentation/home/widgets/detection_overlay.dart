@@ -43,6 +43,14 @@ class _DetectionPainter extends CustomPainter {
       );
 
       canvas.save();
+      if (det.rotation != 0) {
+        final center = rect.center;
+        canvas.translate(center.dx, center.dy);
+        canvas.rotate(det.rotation);
+        canvas.translate(-center.dx, -center.dy);
+      }
+
+      canvas.save();
       canvas.clipRRect(roundedRect);
       canvas.saveLayer(
         rect,
@@ -71,6 +79,7 @@ class _DetectionPainter extends CustomPainter {
           rect.top + (rect.height - painter.height) / 2,
         ),
       );
+      canvas.restore();
       canvas.restore();
     }
   }

@@ -7,7 +7,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
-import 'package:baybai/core/utils/baybayin_transliterator.dart';
+import 'package:baybai/core/utils/transliterator.dart';
 import 'package:baybai/core/models/detection.dart';
 
 class OCRService {
@@ -24,7 +24,13 @@ class OCRService {
   static const double _detConfThreshold = 0.3;
   static const double _detNmsThreshold = 0.3;
   static const int _detMinArea = 24;
-  static const int _detBoxPadding = 4;
+  static const double _detInlinePaddingRatio = 0.22;
+  static const double _detCrossPaddingRatio = 0.55;
+  static const double _detMinPaddingPx = 10 * 2;
+  static const double _detMaxPaddingPx = 42 * 2;
+  static const double _detRotationDeadZoneRadians =
+      0.05235987755982989; // 3 deg
+  static const double _detMinElongationForRotation = 1.25;
   static const List<double> _detMean = [0.485, 0.456, 0.406];
   static const List<double> _detStd = [0.229, 0.224, 0.225];
 
@@ -65,6 +71,8 @@ class OCRService {
 
     debugPrint('[OCRService] Initializing models...');
 
+    await Transliterator.ensureInitialized();
+
     // Load detection model
     final detModelBuffer = await rootBundle.load(
       'assets/models/ocr_det_fp16.tflite',
@@ -96,28 +104,21 @@ class OCRService {
     final detections = await _runDetection(image);
     final results = <Detection>[];
 
-    for (final box in detections) {
-      final cropped = _cropImage(image, box);
+    for (final region in detections) {
+      final cropped = _cropTextRegion(image, region);
       final recognition = await _runRecognition(cropped);
       if (!_isReliableBaybayin(recognition)) continue;
 
       final text = recognition.text;
-      final transliterated = BaybayinTransliterator.transliterate(text);
-
-      // Normalize box to 0..1
-      final normalizedBox = Rect.fromLTRB(
-        box.left / image.width,
-        box.top / image.height,
-        box.right / image.width,
-        box.bottom / image.height,
-      );
+      final transliterated = _toFilipino(text);
 
       results.add(
         Detection(
-          box: normalizedBox,
+          box: _normalizeRegionBox(region, image.width, image.height),
           label: text,
           transliteratedText: transliterated,
           confidence: recognition.confidence,
+          rotation: region.angleRadians,
         ),
       );
     }
@@ -136,29 +137,27 @@ class OCRService {
     final boxes = await _runDetection(image);
     final results = <Detection>[];
 
-    for (final box in boxes) {
-      final cropped = _cropImage(image, box);
+    for (final region in boxes) {
+      final cropped = _cropTextRegion(image, region);
       final recognition = await _runRecognition(cropped);
       if (!_isReliableBaybayin(recognition)) continue;
 
       results.add(
         Detection(
-          box: Rect.fromLTRB(
-            box.left / image.width,
-            box.top / image.height,
-            box.right / image.width,
-            box.bottom / image.height,
-          ),
+          box: _normalizeRegionBox(region, image.width, image.height),
           label: recognition.text,
-          transliteratedText: BaybayinTransliterator.transliterate(
-            recognition.text,
-          ),
+          transliteratedText: _toFilipino(recognition.text),
           confidence: recognition.confidence,
+          rotation: region.angleRadians,
         ),
       );
     }
 
     return results;
+  }
+
+  String _toFilipino(String baybayinText) {
+    return Transliterator.toFilipino(baybayinText);
   }
 
   img.Image _convertCameraImageToImage(CameraImage cameraImage) {
@@ -246,7 +245,7 @@ class OCRService {
     return rotated;
   }
 
-  Future<List<Rect>> _runDetection(img.Image image) async {
+  Future<List<_TextRegion>> _runDetection(img.Image image) async {
     // Resize image to model input size
     final resized = img.copyResize(
       image,
@@ -279,7 +278,7 @@ class OCRService {
     return _parseDetectionMap(output, outputShape, image.width, image.height);
   }
 
-  List<Rect> _parseDetectionMap(
+  List<_TextRegion> _parseDetectionMap(
     Float32List output,
     List<int> outputShape,
     int sourceWidth,
@@ -287,8 +286,10 @@ class OCRService {
   ) {
     final mapHeight = outputShape.length >= 3 ? outputShape[1] : _detInputSize;
     final mapWidth = outputShape.length >= 3 ? outputShape[2] : _detInputSize;
+    final sourceScaleX = sourceWidth / mapWidth;
+    final sourceScaleY = sourceHeight / mapHeight;
     final visited = Uint8List(mapWidth * mapHeight);
-    final boxes = <Rect>[];
+    final regions = <_TextRegion>[];
     final queue = Int32List(mapWidth * mapHeight);
 
     for (int y = 0; y < mapHeight; y++) {
@@ -304,6 +305,11 @@ class OCRService {
         var maxY = y;
         var area = 0;
         var confidenceSum = 0.0;
+        var sumX = 0.0;
+        var sumY = 0.0;
+        var sumXX = 0.0;
+        var sumYY = 0.0;
+        var sumXY = 0.0;
 
         queue[tail++] = start;
         visited[start] = 1;
@@ -314,6 +320,13 @@ class OCRService {
           final cy = index ~/ mapWidth;
           area++;
           confidenceSum += output[index];
+          final sourceX = (cx + 0.5) * sourceScaleX;
+          final sourceY = (cy + 0.5) * sourceScaleY;
+          sumX += sourceX;
+          sumY += sourceY;
+          sumXX += sourceX * sourceX;
+          sumYY += sourceY * sourceY;
+          sumXY += sourceX * sourceY;
 
           if (cx < minX) minX = cx;
           if (cx > maxX) maxX = cx;
@@ -342,38 +355,133 @@ class OCRService {
         if (area < _detMinArea || meanConfidence < _detConfThreshold) continue;
         if (boxWidth < 4 || boxHeight < 4) continue;
 
-        final left =
-            ((minX - _detBoxPadding).clamp(0, mapWidth - 1) / mapWidth) *
-            sourceWidth;
-        final top =
-            ((minY - _detBoxPadding).clamp(0, mapHeight - 1) / mapHeight) *
-            sourceHeight;
-        final right =
-            ((maxX + _detBoxPadding).clamp(0, mapWidth) / mapWidth) *
-            sourceWidth;
-        final bottom =
-            ((maxY + _detBoxPadding).clamp(0, mapHeight) / mapHeight) *
-            sourceHeight;
-
-        boxes.add(Rect.fromLTRB(left, top, right, bottom));
+        final region = _buildTextRegion(
+          queue: queue,
+          length: tail,
+          mapWidth: mapWidth,
+          sourceScaleX: sourceScaleX,
+          sourceScaleY: sourceScaleY,
+          area: area,
+          meanConfidence: meanConfidence,
+          sumX: sumX,
+          sumY: sumY,
+          sumXX: sumXX,
+          sumYY: sumYY,
+          sumXY: sumXY,
+        );
+        if (region != null) regions.add(region);
       }
     }
 
-    boxes.sort((a, b) => (b.width * b.height).compareTo(a.width * a.height));
-    return _nonMaxSuppression(boxes).take(12).toList();
+    regions.sort((a, b) => b.area.compareTo(a.area));
+    return _nonMaxSuppression(regions).take(12).toList();
   }
 
-  List<Rect> _nonMaxSuppression(List<Rect> boxes) {
-    final kept = <Rect>[];
-    for (final box in boxes) {
+  _TextRegion? _buildTextRegion({
+    required Int32List queue,
+    required int length,
+    required int mapWidth,
+    required double sourceScaleX,
+    required double sourceScaleY,
+    required int area,
+    required double meanConfidence,
+    required double sumX,
+    required double sumY,
+    required double sumXX,
+    required double sumYY,
+    required double sumXY,
+  }) {
+    if (area <= 0 || length <= 0) return null;
+
+    final meanX = sumX / area;
+    final meanY = sumY / area;
+    final covXX = (sumXX / area) - (meanX * meanX);
+    final covYY = (sumYY / area) - (meanY * meanY);
+    final covXY = (sumXY / area) - (meanX * meanY);
+
+    var angle = _normalizeTextAngle(0.5 * math.atan2(2 * covXY, covXX - covYY));
+
+    final trace = covXX + covYY;
+    final delta = math.sqrt(
+      math.max(0.0, (covXX - covYY) * (covXX - covYY) + 4 * covXY * covXY),
+    );
+    final major = math.max((trace + delta) / 2, 0.000001);
+    final minor = math.max((trace - delta) / 2, 0.000001);
+    final elongation = math.sqrt(major / minor);
+    if (elongation < _detMinElongationForRotation) {
+      angle = 0;
+    }
+
+    final cosA = math.cos(angle);
+    final sinA = math.sin(angle);
+    var minU = double.infinity;
+    var maxU = -double.infinity;
+    var minV = double.infinity;
+    var maxV = -double.infinity;
+
+    for (int i = 0; i < length; i++) {
+      final index = queue[i];
+      final cx = index % mapWidth;
+      final cy = index ~/ mapWidth;
+      final sourceX = (cx + 0.5) * sourceScaleX;
+      final sourceY = (cy + 0.5) * sourceScaleY;
+      final u = sourceX * cosA + sourceY * sinA;
+      final v = -sourceX * sinA + sourceY * cosA;
+
+      if (u < minU) minU = u;
+      if (u > maxU) maxU = u;
+      if (v < minV) minV = v;
+      if (v > maxV) maxV = v;
+    }
+
+    final rawWidth = maxU - minU;
+    final rawHeight = maxV - minV;
+    if (rawWidth <= 0 || rawHeight <= 0) return null;
+
+    final lineHeight = math.max(rawHeight, 1.0);
+    final inlinePadding = (lineHeight * _detInlinePaddingRatio)
+        .clamp(_detMinPaddingPx, _detMaxPaddingPx)
+        .toDouble();
+    final crossPadding = (lineHeight * _detCrossPaddingRatio)
+        .clamp(_detMinPaddingPx, _detMaxPaddingPx)
+        .toDouble();
+
+    final centerU = (minU + maxU) / 2;
+    final centerV = (minV + maxV) / 2;
+
+    return _TextRegion(
+      centerX: centerU * cosA - centerV * sinA,
+      centerY: centerU * sinA + centerV * cosA,
+      width: rawWidth + inlinePadding * 2,
+      height: rawHeight + crossPadding * 2,
+      angleRadians: angle,
+      confidence: meanConfidence,
+    );
+  }
+
+  double _normalizeTextAngle(double angle) {
+    while (angle <= -math.pi / 2) {
+      angle += math.pi;
+    }
+    while (angle > math.pi / 2) {
+      angle -= math.pi;
+    }
+    return angle.abs() < _detRotationDeadZoneRadians ? 0 : angle;
+  }
+
+  List<_TextRegion> _nonMaxSuppression(List<_TextRegion> regions) {
+    final kept = <_TextRegion>[];
+    for (final region in regions) {
       var overlaps = false;
+      final bounds = region.axisAlignedBounds;
       for (final other in kept) {
-        if (_intersectionOverUnion(box, other) > _detNmsThreshold) {
+        if (_intersectionOverUnion(bounds, other.axisAlignedBounds) >
+            _detNmsThreshold) {
           overlaps = true;
           break;
         }
       }
-      if (!overlaps) kept.add(box);
+      if (!overlaps) kept.add(region);
     }
     return kept;
   }
@@ -389,13 +497,64 @@ class OCRService {
     return union <= 0 ? 0 : intersection / union;
   }
 
-  img.Image _cropImage(img.Image image, Rect box) {
-    final x = box.left.floor().clamp(0, image.width - 1).toInt();
-    final y = box.top.floor().clamp(0, image.height - 1).toInt();
-    final w = box.width.ceil().clamp(1, image.width - x).toInt();
-    final h = box.height.ceil().clamp(1, image.height - y).toInt();
+  Rect _normalizeRegionBox(
+    _TextRegion region,
+    int imageWidth,
+    int imageHeight,
+  ) {
+    final left = ((region.centerX - region.width / 2) / imageWidth)
+        .clamp(0.0, 1.0)
+        .toDouble();
+    final top = ((region.centerY - region.height / 2) / imageHeight)
+        .clamp(0.0, 1.0)
+        .toDouble();
+    final right = ((region.centerX + region.width / 2) / imageWidth)
+        .clamp(0.0, 1.0)
+        .toDouble();
+    final bottom = ((region.centerY + region.height / 2) / imageHeight)
+        .clamp(0.0, 1.0)
+        .toDouble();
 
-    return img.copyCrop(image, x: x, y: y, width: w, height: h);
+    return Rect.fromLTRB(
+      left,
+      top,
+      math.max(left, right),
+      math.max(top, bottom),
+    );
+  }
+
+  img.Image _cropTextRegion(img.Image image, _TextRegion region) {
+    final outputWidth = math.max(1, region.width.round());
+    final outputHeight = math.max(1, region.height.round());
+    final output = img.Image(
+      width: outputWidth,
+      height: outputHeight,
+      numChannels: image.numChannels <= 0 ? 3 : image.numChannels,
+    );
+
+    final cosA = math.cos(region.angleRadians);
+    final sinA = math.sin(region.angleRadians);
+    final halfWidth = (outputWidth - 1) / 2;
+    final halfHeight = (outputHeight - 1) / 2;
+    final maxSourceX = (image.width - 1).toDouble();
+    final maxSourceY = (image.height - 1).toDouble();
+
+    for (int y = 0; y < outputHeight; y++) {
+      final localY = y - halfHeight;
+      for (int x = 0; x < outputWidth; x++) {
+        final localX = x - halfWidth;
+        final sourceX = region.centerX + localX * cosA - localY * sinA;
+        final sourceY = region.centerY + localX * sinA + localY * cosA;
+        final pixel = image.getPixelInterpolate(
+          sourceX.clamp(0.0, maxSourceX).toDouble(),
+          sourceY.clamp(0.0, maxSourceY).toDouble(),
+          interpolation: img.Interpolation.linear,
+        );
+        output.setPixel(x, y, pixel);
+      }
+    }
+
+    return output;
   }
 
   bool _isReliableBaybayin(_RecognitionResult result) {
@@ -534,4 +693,51 @@ class _RecognitionResult {
   final double confidence;
 
   const _RecognitionResult({required this.text, required this.confidence});
+}
+
+class _TextRegion {
+  final double centerX;
+  final double centerY;
+  final double width;
+  final double height;
+  final double angleRadians;
+  final double confidence;
+
+  const _TextRegion({
+    required this.centerX,
+    required this.centerY,
+    required this.width,
+    required this.height,
+    required this.angleRadians,
+    required this.confidence,
+  });
+
+  double get area => width * height;
+
+  Rect get axisAlignedBounds {
+    final cosA = math.cos(angleRadians);
+    final sinA = math.sin(angleRadians);
+    final halfWidth = width / 2;
+    final halfHeight = height / 2;
+    var minX = double.infinity;
+    var maxX = -double.infinity;
+    var minY = double.infinity;
+    var maxY = -double.infinity;
+
+    void include(double localX, double localY) {
+      final x = centerX + localX * cosA - localY * sinA;
+      final y = centerY + localX * sinA + localY * cosA;
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+
+    include(-halfWidth, -halfHeight);
+    include(halfWidth, -halfHeight);
+    include(halfWidth, halfHeight);
+    include(-halfWidth, halfHeight);
+
+    return Rect.fromLTRB(minX, minY, maxX, maxY);
+  }
 }

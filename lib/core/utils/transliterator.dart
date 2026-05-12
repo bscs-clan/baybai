@@ -604,6 +604,8 @@ class Transliterator {
   /// Main conversion: Baybayin → Filipino (Latin) with dictionary awareness.
   /// Currently set to auto-select the best option (non-interactive).
   static String toFilipino(String text) {
+    ensureInitialized();
+
     final ambigTypes = getAmbigTypes(text);
 
     // No ambiguity → direct conversion
