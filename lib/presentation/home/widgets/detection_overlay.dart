@@ -93,7 +93,7 @@ class _DetectionBox extends StatelessWidget {
                         style: TextStyle(
                           color: Colors.white,
                           fontFamily: "Baybayin",
-                          // fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w700,
                           fontSize: baybayinFontSize,
                           height: 1.05,
                         ),
@@ -103,7 +103,7 @@ class _DetectionBox extends StatelessWidget {
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: latinFontSize,
-                          // fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w800,
                           height: 1.15,
                         ),
                       ),
