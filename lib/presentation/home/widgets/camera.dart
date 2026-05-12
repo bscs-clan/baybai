@@ -1,6 +1,10 @@
+import "dart:async";
+import "dart:io";
+
 import "package:baybai/core/configs/theme/colors.dart";
 import "package:flutter/material.dart";
 import "package:camera/camera.dart";
+import "package:image/image.dart" as img;
 import "package:baybai/core/models/detection.dart";
 import "package:baybai/service_camera.dart";
 import "package:baybai/service_ocr.dart";
@@ -32,6 +36,8 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
   bool _isProcessingFrame = false;
   bool _isStreaming = false;
   DateTime? _lastProcessTime;
+  String? _capturedPhotoPath;
+  Size? _capturedPhotoSize;
 
   @override
   void initState() {
@@ -89,7 +95,7 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
   }
 
   void _onCameraImage(CameraImage image) {
-    if (!widget.liveEnabled) return;
+    if (!widget.liveEnabled || _capturedPhotoPath != null) return;
 
     final now = DateTime.now();
     if (_isProcessingFrame ||
@@ -103,7 +109,7 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
     _ocrService
         .processFrame(image)
         .then((detections) {
-          if (mounted) {
+          if (mounted && widget.liveEnabled && _capturedPhotoPath == null) {
             widget.detectionNotifier.value = detections;
           }
         })
@@ -129,6 +135,15 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
 
     try {
       final file = await controller.takePicture();
+      final photoSize = await _readPhotoSize(file.path);
+      if (mounted) {
+        setState(() {
+          _capturedPhotoPath = file.path;
+          _capturedPhotoSize = photoSize;
+        });
+        widget.detectionNotifier.value = [];
+      }
+
       final detections = await _ocrService.processPhoto(file.path);
       if (mounted) {
         widget.detectionNotifier.value = detections;
@@ -136,9 +151,21 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
     } catch (e) {
       debugPrint("[Camera] Capture OCR error: $e");
     } finally {
-      if (mounted && wasStreaming) {
+      if (mounted && wasStreaming && widget.liveEnabled) {
         await _startStream();
       }
+    }
+  }
+
+  Future<Size?> _readPhotoSize(String path) async {
+    try {
+      final decoded = img.decodeImage(await File(path).readAsBytes());
+      if (decoded == null) return null;
+      final baked = img.bakeOrientation(decoded);
+      return Size(baked.width.toDouble(), baked.height.toDouble());
+    } catch (e) {
+      debugPrint("[Camera] Could not read captured photo size: $e");
+      return null;
     }
   }
 
@@ -146,10 +173,24 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
   void didUpdateWidget(covariant CameraPreviewWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.liveEnabled != widget.liveEnabled) {
-      _isProcessingFrame = false;
-      if (!widget.liveEnabled) {
-        widget.detectionNotifier.value = [];
+      unawaited(_setLiveMode(widget.liveEnabled));
+    }
+  }
+
+  Future<void> _setLiveMode(bool liveEnabled) async {
+    _isProcessingFrame = false;
+    widget.detectionNotifier.value = [];
+
+    if (liveEnabled) {
+      if (mounted) {
+        setState(() {
+          _capturedPhotoPath = null;
+          _capturedPhotoSize = null;
+        });
       }
+      await _startStream();
+    } else {
+      await _stopStream();
     }
   }
 
@@ -177,6 +218,10 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
       return const Center(child: CircularProgressIndicator());
     }
 
+    if (_capturedPhotoPath != null) {
+      return _buildCapturedPhotoPreview(controller);
+    }
+
     return SizedBox.expand(
       child: FittedBox(
         fit: BoxFit.cover,
@@ -187,6 +232,37 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
             fit: StackFit.expand,
             children: [
               CameraPreview(controller),
+              DetectionOverlayLayer(
+                detectionNotifier: widget.detectionNotifier,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCapturedPhotoPreview(CameraController controller) {
+    final fallbackSize = Size(
+      controller.value.previewSize!.height,
+      controller.value.previewSize!.width,
+    );
+    final photoSize = _capturedPhotoSize ?? fallbackSize;
+
+    return SizedBox.expand(
+      child: FittedBox(
+        fit: BoxFit.cover,
+        child: SizedBox(
+          width: photoSize.width,
+          height: photoSize.height,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.file(
+                File(_capturedPhotoPath!),
+                fit: BoxFit.fill,
+                gaplessPlayback: true,
+              ),
               DetectionOverlayLayer(
                 detectionNotifier: widget.detectionNotifier,
               ),
