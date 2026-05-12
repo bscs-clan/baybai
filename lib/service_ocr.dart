@@ -184,6 +184,26 @@ class OCRService {
     return _toDetections(response);
   }
 
+  Future<Detection?> recognizeImageBytes(Uint8List encodedImageBytes) async {
+    if (!_isInitialized || _workerSendPort == null) {
+      throw Exception('OCR service not initialized');
+    }
+
+    final response = await _sendRequest(
+      _OcrRecognitionRequest(
+        requestId: _nextRequestId++,
+        encodedImageBytes: encodedImageBytes,
+      ),
+    );
+
+    _logRecognitionDebug(response, source: 'recognition');
+    final detections = _toDetections(response);
+    if (detections.isEmpty) return null;
+
+    detections.sort((a, b) => b.confidence.compareTo(a.confidence));
+    return detections.first;
+  }
+
   Future<_OcrResponse> _sendRequest(_OcrRequest request) {
     final completer = Completer<_OcrResponse>();
     _pendingRequests[request.requestId] = completer;

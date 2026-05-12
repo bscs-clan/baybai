@@ -60,6 +60,8 @@ void ocrWorkerEntry(SendPort sendPort) {
         sendPort.send(worker.processFrame(message));
       } else if (message is _OcrPhotoRequest) {
         sendPort.send(await worker.processPhoto(message));
+      } else if (message is _OcrRecognitionRequest) {
+        sendPort.send(worker.processRecognitionImage(message));
       } else if (message is _OcrShutdownMessage) {
         worker.dispose();
         receivePort.close();
@@ -134,6 +136,17 @@ class _OcrPhotoRequest implements _OcrRequest {
   final String imagePath;
 
   const _OcrPhotoRequest({required this.requestId, required this.imagePath});
+}
+
+class _OcrRecognitionRequest implements _OcrRequest {
+  @override
+  final int requestId;
+  final Uint8List encodedImageBytes;
+
+  const _OcrRecognitionRequest({
+    required this.requestId,
+    required this.encodedImageBytes,
+  });
 }
 
 class _OcrPlaneData {
@@ -260,6 +273,21 @@ class _OcrWorker {
     );
   }
 
+  _OcrResponse processRecognitionImage(_OcrRecognitionRequest request) {
+    final stopwatch = Stopwatch()..start();
+    final decoded = img.decodeImage(request.encodedImageBytes);
+    if (decoded == null) {
+      return _emptyResponse(request.requestId, stopwatch);
+    }
+
+    final recognition = _runRecognition(img.bakeOrientation(decoded));
+    return _recognitionResponse(
+      requestId: request.requestId,
+      recognition: recognition,
+      elapsed: stopwatch,
+    );
+  }
+
   _OcrResponse _processImage({
     required int requestId,
     required img.Image image,
@@ -338,6 +366,58 @@ class _OcrWorker {
     if (currentBest == null || recognition.confidence > currentBest) {
       setBest(recognition.text, recognition.confidence);
     }
+  }
+
+  _OcrResponse _recognitionResponse({
+    required int requestId,
+    required _RecognitionResult recognition,
+    required Stopwatch elapsed,
+  }) {
+    var rejectedLowConfidence = 0;
+    var rejectedNonBaybayin = 0;
+    var rejectedEmpty = 0;
+    String? bestRejectedText;
+    double? bestRejectedConfidence;
+    final results = <_OcrResult>[];
+
+    if (recognition.text.runes.length < _recMinChars) {
+      rejectedEmpty = 1;
+    } else if (!_isBaybayinText(recognition.text)) {
+      rejectedNonBaybayin = 1;
+      bestRejectedText = recognition.text;
+      bestRejectedConfidence = recognition.confidence;
+    } else if (recognition.confidence < _recConfidenceThreshold) {
+      rejectedLowConfidence = 1;
+      bestRejectedText = recognition.text;
+      bestRejectedConfidence = recognition.confidence;
+    } else {
+      results.add(
+        _OcrResult(
+          left: 0,
+          top: 0,
+          right: 1,
+          bottom: 1,
+          text: recognition.text,
+          confidence: recognition.confidence,
+          rotation: 0,
+        ),
+      );
+    }
+
+    elapsed.stop();
+    return _OcrResponse(
+      requestId: requestId,
+      results: results,
+      regionCount: 1,
+      rejectedLowConfidence: rejectedLowConfidence,
+      rejectedNonBaybayin: rejectedNonBaybayin,
+      rejectedEmpty: rejectedEmpty,
+      bestRejectedText: bestRejectedText,
+      bestRejectedConfidence: bestRejectedConfidence,
+      elapsedMs: elapsed.elapsedMilliseconds,
+      recConfidenceThreshold: _recConfidenceThreshold,
+      debugEnabled: _debugEnabled,
+    );
   }
 
   _OcrResponse _emptyResponse(int requestId, Stopwatch elapsed) {

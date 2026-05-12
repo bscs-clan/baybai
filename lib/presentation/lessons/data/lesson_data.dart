@@ -79,19 +79,19 @@ class LessonData {
         title: "Changing Sounds",
         description:
             "In Baybayin, we use small marks called **kudlit**. These marks change the vowel sound of a character. They are placed **Above** and **Below** on Characters",
-        image: "assets/images/lesson1_image6.png",
+        image: "assets/images/lesson2_image1.png",
       ),
       LessonContent(
         title: "Kudlit Above",
         description:
-            "When you place a mark **above** the character. the sound changes to **'E' or 'I'**.",
-        image: "assets/images/lesson1_image6.png",
+            "When you place a mark **above** the character. the sound changes to **'E' or 'I'**. Example the Image above which the character **'BA'** with a kudlit above becomes **'BE'** or **'BI'**.",
+        image: "assets/images/lesson2_image2.png",
       ),
       LessonContent(
         title: "Kudlit Below",
         description:
-            "When you place a mark **below** the character. the sound changes to **'O' or 'U'**.",
-        image: "assets/images/lesson1_image6.png",
+            "When you place a mark **below** the character. the sound changes to **'O' or 'U'**. Example the Image above which the character **'BA'** with a kudlit below becomes **'BO'** or **'BU'**.",
+        image: "assets/images/lesson2_image3.png",
       ),
       LessonContent(
         title: "Quick Practice",

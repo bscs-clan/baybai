@@ -1,7 +1,13 @@
+import "dart:math" as math;
+import "dart:typed_data";
+import "dart:ui" as ui;
+
 import "package:flutter/material.dart";
+import "package:fluttertoast/fluttertoast.dart";
 import "package:baybai/core/configs/theme/colors.dart";
 import "package:baybai/core/configs/theme/text.dart";
 import "package:baybai/common/components/button.dart";
+import "package:baybai/service_ocr.dart";
 import "package:flutter_svg/flutter_svg.dart";
 
 class StrokePoint {
@@ -46,7 +52,11 @@ class _PracticePageState extends State<PracticePage>
   double _strokeWidth = 4.0;
   bool _hasDrawn = false;
   bool _showStrokeGuide = false;
-  bool _showNavigationButtons = false;
+  bool _showResultButton = false;
+  bool _isChecking = false;
+  bool? _isPracticeCorrect;
+  String? _recognizedSymbol;
+  double? _recognitionConfidence;
   late final AnimationController _demoController;
 
   @override
@@ -69,30 +79,106 @@ class _PracticePageState extends State<PracticePage>
       _currentIndex = (_currentIndex + 1) % _characters.length;
       _strokes.clear();
       _hasDrawn = false;
-      _showNavigationButtons = false;
+      _showResultButton = false;
+      _clearPracticeResult();
     });
   }
 
-  void _previousCharacter() {
+  void _tryAgain() {
     setState(() {
-      _currentIndex =
-          (_currentIndex - 1 + _characters.length) % _characters.length;
       _strokes.clear();
       _hasDrawn = false;
-      _showNavigationButtons = false;
+      _showResultButton = false;
+      _clearPracticeResult();
     });
   }
 
-  void _checkPractice() {
+  Future<void> _checkPractice() async {
+    if (_isChecking) return;
+
+    if (!_hasDrawableStroke) {
+      _showToast(
+        "Please draw the character first",
+        isError: true,
+      );
+      return;
+    }
+
     setState(() {
-      _showNavigationButtons = true;
+      _isChecking = true;
+      _clearPracticeResult();
     });
+
+    try {
+      await OCRService().initialize();
+      final drawingBytes = await _renderDrawingForRecognition();
+      final detection = await OCRService().recognizeImageBytes(drawingBytes);
+      final recognized = detection?.label;
+      final expected = _characters[_currentIndex]["symbol"]!;
+      final confidence = detection?.confidence ?? 0.0;
+
+      if (!mounted) return;
+      setState(() {
+        _recognizedSymbol = recognized;
+        _recognitionConfidence = confidence;
+        // Compare symbols while ignoring kudlit marks
+        _isPracticeCorrect = _stripKudlits(recognized ?? '') == _stripKudlits(expected);
+        _showResultButton = true;
+      });
+
+      // Show toast notification - success only if symbols match (ignoring kudlits)
+      if (_stripKudlits(recognized ?? '') == _stripKudlits(expected)) {
+        _showToast(
+         "Perfect! Your drawing matched the symbol.",
+          isError: false,
+        );
+      } else {
+        _showToast(
+          "Your drawing did not match. Try again!",
+          isError: true,
+        );
+      }
+    } catch (error) {
+      debugPrint("Practice recognition error: $error");
+      if (!mounted) return;
+      setState(() {
+        _isPracticeCorrect = false;
+        _recognizedSymbol = null;
+        _recognitionConfidence = null;
+        _showResultButton = false;
+      });
+      _showToast(
+        "Error recognizing drawing. Please try again.",
+        isError: true,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isChecking = false;
+        });
+      }
+    }
+  }
+
+  void _showToast(String message, {required bool isError}) {
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      timeInSecForIosWeb: 2,
+      backgroundColor: isError ? Colors.redAccent : Colors.green,
+      textColor: Colors.white,
+      fontSize: 14.0,
+    );
   }
 
   void _undo() {
     if (_strokes.isNotEmpty) {
       setState(() {
         _strokes.removeLast();
+        _hasDrawn = _strokes.isNotEmpty;
+        _showResultButton = false;
+        _clearPracticeResult();
       });
     }
   }
@@ -108,6 +194,122 @@ class _PracticePageState extends State<PracticePage>
     setState(() {
       _showStrokeGuide = !_showStrokeGuide;
     });
+  }
+
+  String _stripKudlits(String text) {
+    // Remove kudlit marks (U+1712, U+1713, U+1714) which are diacritical marks
+    return text.replaceAll(RegExp(r'[\u1712\u1713\u1714]'), '');
+  }
+
+  bool get _hasDrawableStroke {
+    return _strokes.any((stroke) => stroke.isNotEmpty);
+  }
+
+  void _clearPracticeResult() {
+    _isPracticeCorrect = null;
+    _recognizedSymbol = null;
+    _recognitionConfidence = null;
+  }
+
+  Future<Uint8List> _renderDrawingForRecognition() async {
+    final bounds = _drawingBounds();
+    if (bounds == null) {
+      throw StateError("No drawing to recognize.");
+    }
+
+    const double targetHeight = 192;
+    const double padding = 28;
+    final aspectRatio = bounds.width / math.max(bounds.height, 1);
+    final targetWidth =
+        (aspectRatio * (targetHeight - padding * 2) + padding * 2).clamp(
+          96.0,
+          512.0,
+        );
+    final scale = math.min(
+      (targetWidth - padding * 2) / math.max(bounds.width, 1),
+      (targetHeight - padding * 2) / math.max(bounds.height, 1),
+    );
+    final offset = Offset(
+      (targetWidth - bounds.width * scale) / 2 - bounds.left * scale,
+      (targetHeight - bounds.height * scale) / 2 - bounds.top * scale,
+    );
+
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, targetWidth, targetHeight),
+      Paint()..color = Colors.white,
+    );
+
+    final paint = Paint()
+      ..color = Colors.black
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..style = PaintingStyle.stroke;
+
+    for (final stroke in _strokes) {
+      if (stroke.isEmpty) continue;
+      if (stroke.length == 1) {
+        canvas.drawCircle(
+          stroke.first.point * scale + offset,
+          math.max(stroke.first.strokeWidth * scale / 2, 1),
+          Paint()..color = Colors.black,
+        );
+        continue;
+      }
+
+      for (int i = 0; i < stroke.length - 1; i++) {
+        paint.strokeWidth = math.max(stroke[i].strokeWidth * scale, 2);
+        canvas.drawLine(
+          stroke[i].point * scale + offset,
+          stroke[i + 1].point * scale + offset,
+          paint,
+        );
+      }
+    }
+
+    final picture = recorder.endRecording();
+    final image = await picture.toImage(
+      targetWidth.ceil(),
+      targetHeight.ceil(),
+    );
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    picture.dispose();
+    image.dispose();
+    if (byteData == null) {
+      throw StateError("Unable to encode drawing for recognition.");
+    }
+
+    return byteData.buffer.asUint8List();
+  }
+
+  Rect? _drawingBounds() {
+    double? minX;
+    double? minY;
+    double? maxX;
+    double? maxY;
+
+    for (final stroke in _strokes) {
+      for (final strokePoint in stroke) {
+        final radius = strokePoint.strokeWidth / 2;
+        minX = math.min(minX ?? double.infinity, strokePoint.point.dx - radius);
+        minY = math.min(minY ?? double.infinity, strokePoint.point.dy - radius);
+        maxX = math.max(
+          maxX ?? double.negativeInfinity,
+          strokePoint.point.dx + radius,
+        );
+        maxY = math.max(
+          maxY ?? double.negativeInfinity,
+          strokePoint.point.dy + radius,
+        );
+      }
+    }
+
+    if (minX == null || minY == null || maxX == null || maxY == null) {
+      return null;
+    }
+
+    return Rect.fromLTRB(minX, minY, maxX, maxY);
   }
 
   void _showDemonstrationGif() {
@@ -282,6 +484,8 @@ class _PracticePageState extends State<PracticePage>
                           onPanStart: (details) {
                             setState(() {
                               _hasDrawn = true;
+                              _showResultButton = false;
+                              _clearPracticeResult();
                               _strokes.add([
                                 StrokePoint(
                                   details.localPosition,
@@ -384,33 +588,34 @@ class _PracticePageState extends State<PracticePage>
 
               const SizedBox(height: 32),
 
-              if (_showNavigationButtons)
+              if (_showResultButton)
                 Row(
                   children: [
-                    Expanded(
-                      child: Button(
-                        label: "Previous",
-                        leftIcon: Icons.arrow_back,
-                        onTap: _previousCharacter,
-                        type: ButtonType.secondary,
+                    if (_isPracticeCorrect == false)
+                      Expanded(
+                        child: Button(
+                          label: "Try Again",
+                          leftIcon: Icons.refresh,
+                          onTap: _tryAgain,
+                          type: ButtonType.secondary,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Button(
-                        label: "Next",
-                        rightIcon: Icons.arrow_forward,
-                        onTap: _nextCharacter,
-                        type: ButtonType.primary,
+                    if (_isPracticeCorrect == true)
+                      Expanded(
+                        child: Button(
+                          label: "Continue",
+                          rightIcon: Icons.arrow_forward,
+                          onTap: _nextCharacter,
+                          type: ButtonType.primary,
+                        ),
                       ),
-                    ),
                   ],
                 )
               else
                 Button(
-                  label: "Check",
+                  label: _isChecking ? "Checking..." : "Check",
                   rightIcon: Icons.check,
-                  onTap: _checkPractice,
+                  onTap: _isChecking ? null : _checkPractice,
                   type: ButtonType.primary,
                   width: double.infinity,
                 ),
@@ -420,6 +625,8 @@ class _PracticePageState extends State<PracticePage>
       ),
     );
   }
+
+
 
   Widget _buildStrokeButton(bool isDarkMode) {
     return GestureDetector(

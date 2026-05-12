@@ -15,7 +15,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       scrolledUnderElevation: 0,
       toolbarHeight: 64,
       actionsPadding: const EdgeInsets.symmetric(horizontal: 24),
-      actions: const [_ProfileButton(), SizedBox(width: 8), _SettingsButton()],
+      actions: const [_SettingsButton()],
     );
   }
 
@@ -23,24 +23,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => const Size.fromHeight(64);
 }
 
-class _ProfileButton extends StatelessWidget {
-  const _ProfileButton();
-
-  static const double _size = 48;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: _size,
-      height: _size,
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
-      child: ClipRSuperellipse(
-        borderRadius: BorderRadius.circular(16),
-        child: Image.asset("assets/images/img_profile.jpg", fit: BoxFit.cover),
-      ),
-    );
-  }
-}
 
 class _SettingsButton extends StatelessWidget {
   const _SettingsButton();
