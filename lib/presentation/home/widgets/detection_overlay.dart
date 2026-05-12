@@ -12,122 +12,109 @@ class DetectionOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RepaintBoundary(
-      child: CustomPaint(
-        size: Size.infinite,
-        painter: _DetectionPainter(detections),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final height = constraints.maxHeight;
+
+          return Stack(
+            children: detections.map((det) {
+              final rect = Rect.fromLTRB(
+                det.box.left * width,
+                det.box.top * height,
+                det.box.right * width,
+                det.box.bottom * height,
+              );
+
+              if (rect.isEmpty) {
+                return const SizedBox.shrink();
+              }
+
+              return _DetectionBox(detection: det, rect: rect);
+            }).toList(),
+          );
+        },
       ),
     );
   }
 }
 
-class _DetectionPainter extends CustomPainter {
-  final List<Detection> detections;
+class _DetectionBox extends StatelessWidget {
+  final Detection detection;
+  final Rect rect;
 
-  _DetectionPainter(this.detections);
+  const _DetectionBox({required this.detection, required this.rect});
 
   @override
-  void paint(Canvas canvas, Size size) {
-    for (final det in detections) {
-      final rect = Rect.fromLTRB(
-        det.box.left * size.width,
-        det.box.top * size.height,
-        det.box.right * size.width,
-        det.box.bottom * size.height,
-      );
-      if (rect.isEmpty) continue;
+  Widget build(BuildContext context) {
+    final horizontalInset = math.max(8.0, rect.width * 0.04);
+    final baybayinFontSize = math.max(14.0, rect.height * 0.30);
+    final latinFontSize = math.max(12.0, rect.height * 0.23);
 
-      final roundedRect = RRect.fromRectAndRadius(
-        rect,
-        const Radius.circular(6),
-      );
+    final transliterated = detection.transliteratedText.isNotEmpty
+        ? detection.transliteratedText
+        : detection.label;
 
-      canvas.save();
-      if (det.rotation != 0) {
-        final center = rect.center;
-        canvas.translate(center.dx, center.dy);
-        canvas.rotate(det.rotation);
-        canvas.translate(-center.dx, -center.dy);
-      }
-
-      canvas.save();
-      canvas.clipRRect(roundedRect);
-      canvas.saveLayer(
-        rect,
-        Paint()..imageFilter = ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-      );
-      canvas.drawRect(rect, Paint()..color = Colors.transparent);
-      canvas.restore();
-
-      canvas.drawRRect(
-        roundedRect,
-        Paint()..color = Colors.black.withValues(alpha: 0.48),
-      );
-
-      final horizontalInset = math.max(8.0, rect.width * 0.04);
-      final baybayinFontSize = math.max(14.0, rect.height * 0.30);
-      final latinFontSize = math.max(12.0, rect.height * 0.23);
-
-      final painter =
-          TextPainter(
-            text: _buildDebugText(det, baybayinFontSize, latinFontSize),
-            textAlign: TextAlign.center,
-            textDirection: TextDirection.ltr,
-            maxLines: 3,
-            ellipsis: "...",
-          )..layout(
-            maxWidth: (rect.width - horizontalInset * 2).clamp(
-              1.0,
-              double.infinity,
+    return Positioned(
+      left: rect.left,
+      top: rect.top,
+      width: rect.width,
+      height: rect.height,
+      child: Transform.rotate(
+        angle: detection.rotation,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ui.ImageFilter.blur(sigmaX: 64, sigmaY: 64),
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: horizontalInset,
+                vertical: 6,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.24),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  width: 1,
+                ),
+              ),
+              alignment: Alignment.center,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: RichText(
+                  textAlign: TextAlign.center,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: detection.label,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontFamily: "Baybayin",
+                          // fontWeight: FontWeight.w700,
+                          fontSize: baybayinFontSize,
+                          height: 1.05,
+                        ),
+                      ),
+                      TextSpan(
+                        text: "\n$transliterated",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: latinFontSize,
+                          // fontWeight: FontWeight.w800,
+                          height: 1.15,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-          );
-
-      painter.paint(
-        canvas,
-        Offset(
-          rect.left + (rect.width - painter.width) / 2,
-          rect.top + (rect.height - painter.height) / 2,
-        ),
-      );
-      canvas.restore();
-      canvas.restore();
-    }
-  }
-
-  TextSpan _buildDebugText(
-    Detection det,
-    double baybayinFontSize,
-    double latinFontSize,
-  ) {
-    final transliterated = det.transliteratedText.isNotEmpty
-        ? det.transliteratedText
-        : det.label;
-
-    return TextSpan(
-      children: [
-        TextSpan(
-          text: det.label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontFamily: "Baybayin",
-            fontWeight: FontWeight.w700,
-            height: 1.05,
-          ).copyWith(fontSize: baybayinFontSize),
-        ),
-        TextSpan(
-          text: "\n$transliterated",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: latinFontSize,
-            fontWeight: FontWeight.w800,
-            height: 1.15,
           ),
         ),
-      ],
+      ),
     );
-  }
-
-  @override
-  bool shouldRepaint(_DetectionPainter oldDelegate) {
-    return !identical(detections, oldDelegate.detections);
   }
 }
