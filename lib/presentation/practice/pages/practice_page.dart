@@ -18,25 +18,26 @@ class PracticePage extends StatefulWidget {
   State<PracticePage> createState() => _PracticePageState();
 }
 
-class _PracticePageState extends State<PracticePage> {
+class _PracticePageState extends State<PracticePage>
+    with SingleTickerProviderStateMixin {
   final List<Map<String, String>> _characters = [
     {"symbol": "\u1700", "label": "A"},
-    {"symbol": "\u170A", "label": "Ba"},
-    {"symbol": "\u1703", "label": "Ka"},
-    {"symbol": "\u1707", "label": "Da"},
     {"symbol": "\u1701", "label": "E/I"},
-    {"symbol": "\u1704", "label": "Ga"},
-    {"symbol": "\u1705", "label": "Ha"},
-    {"symbol": "\u170E", "label": "La"},
-    {"symbol": "\u170F", "label": "Ma"},
-    {"symbol": "\u1710", "label": "Na"},
-    {"symbol": "\u1705\u1714", "label": "Nga"},
     {"symbol": "\u1702", "label": "O/U"},
-    {"symbol": "\u1711", "label": "Pa"},
-    {"symbol": "\u1713", "label": "Sa"},
-    {"symbol": "\u1714", "label": "Ta"},
-    {"symbol": "\u1715", "label": "Wa"},
-    {"symbol": "\u1716", "label": "Ya"},
+    {"symbol": "\u1703", "label": "Ka"},
+    {"symbol": "\u1704", "label": "Ga"},
+    {"symbol": "\u1705", "label": "Nga"},
+    {"symbol": "\u1706", "label": "Ta"},
+    {"symbol": "\u1707", "label": "Da/Ra"},
+    {"symbol": "\u1708", "label": "Na"},
+    {"symbol": "\u1709", "label": "Pa"},
+    {"symbol": "\u170A", "label": "Ba"},
+    {"symbol": "\u170B", "label": "Ma"},
+    {"symbol": "\u170C", "label": "Ya"},
+    {"symbol": "\u170D", "label": "La"},
+    {"symbol": "\u170E", "label": "Wa"},
+    {"symbol": "\u170F", "label": "Sa"},
+    {"symbol": "\u1710", "label": "Ha"},
   ];
 
   int _currentIndex = 0;
@@ -44,12 +45,31 @@ class _PracticePageState extends State<PracticePage> {
   final List<List<StrokePoint>> _strokes = [];
   double _strokeWidth = 4.0;
   bool _hasDrawn = false;
+  bool _showStrokeGuide = false;
+  bool _showNavigationButtons = false;
+  late final AnimationController _demoController;
+
+  @override
+  void initState() {
+    super.initState();
+    _demoController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    );
+  }
+
+  @override
+  void dispose() {
+    _demoController.dispose();
+    super.dispose();
+  }
 
   void _nextCharacter() {
     setState(() {
       _currentIndex = (_currentIndex + 1) % _characters.length;
       _strokes.clear();
       _hasDrawn = false;
+      _showNavigationButtons = false;
     });
   }
 
@@ -59,6 +79,13 @@ class _PracticePageState extends State<PracticePage> {
           (_currentIndex - 1 + _characters.length) % _characters.length;
       _strokes.clear();
       _hasDrawn = false;
+      _showNavigationButtons = false;
+    });
+  }
+
+  void _checkPractice() {
+    setState(() {
+      _showNavigationButtons = true;
     });
   }
 
@@ -75,6 +102,81 @@ class _PracticePageState extends State<PracticePage> {
       _strokeWidth += 2;
       if (_strokeWidth > 12) _strokeWidth = 2;
     });
+  }
+
+  void _toggleStrokeGuide() {
+    setState(() {
+      _showStrokeGuide = !_showStrokeGuide;
+    });
+  }
+
+  void _showDemonstrationGif() {
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final character = _characters[_currentIndex];
+
+    _demoController
+      ..reset()
+      ..repeat();
+
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: isDarkMode ? AppColors.darkBox : AppColors.box,
+          shape: RoundedSuperellipseBorder(
+            borderRadius: BorderRadius.circular(28),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        "Demonstration",
+                        style: AppTextStyles.bigbody.copyWith(
+                          color: isDarkMode
+                              ? AppColors.darkWhite
+                              : AppColors.text,
+                        ),
+                      ),
+                    ),
+                    _buildActionButton(
+                      child: Icon(
+                        Icons.close,
+                        size: 20,
+                        color: isDarkMode ? AppColors.darkIcon : AppColors.icon,
+                      ),
+                      onTap: () => Navigator.pop(dialogContext),
+                      isDarkMode: isDarkMode,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                SizedBox(
+                  height: 220,
+                  width: double.infinity,
+                  child: AnimatedBuilder(
+                    animation: _demoController,
+                    builder: (context, _) {
+                      return CustomPaint(
+                        painter: _DemoPainter(
+                          symbol: character["symbol"]!,
+                          progress: _demoController.value,
+                          isDarkMode: isDarkMode,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ).whenComplete(_demoController.stop);
   }
 
   @override
@@ -134,7 +236,10 @@ class _PracticePageState extends State<PracticePage> {
             children: [
               Text(
                 character["symbol"]!,
-                style: AppTextStyles.heading.copyWith(fontSize: 92),
+                style: AppTextStyles.heading.copyWith(
+                  color: isDarkMode ? AppColors.darkWhite : AppColors.dark,
+                  fontSize: 92,
+                ),
               ),
               const SizedBox(height: 12),
 
@@ -151,6 +256,27 @@ class _PracticePageState extends State<PracticePage> {
                     borderRadius: BorderRadius.circular(38),
                     child: Stack(
                       children: [
+                        if (_showStrokeGuide)
+                          IgnorePointer(
+                            child: Center(
+                              child: Text(
+                                character["symbol"]!,
+                                style:
+                                    const TextStyle(
+                                      fontFamily: "Baybayin",
+                                      fontSize: 186,
+                                      fontWeight: FontWeight.w400,
+                                    ).copyWith(
+                                      color:
+                                          (isDarkMode
+                                                  ? AppColors.white
+                                                  : AppColors.dark)
+                                              .withValues(alpha: 0.14),
+                                    ),
+                              ),
+                            ),
+                          ),
+
                         GestureDetector(
                           behavior: HitTestBehavior.opaque,
                           onPanStart: (details) {
@@ -180,7 +306,7 @@ class _PracticePageState extends State<PracticePage> {
                           ),
                         ),
 
-                        if (!_hasDrawn)
+                        if (!_hasDrawn && !_showStrokeGuide)
                           IgnorePointer(
                             child: Center(
                               child: Column(
@@ -201,8 +327,8 @@ class _PracticePageState extends State<PracticePage> {
 
                         Positioned(
                           top: 24,
-                          right: 24,
-                          child: Column(
+                          left: 24,
+                          child: Row(
                             children: [
                               _buildActionButton(
                                 child: SvgPicture.asset(
@@ -219,8 +345,34 @@ class _PracticePageState extends State<PracticePage> {
                                 onTap: _undo,
                                 isDarkMode: isDarkMode,
                               ),
-                              const SizedBox(height: 6),
+                              const SizedBox(width: 6),
                               _buildStrokeButton(isDarkMode),
+                              const SizedBox(width: 6),
+                              _buildActionButton(
+                                child: Icon(
+                                  Icons.gesture,
+                                  size: 22,
+                                  color: _showStrokeGuide
+                                      ? AppColors.primary
+                                      : (isDarkMode
+                                            ? AppColors.darkIcon
+                                            : AppColors.icon),
+                                ),
+                                onTap: _toggleStrokeGuide,
+                                isDarkMode: isDarkMode,
+                              ),
+                              const SizedBox(width: 6),
+                              _buildActionButton(
+                                child: Icon(
+                                  Icons.play_circle_outline,
+                                  size: 24,
+                                  color: isDarkMode
+                                      ? AppColors.darkIcon
+                                      : AppColors.icon,
+                                ),
+                                onTap: _showDemonstrationGif,
+                                isDarkMode: isDarkMode,
+                              ),
                             ],
                           ),
                         ),
@@ -232,27 +384,36 @@ class _PracticePageState extends State<PracticePage> {
 
               const SizedBox(height: 32),
 
-              Row(
-                children: [
-                  Expanded(
-                    child: Button(
-                      label: "Previous",
-                      leftIcon: Icons.arrow_back,
-                      onTap: _previousCharacter,
-                      type: ButtonType.secondary,
+              if (_showNavigationButtons)
+                Row(
+                  children: [
+                    Expanded(
+                      child: Button(
+                        label: "Previous",
+                        leftIcon: Icons.arrow_back,
+                        onTap: _previousCharacter,
+                        type: ButtonType.secondary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Button(
-                      label: "Next",
-                      rightIcon: Icons.arrow_forward,
-                      onTap: _nextCharacter,
-                      type: ButtonType.primary,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Button(
+                        label: "Next",
+                        rightIcon: Icons.arrow_forward,
+                        onTap: _nextCharacter,
+                        type: ButtonType.primary,
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                )
+              else
+                Button(
+                  label: "Check",
+                  rightIcon: Icons.check,
+                  onTap: _checkPractice,
+                  type: ButtonType.primary,
+                  width: double.infinity,
+                ),
             ],
           ),
         ),
@@ -277,7 +438,7 @@ class _PracticePageState extends State<PracticePage> {
             width: _strokeWidth * 2,
             height: _strokeWidth * 2,
             decoration: ShapeDecoration(
-              color: Colors.black,
+              color: isDarkMode ? AppColors.darkWhite : AppColors.dark,
               shape: RoundedSuperellipseBorder(
                 borderRadius: BorderRadius.circular(6),
               ),
@@ -336,4 +497,76 @@ class _DrawPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+class _DemoPainter extends CustomPainter {
+  final String symbol;
+  final double progress;
+  final bool isDarkMode;
+
+  _DemoPainter({
+    required this.symbol,
+    required this.progress,
+    required this.isDarkMode,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final guidePainter = TextPainter(
+      text: TextSpan(
+        text: symbol,
+        style: TextStyle(
+          color: (isDarkMode ? AppColors.white : AppColors.dark).withValues(
+            alpha: 0.12,
+          ),
+          fontFamily: "Baybayin",
+          fontSize: 128,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: size.width);
+
+    guidePainter.paint(
+      canvas,
+      Offset(
+        (size.width - guidePainter.width) / 2,
+        (size.height - guidePainter.height) / 2,
+      ),
+    );
+
+    final start = Offset(size.width * 0.24, size.height * 0.76);
+    final control = Offset(size.width * 0.48, size.height * 0.18);
+    final end = Offset(size.width * 0.76, size.height * 0.68);
+    final path = Path()
+      ..moveTo(start.dx, start.dy)
+      ..quadraticBezierTo(control.dx, control.dy, end.dx, end.dy);
+
+    final metric = path.computeMetrics().first;
+    final drawnPath = metric.extractPath(0, metric.length * progress);
+    final paint = Paint()
+      ..color = AppColors.primary
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 9;
+
+    canvas.drawPath(drawnPath, paint);
+
+    final tangent = metric.getTangentForOffset(metric.length * progress);
+    if (tangent == null) return;
+
+    canvas.drawCircle(
+      tangent.position,
+      9,
+      Paint()..color = isDarkMode ? AppColors.darkWhite : AppColors.white,
+    );
+    canvas.drawCircle(tangent.position, 6, Paint()..color = AppColors.primary);
+  }
+
+  @override
+  bool shouldRepaint(covariant _DemoPainter oldDelegate) {
+    return oldDelegate.symbol != symbol ||
+        oldDelegate.progress != progress ||
+        oldDelegate.isDarkMode != isDarkMode;
+  }
 }

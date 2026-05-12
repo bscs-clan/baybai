@@ -39,7 +39,7 @@ class Button extends StatelessWidget {
       if (isPrimary) {
         return isDarkMode ? AppColors.text : AppColors.white;
       } else if (isSecondary) {
-        return AppColors.text;
+        return isDarkMode ? AppColors.darkWhite : AppColors.text;
       } else {
         return AppColors.white;
       }
@@ -54,7 +54,9 @@ class Button extends StatelessWidget {
           decoration: ShapeDecoration(
             color: isPrimary
                 ? AppColors.primary
-                : (isSecondary ? AppColors.white : Colors.transparent),
+                : (isSecondary
+                      ? (isDarkMode ? AppColors.darkCompBg : AppColors.white)
+                      : Colors.transparent),
             shape: RoundedSuperellipseBorder(
               borderRadius: BorderRadius.circular(18),
               side: isPrimary || isSecondary
