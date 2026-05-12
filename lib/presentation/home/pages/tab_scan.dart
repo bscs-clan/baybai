@@ -1,7 +1,9 @@
+import "package:baybai/core/configs/theme/colors.dart";
 import "package:flutter/material.dart";
 import "package:baybai/common/components/icon_button.dart";
 import "package:baybai/core/models/detection.dart";
 import "package:baybai/presentation/home/widgets/camera.dart";
+import "package:flutter/services.dart";
 
 enum _ScanMode { live, photo }
 
@@ -22,7 +24,7 @@ class _TabScanState extends State<TabScan> {
   bool _isCameraReady = false;
   bool _isCapturing = false;
   bool _isViewingCapture = false;
-  _ScanMode _mode = _ScanMode.live;
+  _ScanMode _mode = _ScanMode.photo;
 
   @override
   void dispose() {
@@ -88,6 +90,7 @@ class _TabScanState extends State<TabScan> {
   Future<void> _handleCapture() async {
     if (_mode != _ScanMode.photo || _isCapturing) return;
 
+    HapticFeedback.mediumImpact();
     setState(() => _isCapturing = true);
     try {
       await _cameraKey.currentState?.capturePhoto();
@@ -152,14 +155,14 @@ class _ModeSwitch extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             _ModeButton(
-              label: "Live",
-              selected: mode == _ScanMode.live,
-              onPressed: () => onChanged(_ScanMode.live),
-            ),
-            _ModeButton(
               label: "Photo",
               selected: mode == _ScanMode.photo,
               onPressed: () => onChanged(_ScanMode.photo),
+            ),
+            _ModeButton(
+              label: "Live",
+              selected: mode == _ScanMode.live,
+              onPressed: () => onChanged(_ScanMode.live),
             ),
           ],
         ),
@@ -181,23 +184,35 @@ class _ModeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return SizedBox(
       height: 34,
       width: 82,
       child: TextButton(
         onPressed: onPressed,
         style: TextButton.styleFrom(
-          foregroundColor: selected ? Colors.black : Colors.white,
+          foregroundColor: selected
+              ? (isDarkMode ? AppColors.text : AppColors.white)
+              : (isDarkMode ? AppColors.darkText : AppColors.text),
           backgroundColor: selected
-              ? Colors.white.withValues(alpha: 0.9)
+              ? (isDarkMode ? AppColors.darkBackground : AppColors.white)
               : Colors.transparent,
+          // backgroundColor: selected ? AppColors.dark : Colors.transparent,
           shape: RoundedSuperellipseBorder(
             borderRadius: BorderRadius.circular(14),
           ),
           padding: EdgeInsets.zero,
           textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
         ),
-        child: Text(label),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected
+                ? (isDarkMode ? AppColors.darkText : AppColors.text)
+                : (isDarkMode ? AppColors.darkText : AppColors.darkText),
+          ),
+        ),
       ),
     );
   }
