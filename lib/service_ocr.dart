@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:baybai/core/utils/transliterator.dart';
@@ -14,6 +15,9 @@ class OCRService {
   static final OCRService _instance = OCRService._internal();
   factory OCRService() => _instance;
   OCRService._internal();
+
+  static const String _recModelEnvKey = 'OCR_REC_MODEL';
+  static const String _defaultRecModel = 'ocr_rec_float32.tflite';
 
   Interpreter? _detInterpreter;
   Interpreter? _recInterpreter;
@@ -82,9 +86,12 @@ class OCRService {
     );
 
     // Load recognition model
-    final recModelBuffer = await rootBundle.load(
-      'assets/models/ocr_rec_float16.tflite',
+    final recModelPath = _resolveModelAssetPath(
+      dotenv.env[_recModelEnvKey],
+      fallbackFileName: _defaultRecModel,
     );
+    debugPrint('[OCRService] Loading recognition model: $recModelPath');
+    final recModelBuffer = await rootBundle.load(recModelPath);
     _recInterpreter = Interpreter.fromBuffer(
       recModelBuffer.buffer.asUint8List(),
     );
@@ -95,6 +102,17 @@ class OCRService {
       'det ${_detInterpreter!.getInputTensor(0).shape} -> ${_detInterpreter!.getOutputTensor(0).shape}; '
       'rec ${_recInterpreter!.getInputTensor(0).shape} -> ${_recInterpreter!.getOutputTensor(0).shape}',
     );
+  }
+
+  String _resolveModelAssetPath(
+    String? configured, {
+    required String fallbackFileName,
+  }) {
+    final value = configured?.trim();
+    final modelName = value == null || value.isEmpty ? fallbackFileName : value;
+    return modelName.startsWith('assets/')
+        ? modelName
+        : 'assets/models/$modelName';
   }
 
   Future<List<Detection>> processFrame(CameraImage cameraImage) async {
