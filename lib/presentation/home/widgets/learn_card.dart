@@ -9,12 +9,21 @@ class LearnCard extends StatelessWidget {
   final int? lessonId;
   final VoidCallback? onTap;
 
+  final bool isLocked;
+  final int currentPage;
+  final int totalPages;
+  final bool isCompleted;
+
   const LearnCard({
     super.key,
     required this.lessonNumber,
     required this.title,
     this.lessonId,
     this.onTap,
+    this.isLocked = false,
+    this.currentPage = 0,
+    this.totalPages = 1,
+    this.isCompleted = false,
   });
 
   @override
@@ -33,11 +42,25 @@ class LearnCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            lessonNumber,
-            style: AppTextStyles.body.copyWith(
-              color: isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                lessonNumber,
+                style: AppTextStyles.body.copyWith(
+                  color: isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey,
+                ),
+              ),
+              if (!isLocked)
+                Text(
+                  isCompleted
+                      ? "$totalPages/$totalPages"
+                      : "${currentPage + 1}/$totalPages",
+                  style: AppTextStyles.body.copyWith(
+                    color: isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey,
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 6),
           Text(
@@ -48,17 +71,23 @@ class LearnCard extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           Button(
-            label: "Start Lesson",
-            onTap: onTap ??
-                () {
-                  Navigator.pushNamed(
-                    context,
-                    "/lesson",
-                    arguments: lessonId ?? 1,
-                  );
-                },
+            label: isLocked
+                ? "Locked"
+                : (isCompleted
+                    ? "Complete"
+                    : (currentPage > 0 ? "Continue" : "Start Lesson")),
+            onTap: isLocked
+                ? null
+                : (onTap ??
+                    () {
+                      Navigator.pushNamed(
+                        context,
+                        "/lesson",
+                        arguments: lessonId ?? 1,
+                      );
+                    }),
             type: ButtonType.primary,
-            rightIconPath: "assets/icons/arrow-right-up.svg",
+            rightIconPath: isLocked ? null : "assets/icons/arrow-right-up.svg",
           ),
         ],
       ),

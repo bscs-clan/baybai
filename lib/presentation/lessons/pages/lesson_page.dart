@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:shared_preferences/shared_preferences.dart";
 import "package:baybai/presentation/lessons/models/lesson_content.dart";
 import "package:baybai/presentation/lessons/widgets/lesson_slide.dart";
 import "package:baybai/presentation/lessons/widgets/lesson_back_button.dart";
@@ -13,30 +14,64 @@ class LessonPage extends StatefulWidget {
 }
 
 class _LessonPageState extends State<LessonPage> {
-  final PageController _pageController = PageController();
+  late PageController _pageController;
   int _currentIndex = 0;
   bool _isQuestionAnswered = false;
   late List<LessonContent> _lessons;
   bool _isLoading = true;
+  late int _lessonId;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_isLoading) {
-      final int lessonId = ModalRoute.of(context)!.settings.arguments as int? ?? 1;
-      _lessons = LessonData.lessons[lessonId] ?? LessonData.lessons[1]!;
-      _isLoading = false;
+      _lessonId = ModalRoute.of(context)!.settings.arguments as int? ?? 1;
+      _lessons = LessonData.lessons[_lessonId] ?? LessonData.lessons[1]!;
+      _initLesson();
     }
   }
 
-  void _nextPage() {
+  Future<void> _initLesson() async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    bool isCompleted = prefs.getBool('lesson_${_lessonId}_completed') ?? false;
+    
+    if (isCompleted) {
+      _currentIndex = 0;
+    } else {
+      _currentIndex = prefs.getInt('lesson_${_lessonId}_progress') ?? 0;
+    }
+    
+    if (_currentIndex >= _lessons.length) {
+      _currentIndex = 0;
+    }
+
+    _pageController = PageController(initialPage: _currentIndex);
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  void _nextPage() async {
     if (_currentIndex < _lessons.length - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
     } else {
-      Navigator.pop(context);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('lesson_${_lessonId}_completed', true);
+      await prefs.setInt('lesson_${_lessonId}_progress', _lessons.length);
+      
+      int currentUnlocked = prefs.getInt('unlocked_lessons') ?? 1;
+      if (currentUnlocked <= _lessonId) {
+        await prefs.setInt('unlocked_lessons', _lessonId + 1);
+      }
+
+      if (mounted) {
+        Navigator.pop(context);
+      }
     }
   }
 
@@ -80,11 +115,16 @@ class _LessonPageState extends State<LessonPage> {
               child: PageView.builder(
                 controller: _pageController,
                 physics: const NeverScrollableScrollPhysics(),
-                onPageChanged: (index) {
+                onPageChanged: (index) async {
                   setState(() {
                     _currentIndex = index;
                     _isQuestionAnswered = false; // Reset for the next slide
                   });
+                  final prefs = await SharedPreferences.getInstance();
+                  bool isCompleted = prefs.getBool('lesson_${_lessonId}_completed') ?? false;
+                  if (!isCompleted) {
+                    await prefs.setInt('lesson_${_lessonId}_progress', index);
+                  }
                 },
                 itemCount: _lessons.length,
                 itemBuilder: (context, index) => LessonSlide(
