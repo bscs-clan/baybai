@@ -40,8 +40,8 @@ class SettingsScreen extends StatelessWidget {
           ),
           body: ListView(
             children: [
-              _buildThemeTile(context, isDarkMode),
               _buildAccountTile(context, isDarkMode),
+              _buildThemeTile(context, isDarkMode),
               _buildDeveloperTile(context, isDarkMode),
               _buildCrashlyticsTile(context, isDarkMode),
               _buildLinkTile(
@@ -120,7 +120,7 @@ class SettingsScreen extends StatelessWidget {
         color: _iconColor(context, isDarkMode),
       ),
       title: Text(
-        "My Account",
+        "Account Settings",
         style: TextStyle(
           fontWeight: FontWeight.bold,
           color: _textColor(context, isDarkMode),
@@ -135,7 +135,9 @@ class SettingsScreen extends StatelessWidget {
         color: _iconColor(context, isDarkMode),
         size: 20,
       ),
-      onTap: () {},
+      onTap: () {
+        Navigator.pushNamed(context, "/account-settings");
+      },
     );
   }
 
@@ -150,7 +152,7 @@ class SettingsScreen extends StatelessWidget {
         ),
       ),
       subtitle: Text(
-        "Enable to label detected texts in scan, for training AI.",
+        "Let AI learns from your corrections. Enable to label detected texts in scan.",
         style: TextStyle(color: _subtitleColor(context, isDarkMode)),
       ),
       trailing: Switch(

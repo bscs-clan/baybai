@@ -1,3 +1,4 @@
+import "package:baybai/presentation/account_settings/pages/account_settings.dart";
 import "package:baybai/presentation/quiz/pages/quiz_setup.dart";
 import "package:baybai/presentation/flashcard/pages/flashcard_page.dart";
 import "package:flutter/material.dart";
@@ -58,6 +59,7 @@ class MyApp extends StatelessWidget {
             "/characters": (context) => const CharactersPage(),
             "/practice": (context) => const PracticePage(),
             "/ocr": (context) => const OCRPage(),
+            "/account-settings": (context) => AccountSettingsScreen(),
           },
         ),
       ),
