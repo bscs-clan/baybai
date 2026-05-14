@@ -1,110 +1,238 @@
-import "package:flutter/material.dart";
-import "package:flutter/foundation.dart";
-import "package:flutter_bloc/flutter_bloc.dart";
-import "package:flutter_custom_tabs/flutter_custom_tabs.dart";
-import "package:flutter_dotenv/flutter_dotenv.dart";
-import "package:flutter_tabler_icons/flutter_tabler_icons.dart";
-import "package:baybai/core/configs/theme/colors.dart";
-import "package:baybai/presentation/settings/bloc/theme_cubit.dart";
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_custom_tabs/flutter_custom_tabs.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 
-class SettingsScreen extends StatefulWidget {
+import 'package:baybai/core/configs/theme/colors.dart';
+import 'package:baybai/presentation/settings/bloc/theme_cubit.dart';
+
+class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends State<SettingsScreen> {
-  bool _isDarkMode = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _isDarkMode = Theme.of(context).brightness == Brightness.dark;
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(TablerIcons.arrow_left),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: Text("Settings"),
-      ),
-      body: ListView(
-        children: [
-          ListTile(
-            onTap: () {},
-            leading: Icon(TablerIcons.moon),
-            title: Text("Dark Mode"),
-            subtitle: Text("App theme"),
-            trailing: Switch(
-              value: _isDarkMode,
-              onChanged: (value) {
-                _isDarkMode
-                    ? context.read<ThemeCubit>().updateTheme(ThemeMode.light)
-                    : context.read<ThemeCubit>().updateTheme(ThemeMode.dark);
-                setState(() {
-                  _isDarkMode = value;
-                });
-              },
-              activeThumbColor: AppColors.primary,
+    return BlocBuilder<ThemeCubit, ThemeMode>(
+      builder: (context, themeMode) {
+        final isDarkMode =
+            themeMode == ThemeMode.dark ||
+            (themeMode == ThemeMode.system &&
+                MediaQuery.platformBrightnessOf(context) == Brightness.dark);
+
+        return Scaffold(
+          appBar: AppBar(
+            centerTitle: true,
+            leading: IconButton(
+              icon: Icon(
+                TablerIcons.arrow_left,
+                color: _iconColor(context, isDarkMode),
+              ),
+              onPressed: () => Navigator.pop(context),
+            ),
+            title: Text(
+              "Settings",
+              style: TextStyle(
+                color: _textColor(context, isDarkMode),
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
-          ListTile(
-            onTap: () {
-              _launchUrl("https://baybai.org");
-            },
-            leading: Icon(TablerIcons.scale),
-            title: Text("Terms & Conditions"),
-            subtitle: Text("April 23, 2025"),
+          body: ListView(
+            children: [
+              _buildThemeTile(context, isDarkMode),
+              _buildAccountTile(context, isDarkMode),
+              _buildDeveloperTile(context, isDarkMode),
+              _buildCrashlyticsTile(context, isDarkMode),
+              _buildLinkTile(
+                context,
+                isDarkMode,
+                title: "Terms & Conditions",
+                subtitle: "April 23, 2025",
+                icon: TablerIcons.scale,
+                url: "https://baybai.org",
+              ),
+              _buildLinkTile(
+                context,
+                isDarkMode,
+                title: "Privacy Policy",
+                subtitle: "April 23, 2025",
+                icon: TablerIcons.shield_lock,
+                url: "https://baybai.org",
+              ),
+              _buildLinkTile(
+                context,
+                isDarkMode,
+                title: "About Us",
+                subtitle: "App version ${dotenv.env["APP_VERSION"] ?? '1.0.0'}",
+                icon: TablerIcons.info_circle,
+                url: dotenv.env["WEB_HOST"] ?? "https://baybai.org",
+              ),
+            ],
           ),
-          ListTile(
-            onTap: () {
-              _launchUrl("https://baybai.org");
-            },
-            leading: Icon(TablerIcons.shield_lock),
-            title: Text("Privacy policy"),
-            subtitle: Text("April 23, 2025"),
-          ),
-          ListTile(
-            onTap: () {
-              _launchUrl("${dotenv.env["WEB_HOST"]}/about");
-            },
-            leading: Icon(TablerIcons.info_circle),
-            title: Text("About Us"),
-            subtitle: Text("App version ${dotenv.env["APP_VERSION"]}"),
-          ),
-        ],
+        );
+      },
+    );
+  }
+
+  // ================================================================
+  // Helper Methods
+  // ================================================================
+
+  Color _iconColor(BuildContext context, bool isDark) =>
+      isDark ? AppColors.darkIcon : AppColors.icon;
+
+  Color _textColor(BuildContext context, bool isDark) =>
+      isDark ? AppColors.darkText : AppColors.text;
+
+  Color _subtitleColor(BuildContext context, bool isDark) =>
+      isDark ? AppColors.darkTextGrey : AppColors.textGrey;
+
+  Widget _buildThemeTile(BuildContext context, bool isDarkMode) {
+    return ListTile(
+      leading: Icon(TablerIcons.moon, color: _iconColor(context, isDarkMode)),
+      title: Text(
+        "Dark Mode",
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: _textColor(context, isDarkMode),
+        ),
+      ),
+      subtitle: Text(
+        "App theme",
+        style: TextStyle(color: _subtitleColor(context, isDarkMode)),
+      ),
+      trailing: Switch(
+        value: isDarkMode,
+        activeThumbColor: AppColors.primary,
+        onChanged: (value) {
+          final cubit = context.read<ThemeCubit>();
+          cubit.updateTheme(value ? ThemeMode.dark : ThemeMode.light);
+        },
       ),
     );
   }
-}
 
-void _launchUrl(String url) async {
-  try {
-    await launchUrl(
-      Uri.parse(url),
-      customTabsOptions: CustomTabsOptions(
-        colorSchemes: CustomTabsColorSchemes.defaults(
-          toolbarColor: AppColors.background,
-        ),
-        shareState: CustomTabsShareState.off,
-        urlBarHidingEnabled: true,
-        showTitle: true,
-        closeButton: CustomTabsCloseButton(
-          icon: CustomTabsCloseButtonIcons.back,
+  Widget _buildAccountTile(BuildContext context, bool isDarkMode) {
+    return ListTile(
+      leading: Icon(
+        TablerIcons.user_circle,
+        color: _iconColor(context, isDarkMode),
+      ),
+      title: Text(
+        "My Account",
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: _textColor(context, isDarkMode),
         ),
       ),
+      subtitle: Text(
+        "Manage your account",
+        style: TextStyle(color: _subtitleColor(context, isDarkMode)),
+      ),
+      trailing: Icon(
+        TablerIcons.chevron_right,
+        color: _iconColor(context, isDarkMode),
+        size: 20,
+      ),
+      onTap: () {},
     );
-  } catch (e) {
-    if (kDebugMode) {
-      print(e.toString());
+  }
+
+  Widget _buildDeveloperTile(BuildContext context, bool isDarkMode) {
+    return ListTile(
+      leading: Icon(TablerIcons.code, color: _iconColor(context, isDarkMode)),
+      title: Text(
+        "Developers Mode",
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: _textColor(context, isDarkMode),
+        ),
+      ),
+      subtitle: Text(
+        "Enable to label detected texts in scan, for training AI.",
+        style: TextStyle(color: _subtitleColor(context, isDarkMode)),
+      ),
+      trailing: Switch(
+        value: false,
+        activeThumbColor: AppColors.primary,
+        onChanged: (value) {},
+      ),
+    );
+  }
+
+  Widget _buildCrashlyticsTile(BuildContext context, bool isDarkMode) {
+    return ListTile(
+      leading: Icon(TablerIcons.bug, color: _iconColor(context, isDarkMode)),
+      title: Text(
+        "Send Crashlytics",
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: _textColor(context, isDarkMode),
+        ),
+      ),
+      subtitle: Text(
+        "Help us improve the app by sending crash reports.",
+        style: TextStyle(color: _subtitleColor(context, isDarkMode)),
+      ),
+      trailing: Switch(
+        value: true,
+        activeThumbColor: AppColors.primary,
+        onChanged: (value) {},
+      ),
+    );
+  }
+
+  Widget _buildLinkTile(
+    BuildContext context,
+    bool isDarkMode, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required String url,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: _iconColor(context, isDarkMode)),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: _textColor(context, isDarkMode),
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: TextStyle(color: _subtitleColor(context, isDarkMode)),
+      ),
+      trailing: Icon(
+        TablerIcons.chevron_right,
+        color: _iconColor(context, isDarkMode),
+        size: 20,
+      ),
+      onTap: () => _launchUrl(context, url),
+    );
+  }
+
+  Future<void> _launchUrl(BuildContext context, String url) async {
+    try {
+      await launchUrl(
+        Uri.parse(url),
+        customTabsOptions: CustomTabsOptions(
+          colorSchemes: CustomTabsColorSchemes.defaults(
+            toolbarColor: Theme.of(context).scaffoldBackgroundColor,
+          ),
+          shareState: CustomTabsShareState.off,
+          urlBarHidingEnabled: true,
+          showTitle: true,
+          closeButton: CustomTabsCloseButton(
+            icon: CustomTabsCloseButtonIcons.back,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Could not launch $url: $e');
+      }
     }
   }
 }
