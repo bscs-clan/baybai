@@ -1,15 +1,16 @@
-import "dart:async";
-import "dart:io";
+import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
 
-import "package:baybai/core/configs/theme/colors.dart";
-import "package:flutter/material.dart";
-import "package:camera/camera.dart";
-import "package:image/image.dart" as img;
-import "package:baybai/core/models/detection.dart";
-import "package:baybai/service_camera.dart";
-import "package:baybai/service_ocr.dart";
-import "package:baybai/presentation/home/widgets/detection_overlay.dart";
-import "package:loading_animation_widget/loading_animation_widget.dart";
+import 'package:baybai/core/configs/theme/colors.dart';
+import 'package:flutter/material.dart';
+import 'package:camera/camera.dart';
+import 'package:image/image.dart' as img;
+import 'package:baybai/core/models/detection.dart';
+import 'package:baybai/service_camera.dart';
+import 'package:baybai/service_ocr.dart';
+import 'package:baybai/presentation/home/widgets/detection_overlay.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class CameraPreviewWidget extends StatefulWidget {
   final VoidCallback? onInitialized;
@@ -17,11 +18,15 @@ class CameraPreviewWidget extends StatefulWidget {
   final ValueNotifier<List<Detection>> detectionNotifier;
   final bool liveEnabled;
 
+  /// When true, detection overlay boxes are tappable (Developer Mode).
+  final bool overlayInteractive;
+
   CameraPreviewWidget({
     super.key,
     this.onInitialized,
     this.onPhotoPreviewChanged,
     this.liveEnabled = true,
+    this.overlayInteractive = false,
     ValueNotifier<List<Detection>>? detectionNotifier,
   }) : detectionNotifier = detectionNotifier ?? ValueNotifier([]);
 
@@ -40,6 +45,13 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
   DateTime? _lastProcessTime;
   String? _capturedPhotoPath;
   Size? _capturedPhotoSize;
+
+  /// Cached JPEG bytes of the last decoded camera frame (live mode) or the
+  /// captured photo (photo mode). Used by the interactive overlay for cropping.
+  Uint8List? _sourceImageBytes;
+
+  /// Pixel size of [_sourceImageBytes] (pre-computed to avoid decode on tap).
+  Size? _sourceImageSize;
 
   bool get isShowingCapturedPhoto => _capturedPhotoPath != null;
 
@@ -64,10 +76,10 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
       setState(() => _isInitialized = true);
       widget.onInitialized?.call();
     } on CameraException catch (e) {
-      if (e.code == "CameraAccessDenied") {
-        debugPrint("[Camera] Access denied");
+      if (e.code == 'CameraAccessDenied') {
+        debugPrint('[Camera] Access denied');
       } else {
-        debugPrint("[Camera] Error: ${e.code}");
+        debugPrint('[Camera] Error: ${e.code}');
       }
     }
   }
@@ -115,14 +127,59 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
         .then((detections) {
           if (mounted && widget.liveEnabled && _capturedPhotoPath == null) {
             widget.detectionNotifier.value = detections;
+
+            // Cache source image bytes when interactive overlay is enabled so
+            // tapped detections can be cropped and saved.
+            if (widget.overlayInteractive) {
+              _cacheFrameBytes(image);
+            }
           }
         })
         .catchError((e) {
-          debugPrint("[Camera] Inference error: $e");
+          debugPrint('[Camera] Inference error: $e');
         })
         .whenComplete(() {
           _isProcessingFrame = false;
         });
+  }
+
+  /// Converts the last YUV camera frame to JPEG bytes and caches them.
+  /// Runs in the background — UI is never blocked.
+  void _cacheFrameBytes(CameraImage image) {
+    Future(() {
+      try {
+        // OCRService already has a _convertCameraImage helper; we replicate
+        // the minimal conversion here to avoid coupling.
+        final planes = image.planes;
+        img.Image? decoded;
+
+        if (planes.length == 1) {
+          // JPEG plane (some devices stream compressed frames).
+          decoded = img.decodeImage(planes[0].bytes);
+        } else {
+          // YUV420 — build an Image from luminance plane only (greyscale is
+          // sufficient for dataset quality at this resolution).
+          final yPlane = planes[0];
+          decoded = img.Image.fromBytes(
+            width: image.width,
+            height: image.height,
+            bytes: yPlane.bytes.buffer,
+            format: img.Format.uint8,
+            numChannels: 1,
+          );
+        }
+
+        if (decoded == null) return;
+        final jpeg = Uint8List.fromList(img.encodeJpg(decoded, quality: 90));
+        _sourceImageBytes = jpeg;
+        _sourceImageSize = Size(
+          decoded.width.toDouble(),
+          decoded.height.toDouble(),
+        );
+      } catch (e) {
+        debugPrint('[Camera] Frame cache error: $e');
+      }
+    });
   }
 
   Future<void> capturePhoto() async {
@@ -149,17 +206,42 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
         widget.detectionNotifier.value = [];
       }
 
+      // Pre-cache photo bytes for dataset cropping.
+      if (widget.overlayInteractive) {
+        _cachePhotoBytes(file.path, photoSize);
+      }
+
       final detections = await _ocrService.processPhoto(file.path);
       if (mounted && _capturedPhotoPath == file.path) {
         widget.detectionNotifier.value = detections;
       }
     } catch (e) {
-      debugPrint("[Camera] Capture OCR error: $e");
+      debugPrint('[Camera] Capture OCR error: $e');
     } finally {
       if (mounted && wasStreaming && widget.liveEnabled) {
         await _startStream();
       }
     }
+  }
+
+  /// Reads and caches the captured photo as JPEG bytes (already JPEG on disk).
+  void _cachePhotoBytes(String path, Size? photoSize) {
+    Future(() async {
+      try {
+        final bytes = await File(path).readAsBytes();
+        Size? size = photoSize;
+        if (size == null) {
+          final decoded = img.decodeImage(bytes);
+          if (decoded != null) {
+            size = Size(decoded.width.toDouble(), decoded.height.toDouble());
+          }
+        }
+        _sourceImageBytes = bytes;
+        _sourceImageSize = size;
+      } catch (e) {
+        debugPrint('[Camera] Photo cache error: $e');
+      }
+    });
   }
 
   Future<void> closeCapturedPhoto() async {
@@ -174,6 +256,10 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
       widget.detectionNotifier.value = [];
     }
 
+    // Clear cached source bytes when returning to live view.
+    _sourceImageBytes = null;
+    _sourceImageSize = null;
+
     if (widget.liveEnabled) {
       await _startStream();
     }
@@ -186,7 +272,7 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
       final baked = img.bakeOrientation(decoded);
       return Size(baked.width.toDouble(), baked.height.toDouble());
     } catch (e) {
-      debugPrint("[Camera] Could not read captured photo size: $e");
+      debugPrint('[Camera] Could not read captured photo size: $e');
       return null;
     }
   }
@@ -211,6 +297,8 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
         });
         widget.onPhotoPreviewChanged?.call(false);
       }
+      _sourceImageBytes = null;
+      _sourceImageSize = null;
       await _startStream();
     } else {
       await _stopStream();
@@ -257,6 +345,9 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
               CameraPreview(controller),
               DetectionOverlayLayer(
                 detectionNotifier: widget.detectionNotifier,
+                interactive: widget.overlayInteractive,
+                sourceImageBytesGetter: () => _sourceImageBytes,
+                sourceImageSizeGetter: () => _sourceImageSize,
               ),
             ],
           ),
@@ -288,6 +379,9 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
               ),
               DetectionOverlayLayer(
                 detectionNotifier: widget.detectionNotifier,
+                interactive: widget.overlayInteractive,
+                sourceImageBytesGetter: () => _sourceImageBytes,
+                sourceImageSizeGetter: () => _sourceImageSize,
               ),
             ],
           ),
@@ -299,15 +393,29 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
 
 class DetectionOverlayLayer extends StatelessWidget {
   final ValueNotifier<List<Detection>> detectionNotifier;
+  final bool interactive;
+  final Uint8List? Function() sourceImageBytesGetter;
+  final Size? Function() sourceImageSizeGetter;
 
-  const DetectionOverlayLayer({super.key, required this.detectionNotifier});
+  const DetectionOverlayLayer({
+    super.key,
+    required this.detectionNotifier,
+    required this.sourceImageBytesGetter,
+    required this.sourceImageSizeGetter,
+    this.interactive = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<List<Detection>>(
       valueListenable: detectionNotifier,
       builder: (context, detections, _) {
-        return DetectionOverlay(detections: detections);
+        return DetectionOverlay(
+          detections: detections,
+          interactive: interactive,
+          sourceImageBytes: sourceImageBytesGetter(),
+          sourceImageSize: sourceImageSizeGetter(),
+        );
       },
     );
   }

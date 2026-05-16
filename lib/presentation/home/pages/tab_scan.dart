@@ -1,9 +1,11 @@
-import "package:baybai/core/configs/theme/colors.dart";
-import "package:flutter/material.dart";
-import "package:baybai/common/components/icon_button.dart";
-import "package:baybai/core/models/detection.dart";
-import "package:baybai/presentation/home/widgets/camera.dart";
-import "package:flutter/services.dart";
+import 'package:baybai/core/configs/theme/colors.dart';
+import 'package:baybai/presentation/settings/bloc/scan_settings_cubit.dart';
+import 'package:flutter/material.dart';
+import 'package:baybai/common/components/icon_button.dart';
+import 'package:baybai/core/models/detection.dart';
+import 'package:baybai/presentation/home/widgets/camera.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 enum _ScanMode { live, photo }
 
@@ -34,12 +36,18 @@ class _TabScanState extends State<TabScan> {
 
   @override
   Widget build(BuildContext context) {
+    final developerMode = context
+        .watch<ScanSettingsCubit>()
+        .state
+        .developerModeEnabled;
+
     return Stack(
       children: [
         CameraPreviewWidget(
           key: _cameraKey,
           detectionNotifier: _detectionNotifier,
           liveEnabled: _mode == _ScanMode.live,
+          overlayInteractive: developerMode && _mode == _ScanMode.photo,
           onInitialized: () {
             setState(() => _isCameraReady = true);
           },

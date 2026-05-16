@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 
 import 'package:baybai/core/configs/theme/colors.dart';
+import 'package:baybai/presentation/settings/bloc/scan_settings_cubit.dart';
 import 'package:baybai/presentation/settings/bloc/theme_cubit.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -142,23 +143,28 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildDeveloperTile(BuildContext context, bool isDarkMode) {
+    final developerMode =
+        context.watch<ScanSettingsCubit>().state.developerModeEnabled;
+
     return ListTile(
       leading: Icon(TablerIcons.code, color: _iconColor(context, isDarkMode)),
       title: Text(
-        "Developers Mode",
+        'Developers Mode',
         style: TextStyle(
           fontWeight: FontWeight.bold,
           color: _textColor(context, isDarkMode),
         ),
       ),
       subtitle: Text(
-        "Let AI learns from your corrections. Enable to label detected texts in scan.",
+        'Let AI learns from your corrections. Enable to label detected texts in scan.',
         style: TextStyle(color: _subtitleColor(context, isDarkMode)),
       ),
       trailing: Switch(
-        value: false,
+        value: developerMode,
         activeThumbColor: AppColors.primary,
-        onChanged: (value) {},
+        onChanged: (value) {
+          context.read<ScanSettingsCubit>().setDeveloperMode(value);
+        },
       ),
     );
   }
