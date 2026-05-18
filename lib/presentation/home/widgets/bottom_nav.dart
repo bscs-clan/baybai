@@ -1,7 +1,53 @@
 import "package:flutter/material.dart";
-import "package:flutter_svg/flutter_svg.dart";
 import "package:baybai/core/configs/theme/colors.dart";
 import "package:baybai/core/configs/theme/text.dart";
+import "package:flutter_bloc/flutter_bloc.dart";
+import "package:baybai/presentation/settings/bloc/scan_settings_cubit.dart";
+import "package:solar_icons/solar_icons.dart";
+
+final List<_NavItem> items = [
+  _NavItem(
+    activeIcon: SolarIconsBold.home,
+    inactiveIcon: SolarIconsOutline.home,
+    label: "Learn",
+    index: 0,
+  ),
+  _NavItem(
+    activeIcon: SolarIconsBold.objectScan,
+    inactiveIcon: SolarIconsOutline.objectScan,
+    label: "Scan",
+    index: 1,
+  ),
+  _NavItem(
+    activeIcon: SolarIconsBold.transferHorizontal,
+    inactiveIcon: SolarIconsOutline.transferHorizontal,
+    label: "Convert",
+    index: 2,
+  ),
+  _NavItem(
+    activeIcon: SolarIconsBold.database,
+    inactiveIcon: SolarIconsOutline.database,
+    label: "Datasets",
+    index: 3,
+    requiresDeveloperMode: true,
+  ),
+];
+
+class _NavItem {
+  final IconData activeIcon;
+  final IconData inactiveIcon;
+  final String label;
+  final int index;
+  final bool requiresDeveloperMode;
+
+  const _NavItem({
+    required this.activeIcon,
+    required this.inactiveIcon,
+    required this.label,
+    required this.index,
+    this.requiresDeveloperMode = false,
+  });
+}
 
 class Navbar extends StatelessWidget {
   final int selectedIndex;
@@ -11,17 +57,22 @@ class Navbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    final items = [
-      {"asset": "assets/icons/learn.svg", "label": "Learn", "index": 0},
-      {"asset": "assets/icons/scanner.svg", "label": "Scan", "index": 1},
-      {
-        "asset": "assets/icons/transliteration.svg",
-        "label": "Convert",
-        "index": 2,
-      },
-    ];
+    final developerModeEnabled = context
+        .watch<ScanSettingsCubit>()
+        .state
+        .developerModeEnabled;
+
+    final visibleItems = items.where((i) {
+      if (!i.requiresDeveloperMode) return true;
+      return developerModeEnabled;
+    }).toList();
+
+    final safeSelectedIndex =
+        visibleItems.any((item) => item.index == selectedIndex)
+        ? selectedIndex
+        : (visibleItems.isNotEmpty ? visibleItems.first.index : selectedIndex);
 
     return Align(
       alignment: Alignment.bottomCenter,
@@ -32,7 +83,7 @@ class Navbar extends StatelessWidget {
           color: isDarkMode ? AppColors.darkBox : AppColors.box,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
+              color: Colors.black.withOpacity(0.08),
               blurRadius: 32,
               spreadRadius: 8,
               offset: const Offset(0, -6),
@@ -40,19 +91,17 @@ class Navbar extends StatelessWidget {
           ],
         ),
         child: Row(
-          children: items.map((item) => _navItem(context, item)).toList(),
+          children: visibleItems
+              .map((item) => _navItem(context, item, safeSelectedIndex))
+              .toList(),
         ),
       ),
     );
   }
 
-  Widget _navItem(BuildContext context, Map<String, dynamic> item) {
-    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    final int index = item["index"];
-    final String asset = item["asset"];
-    final String label = item["label"];
-    final bool isSelected = selectedIndex == index;
+  Widget _navItem(BuildContext context, _NavItem item, int safeSelectedIndex) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final isSelected = safeSelectedIndex == item.index;
 
     final Color iconColor = isSelected
         ? AppColors.primary
@@ -60,22 +109,21 @@ class Navbar extends StatelessWidget {
 
     return Expanded(
       child: GestureDetector(
-        onTap: () => onTap(index),
+        onTap: () => onTap(item.index),
         behavior: HitTestBehavior.opaque,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SvgPicture.asset(
-                asset,
-                width: 24,
-                height: 24,
-                colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
+              Icon(
+                isSelected ? item.activeIcon : item.inactiveIcon,
+                size: 24,
+                color: iconColor,
               ),
               const SizedBox(height: 4),
               Text(
-                label,
+                item.label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
