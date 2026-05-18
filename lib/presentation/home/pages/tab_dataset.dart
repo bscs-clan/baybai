@@ -2,11 +2,13 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:baybai/core/configs/theme/colors.dart';
+import 'package:baybai/core/configs/theme/text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 class TabDataset extends StatefulWidget {
   const TabDataset({super.key});
@@ -375,10 +377,35 @@ class _TabDatasetState extends State<TabDataset> {
     }
 
     if (_entries.isEmpty) {
-      return const Center(
-        child: Text(
-          'No dataset found.\nCheck the debug log paths above.',
-          textAlign: TextAlign.center,
+      return Expanded(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              ColorFiltered(
+                colorFilter: isDarkMode
+                    ? const ColorFilter.mode(Colors.white70, BlendMode.modulate)
+                    : const ColorFilter.mode(Colors.transparent, BlendMode.dst),
+                child: Opacity(
+                  opacity: isDarkMode ? 0.80 : 1,
+                  child: Image.asset(
+                    "assets/images/illus_sleep.png",
+                    height: 200,
+                  ),
+                ),
+              ),
+              Text(
+                "No datasets",
+                style: AppTextStyles.title.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: isDarkMode
+                      ? AppColors.darkTextGrey
+                      : AppColors.textGrey,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
