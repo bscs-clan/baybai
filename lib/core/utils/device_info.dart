@@ -1,10 +1,10 @@
-import "dart:io";
-import "dart:convert";
-import "package:flutter/foundation.dart";
 import "package:device_info_plus/device_info_plus.dart";
+import "package:flutter/foundation.dart";
 import "package:flutter_device_imei/flutter_device_imei.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:http/http.dart" as http;
+import "dart:convert";
+import "dart:io";
 
 // For recording users device information.
 class DeviceInfo {

@@ -1,9 +1,9 @@
-import "dart:convert";
 import "package:flutter/foundation.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:geolocator/geolocator.dart";
 import "package:http/http.dart" as http;
 import "package:baybai/core/utils/device_info.dart";
+import "dart:convert";
 
 class DeviceLocation {
   // Get device location
