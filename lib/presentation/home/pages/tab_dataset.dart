@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:baybai/core/configs/theme/colors.dart';
 import 'package:flutter/material.dart';
@@ -784,17 +785,29 @@ class _MobileEditSheetState extends State<_MobileEditSheet> {
                         borderRadius: BorderRadius.circular(16),
                         child: AspectRatio(
                           aspectRatio: 2.35 / 1,
-                          child: Image.file(
-                            File(widget.entry.imagePath),
-                            fit: BoxFit.contain,
-                            errorBuilder: (_, __, ___) => Container(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.surfaceContainerHighest,
-                              child: const Center(
-                                child: Icon(Icons.image_not_supported),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              ImageFiltered(
+                                imageFilter: ImageFilter.blur(
+                                  sigmaX: 20,
+                                  sigmaY: 20,
+                                ),
+                                child: Image.file(
+                                  File(widget.entry.imagePath),
+                                  fit: BoxFit.cover,
+                                ),
                               ),
-                            ),
+
+                              Container(color: Colors.black.withOpacity(0.1)),
+
+                              Center(
+                                child: Image.file(
+                                  File(widget.entry.imagePath),
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
