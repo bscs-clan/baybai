@@ -55,7 +55,10 @@ class DatasetEntryTile extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        entry.titleBaybayin,
+                        entry.titleBaybayin.replaceAll(
+                          RegExp(r'\s+'),
+                          '\u2003\u2003\u2003',
+                        ),
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(
                               fontFamily: 'Baybayin',

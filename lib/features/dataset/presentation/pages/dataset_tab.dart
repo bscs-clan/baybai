@@ -1,4 +1,5 @@
 import "dart:io";
+import "package:baybai/core/theme/text.dart";
 import "package:flutter/material.dart";
 import "package:path_provider/path_provider.dart";
 import "package:permission_handler/permission_handler.dart";
@@ -47,22 +48,72 @@ class _DatasetTabState extends State<DatasetTab> with WidgetsBindingObserver {
   Future<void> _initializeFolder() async {
     final shouldProceed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Storage Permission Required'),
-        content: const Text(
-          'We need storage permission to create and access the ".datasets" folder in your device storage. Do you want to proceed?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+      barrierDismissible: false,
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+
+        return Dialog(
+          backgroundColor: isDark ? AppColors.darkBox : AppColors.box,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Proceed'),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Storage Permission Required",
+                  style: AppTextStyles.bigbody.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? AppColors.darkText : AppColors.text,
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                Text(
+                  'We need storage permission to read the datasets. Do you want to grant access?',
+                  style: TextStyle(
+                    color: isDark ? AppColors.darkTextGrey : AppColors.textGrey,
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: Text(
+                        "Cancel",
+                        style: TextStyle(
+                          color: isDark ? AppColors.darkText : AppColors.text,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: Text(
+                        "Grant Access",
+                        style: TextStyle(
+                          color: isDark
+                              ? AppColors.darkPrimary
+                              : AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
+        );
+      },
     );
 
     if (shouldProceed != true) return;

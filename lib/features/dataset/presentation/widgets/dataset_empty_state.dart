@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
+import "package:solar_icons/solar_icons.dart";
 
 class DatasetEmptyState extends StatelessWidget {
   final VoidCallback? onInitialize;
@@ -36,8 +37,8 @@ class DatasetEmptyState extends StatelessWidget {
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: onInitialize,
-              icon: const Icon(Icons.create_new_folder),
-              label: const Text("Initialize .datasets Folder"),
+              icon: Icon(SolarIconsBold.folderOpen),
+              label: const Text("Enable File Access"),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
