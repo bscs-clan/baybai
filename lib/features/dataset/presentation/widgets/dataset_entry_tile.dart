@@ -57,7 +57,7 @@ class DatasetEntryTile extends StatelessWidget {
                       Text(
                         entry.titleBaybayin.replaceAll(
                           RegExp(r'\s+'),
-                          '\u2003\u2003\u2003',
+                          '\u2003',
                         ),
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(
