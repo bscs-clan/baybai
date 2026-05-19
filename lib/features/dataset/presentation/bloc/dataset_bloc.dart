@@ -1,3 +1,4 @@
+import "package:flutter/foundation.dart";
 import "package:flutter_bloc/flutter_bloc.dart";
 import "package:baybai/core/usecases/usecase.dart";
 import "package:baybai/features/dataset/domain/entities/dataset_entry.dart";
@@ -21,6 +22,7 @@ class DatasetBloc extends Bloc<DatasetEvent, DatasetState> {
         _deleteDatasetEntry = deleteDatasetEntry,
         super(const DatasetState()) {
     on<DatasetLoadRequested>(_onLoadRequested);
+    on<DatasetRefreshRequested>(_onRefreshRequested);
     on<DatasetEntrySelected>(_onEntrySelected);
     on<DatasetEntrySaveRequested>(_onEntrySaveRequested);
     on<DatasetEntryDeleteRequested>(_onEntryDeleteRequested);
@@ -50,6 +52,35 @@ class DatasetBloc extends Bloc<DatasetEvent, DatasetState> {
           clearError: true,
         ),
       ),
+    );
+  }
+
+  Future<void> _onRefreshRequested(
+    DatasetRefreshRequested event,
+    Emitter<DatasetState> emit,
+  ) async {
+    final result = await _loadDatasetEntries(const NoParams());
+
+    result.fold(
+      (failure) {
+        // Silently ignore failure during refresh to prevent flicker/snackbars
+      },
+      (entries) {
+        if (!listEquals(state.entries, entries)) {
+          final selectedEntry = state.selectedEntry;
+          final stillExists =
+              selectedEntry != null && entries.any((e) => e.id == selectedEntry.id);
+          
+          emit(
+            state.copyWith(
+              status: DatasetStatus.loaded,
+              entries: entries,
+              selectedEntry: stillExists ? selectedEntry : (entries.isNotEmpty ? entries.first : null),
+              clearSelectedEntry: entries.isEmpty,
+            ),
+          );
+        }
+      },
     );
   }
 

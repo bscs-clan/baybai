@@ -12,6 +12,10 @@ class DatasetLoadRequested extends DatasetEvent {
   const DatasetLoadRequested();
 }
 
+class DatasetRefreshRequested extends DatasetEvent {
+  const DatasetRefreshRequested();
+}
+
 class DatasetEntrySelected extends DatasetEvent {
   final DatasetEntry entry;
 

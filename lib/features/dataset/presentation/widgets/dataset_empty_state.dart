@@ -1,10 +1,11 @@
 import "package:flutter/material.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
-import "dart:ui";
 
 class DatasetEmptyState extends StatelessWidget {
-  const DatasetEmptyState({super.key});
+  final VoidCallback? onInitialize;
+
+  const DatasetEmptyState({super.key, this.onInitialize});
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +32,18 @@ class DatasetEmptyState extends StatelessWidget {
               color: isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey,
             ),
           ),
+          if (onInitialize != null) ...[
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: onInitialize,
+              icon: const Icon(Icons.create_new_folder),
+              label: const Text("Initialize .datasets Folder"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
         ],
       ),
     );

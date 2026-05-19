@@ -6,7 +6,6 @@ import "package:baybai/features/dataset/presentation/widgets/dataset_thumbnail.d
 
 class DatasetEntryTile extends StatelessWidget {
   final DatasetEntry entry;
-  final bool isSelected;
   final bool isDarkMode;
   final VoidCallback onTap;
   final VoidCallback onDelete;
@@ -14,7 +13,6 @@ class DatasetEntryTile extends StatelessWidget {
   const DatasetEntryTile({
     super.key,
     required this.entry,
-    required this.isSelected,
     required this.isDarkMode,
     required this.onTap,
     required this.onDelete,
@@ -30,7 +28,9 @@ class DatasetEntryTile extends StatelessWidget {
         children: [
           SlidableAction(
             onPressed: (_) => onDelete(),
-            backgroundColor: Colors.transparent,
+            backgroundColor: isDarkMode
+                ? AppColors.darkBackground
+                : AppColors.background,
             foregroundColor: Colors.red,
             label: 'DELETE',
           ),
@@ -42,17 +42,6 @@ class DatasetEntryTile extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: isDarkMode ? AppColors.darkBox : AppColors.box,
-            borderRadius: BorderRadius.circular(10),
-            border: isSelected
-                ? Border.all(color: AppColors.primary.withValues(alpha: 0.45))
-                : null,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 8,
-                offset: const Offset(0, 0),
-              ),
-            ],
           ),
           child: Padding(
             padding: const EdgeInsets.all(12),
@@ -83,14 +72,13 @@ class DatasetEntryTile extends StatelessWidget {
                         entry.descNormal?.trim().isNotEmpty == true
                             ? entry.descNormal!
                             : '-',
-                        style: Theme.of(context).textTheme.bodyMedium
-                            ?.copyWith(
-                              color: entry.descNormal?.trim().isNotEmpty == true
-                                  ? (isDarkMode
-                                        ? AppColors.darkTextGrey
-                                        : AppColors.textGrey)
-                                  : Theme.of(context).disabledColor,
-                            ),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: entry.descNormal?.trim().isNotEmpty == true
+                              ? (isDarkMode
+                                    ? AppColors.darkTextGrey
+                                    : AppColors.textGrey)
+                              : Theme.of(context).disabledColor,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),

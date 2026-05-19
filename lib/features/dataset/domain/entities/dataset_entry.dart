@@ -1,4 +1,6 @@
-class DatasetEntry {
+import "package:equatable/equatable.dart";
+
+class DatasetEntry extends Equatable {
   final String id;
   final String imagePath;
   final String labelPath;
@@ -28,4 +30,13 @@ class DatasetEntry {
       descNormal: descNormal ?? this.descNormal,
     );
   }
+
+  @override
+  List<Object?> get props => [
+        id,
+        imagePath,
+        labelPath,
+        titleBaybayin,
+        descNormal,
+      ];
 }

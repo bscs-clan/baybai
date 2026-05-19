@@ -1,5 +1,5 @@
 import "package:flutter/material.dart";
-import "package:flutter_tabler_icons/flutter_tabler_icons.dart";
+import "package:solar_icons/solar_icons.dart";
 import "package:baybai/core/theme/colors.dart";
 
 class AccountSettingsScreen extends StatefulWidget {
@@ -19,7 +19,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         centerTitle: true,
         leading: IconButton(
           icon: Icon(
-            TablerIcons.arrow_left,
+            SolarIconsOutline.arrowLeft,
             color: isDarkMode ? AppColors.darkIcon : AppColors.icon,
           ),
           onPressed: () => Navigator.pop(context),

@@ -1,4 +1,7 @@
+import "dart:io";
 import "package:flutter/material.dart";
+import "package:path_provider/path_provider.dart";
+import "package:permission_handler/permission_handler.dart";
 import "package:flutter_bloc/flutter_bloc.dart";
 import "package:loading_animation_widget/loading_animation_widget.dart";
 import "package:baybai/core/theme/colors.dart";
@@ -12,8 +15,84 @@ import "package:baybai/features/dataset/presentation/widgets/dataset_empty_state
 import "package:baybai/features/dataset/presentation/widgets/dataset_entry_tile.dart";
 import "package:baybai/features/dataset/presentation/widgets/dataset_preview_pane.dart";
 
-class DatasetTab extends StatelessWidget {
+class DatasetTab extends StatefulWidget {
   const DatasetTab({super.key});
+
+  @override
+  State<DatasetTab> createState() => _DatasetTabState();
+}
+
+class _DatasetTabState extends State<DatasetTab> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      if (mounted) {
+        context.read<DatasetBloc>().add(const DatasetRefreshRequested());
+      }
+    }
+  }
+
+  Future<void> _initializeFolder() async {
+    final shouldProceed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Storage Permission Required'),
+        content: const Text(
+          'We need storage permission to create and access the ".datasets" folder in your device storage. Do you want to proceed?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Proceed'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldProceed != true) return;
+
+    if (Platform.isAndroid) {
+      if (await Permission.manageExternalStorage.isRestricted ||
+          await Permission.manageExternalStorage.isDenied) {
+        await Permission.manageExternalStorage.request();
+      }
+      if (await Permission.storage.isDenied) {
+        await Permission.storage.request();
+      }
+
+      final extDir = await getExternalStorageDirectory();
+      if (extDir != null) {
+        final parts = extDir.path.split('/Android');
+        final root = parts.isNotEmpty ? parts.first : extDir.path;
+        final dir = Directory('$root/.datasets');
+        if (!dir.existsSync()) {
+          try {
+            dir.createSync(recursive: true);
+          } catch (_) {}
+        }
+      }
+    }
+
+    if (mounted) {
+      context.read<DatasetBloc>().add(const DatasetLoadRequested());
+    }
+  }
 
   Future<void> _saveEntry(
     BuildContext context,
@@ -67,9 +146,9 @@ class DatasetTab extends StatelessWidget {
             current.errorMessage != null;
       },
       listener: (context, state) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(state.errorMessage!)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
       },
       builder: (context, state) {
         final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -93,7 +172,7 @@ class DatasetTab extends StatelessWidget {
         }
 
         if (state.entries.isEmpty) {
-          return const DatasetEmptyState();
+          return DatasetEmptyState(onInitialize: _initializeFolder);
         }
 
         return LayoutBuilder(
@@ -136,9 +215,7 @@ class DatasetTab extends StatelessWidget {
               isDesktop: false,
               isDarkMode: isDarkMode,
               onSelected: (entry) {
-                context.read<DatasetBloc>().add(
-                  DatasetEntrySelected(entry),
-                );
+                context.read<DatasetBloc>().add(DatasetEntrySelected(entry));
               },
               onDelete: (entry) => _deleteEntry(context, entry),
               onMobileEdit: (entry) => _showMobileEditSheet(context, entry),
@@ -171,25 +248,36 @@ class _DatasetEntryList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.only(left: 12, right: 12, top: 12, bottom: 156),
-      itemCount: entries.length,
-      cacheExtent: 1000,
-      physics: const BouncingScrollPhysics(),
-      itemBuilder: (context, index) {
-        final entry = entries[index];
+    return Container(
+      color: isDarkMode ? AppColors.darkBox : AppColors.box,
+      child: ListView.separated(
+        padding: const EdgeInsets.only(bottom: 156),
+        itemCount: entries.length,
+        cacheExtent: 1000,
+        physics: const BouncingScrollPhysics(),
 
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: DatasetEntryTile(
+        itemBuilder: (context, index) {
+          final entry = entries[index];
+
+          return DatasetEntryTile(
             entry: entry,
-            isSelected: selectedEntry?.id == entry.id,
             isDarkMode: isDarkMode,
             onTap: () => isDesktop ? onSelected(entry) : onMobileEdit(entry),
             onDelete: () => onDelete(entry),
+          );
+        },
+
+        separatorBuilder: (context, index) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Divider(
+            height: 1,
+            thickness: 1,
+            color: isDarkMode
+                ? AppColors.darkListSeparator
+                : AppColors.listSeparator,
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

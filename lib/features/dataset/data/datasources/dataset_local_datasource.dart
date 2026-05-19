@@ -1,8 +1,7 @@
+import "dart:io";
 import "package:path_provider/path_provider.dart";
-import "package:permission_handler/permission_handler.dart";
 import "package:baybai/core/error/exceptions.dart";
 import "package:baybai/features/dataset/data/models/dataset_entry_model.dart";
-import "dart:io";
 
 class DatasetLocalDataSource {
   static const Set<String> imageExtensions = {
@@ -20,8 +19,6 @@ class DatasetLocalDataSource {
       dirs.add(Directory('${docs.path}/.datasets'));
 
       if (Platform.isAndroid) {
-        await _requestAndroidStoragePermissions();
-
         final extDir = await getExternalStorageDirectory();
         if (extDir != null) {
           final parts = extDir.path.split('/Android');
@@ -144,13 +141,4 @@ class DatasetLocalDataSource {
     }
   }
 
-  Future<void> _requestAndroidStoragePermissions() async {
-    try {
-      await Permission.storage.request();
-    } catch (_) {}
-
-    try {
-      await Permission.manageExternalStorage.request();
-    } catch (_) {}
-  }
 }
