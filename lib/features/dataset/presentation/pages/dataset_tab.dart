@@ -299,35 +299,74 @@ class _DatasetEntryList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final reversedEntries = entries.reversed.toList();
+
     return Container(
-      color: isDarkMode ? AppColors.darkBox : AppColors.box,
-      child: ListView.separated(
-        padding: const EdgeInsets.only(bottom: 156),
-        itemCount: entries.length,
-        cacheExtent: 1000,
-        physics: const BouncingScrollPhysics(),
-
-        itemBuilder: (context, index) {
-          final entry = entries[index];
-
-          return DatasetEntryTile(
-            entry: entry,
-            isDarkMode: isDarkMode,
-            onTap: () => isDesktop ? onSelected(entry) : onMobileEdit(entry),
-            onDelete: () => onDelete(entry),
-          );
-        },
-
-        separatorBuilder: (context, index) => Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Divider(
-            height: 1,
-            thickness: 1,
-            color: isDarkMode
-                ? AppColors.darkListSeparator
-                : AppColors.listSeparator,
-          ),
+      decoration: BoxDecoration(
+        color: isDarkMode ? AppColors.darkBox : AppColors.box,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(16),
+          topRight: Radius.circular(16),
         ),
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+            child: Expanded(
+              child: Row(
+                children: [
+                  Text(
+                    'Datasets',
+                    style: AppTextStyles.bigbody.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: isDarkMode ? AppColors.darkText : AppColors.text,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${entries.length} ${entries.length == 1 ? "item" : "items"}',
+                    style: TextStyle(
+                      color: isDarkMode
+                          ? AppColors.darkTextGrey
+                          : AppColors.textGrey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.only(bottom: 156),
+              itemCount: reversedEntries.length,
+              cacheExtent: 1000,
+              physics: const BouncingScrollPhysics(),
+              itemBuilder: (context, index) {
+                final entry = reversedEntries[index];
+
+                return DatasetEntryTile(
+                  entry: entry,
+                  isDarkMode: isDarkMode,
+                  onTap: () =>
+                      isDesktop ? onSelected(entry) : onMobileEdit(entry),
+                  onDelete: () => onDelete(entry),
+                );
+              },
+              separatorBuilder: (context, index) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: isDarkMode
+                      ? AppColors.darkListSeparator
+                      : AppColors.listSeparator,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
