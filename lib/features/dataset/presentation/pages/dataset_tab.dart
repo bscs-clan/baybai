@@ -1,11 +1,11 @@
 import "dart:io";
-import "package:baybai/core/theme/text.dart";
 import "package:flutter/material.dart";
 import "package:path_provider/path_provider.dart";
 import "package:permission_handler/permission_handler.dart";
 import "package:flutter_bloc/flutter_bloc.dart";
 import "package:loading_animation_widget/loading_animation_widget.dart";
 import "package:baybai/core/theme/colors.dart";
+import "package:baybai/core/theme/text.dart";
 import "package:baybai/features/dataset/domain/entities/dataset_entry.dart";
 import "package:baybai/features/dataset/presentation/bloc/dataset_bloc.dart";
 import "package:baybai/features/dataset/presentation/bloc/dataset_event.dart";
@@ -15,6 +15,7 @@ import "package:baybai/features/dataset/presentation/widgets/dataset_edit_sheet.
 import "package:baybai/features/dataset/presentation/widgets/dataset_empty_state.dart";
 import "package:baybai/features/dataset/presentation/widgets/dataset_entry_tile.dart";
 import "package:baybai/features/dataset/presentation/widgets/dataset_preview_pane.dart";
+import "package:baybai/features/dataset/presentation/widgets/dataset_character_bar_graph.dart";
 
 class DatasetTab extends StatefulWidget {
   const DatasetTab({super.key});
@@ -51,7 +52,6 @@ class _DatasetTabState extends State<DatasetTab> with WidgetsBindingObserver {
       barrierDismissible: false,
       builder: (context) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
-
         return Dialog(
           backgroundColor: isDark ? AppColors.darkBox : AppColors.box,
           shape: RoundedRectangleBorder(
@@ -70,18 +70,14 @@ class _DatasetTabState extends State<DatasetTab> with WidgetsBindingObserver {
                     color: isDark ? AppColors.darkText : AppColors.text,
                   ),
                 ),
-
                 const SizedBox(height: 12),
-
                 Text(
                   'We need storage permission to read the datasets. Do you want to grant access?',
                   style: TextStyle(
                     color: isDark ? AppColors.darkTextGrey : AppColors.textGrey,
                   ),
                 ),
-
                 const SizedBox(height: 20),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -119,13 +115,8 @@ class _DatasetTabState extends State<DatasetTab> with WidgetsBindingObserver {
     if (shouldProceed != true) return;
 
     if (Platform.isAndroid) {
-      if (await Permission.manageExternalStorage.isRestricted ||
-          await Permission.manageExternalStorage.isDenied) {
-        await Permission.manageExternalStorage.request();
-      }
-      if (await Permission.storage.isDenied) {
-        await Permission.storage.request();
-      }
+      await Permission.manageExternalStorage.request();
+      await Permission.storage.request();
 
       final extDir = await getExternalStorageDirectory();
       if (extDir != null) {
@@ -168,9 +159,8 @@ class _DatasetTabState extends State<DatasetTab> with WidgetsBindingObserver {
     await showDatasetEditDialog(
       context: context,
       entry: entry,
-      onSave: (title, description) {
-        return _saveEntry(context, entry, title, description);
-      },
+      onSave: (title, description) =>
+          _saveEntry(context, entry, title, description),
     );
   }
 
@@ -182,9 +172,8 @@ class _DatasetTabState extends State<DatasetTab> with WidgetsBindingObserver {
       backgroundColor: Colors.transparent,
       builder: (context) => DatasetEditSheet(
         entry: entry,
-        onSave: (title, description) {
-          return _saveEntry(context, entry, title, description);
-        },
+        onSave: (title, description) =>
+            _saveEntry(context, entry, title, description),
       ),
     );
   }
@@ -192,10 +181,9 @@ class _DatasetTabState extends State<DatasetTab> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<DatasetBloc, DatasetState>(
-      listenWhen: (previous, current) {
-        return previous.errorMessage != current.errorMessage &&
-            current.errorMessage != null;
-      },
+      listenWhen: (previous, current) =>
+          previous.errorMessage != current.errorMessage &&
+          current.errorMessage != null,
       listener: (context, state) {
         ScaffoldMessenger.of(
           context,
@@ -232,42 +220,59 @@ class _DatasetTabState extends State<DatasetTab> with WidgetsBindingObserver {
 
             if (showPreviewPane) {
               return Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  SizedBox(
+                    width: 320,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
+                      child: DatasetCharacterBarGraph(
+                        entries: state.entries,
+                        isDarkMode: isDarkMode,
+                      ),
+                    ),
+                  ),
+
                   Expanded(
                     child: _DatasetEntryList(
                       entries: state.entries,
                       selectedEntry: state.selectedEntry,
                       isDesktop: true,
                       isDarkMode: isDarkMode,
-                      onSelected: (entry) {
-                        context.read<DatasetBloc>().add(
-                          DatasetEntrySelected(entry),
-                        );
-                      },
+                      onSelected: (entry) => context.read<DatasetBloc>().add(
+                        DatasetEntrySelected(entry),
+                      ),
                       onDelete: (entry) => _deleteEntry(context, entry),
-                      onMobileEdit: (entry) {
-                        _showMobileEditSheet(context, entry);
-                      },
+                      onMobileEdit: (entry) =>
+                          _showMobileEditSheet(context, entry),
                     ),
                   ),
+
+                  // Preview Pane
                   if (state.selectedEntry != null)
-                    DatasetPreviewPane(
-                      entry: state.selectedEntry!,
-                      isDarkMode: isDarkMode,
-                      onEdit: (entry) => _showEditDialog(context, entry),
+                    SizedBox(
+                      width: 360,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 12, 12, 12),
+                        child: DatasetPreviewPane(
+                          entry: state.selectedEntry!,
+                          isDarkMode: isDarkMode,
+                          onEdit: (entry) => _showEditDialog(context, entry),
+                        ),
+                      ),
                     ),
                 ],
               );
             }
 
+            // Mobile Layout
             return _DatasetEntryList(
               entries: state.entries,
               selectedEntry: state.selectedEntry,
               isDesktop: false,
               isDarkMode: isDarkMode,
-              onSelected: (entry) {
-                context.read<DatasetBloc>().add(DatasetEntrySelected(entry));
-              },
+              onSelected: (entry) =>
+                  context.read<DatasetBloc>().add(DatasetEntrySelected(entry)),
               onDelete: (entry) => _deleteEntry(context, entry),
               onMobileEdit: (entry) => _showMobileEditSheet(context, entry),
             );
@@ -309,11 +314,31 @@ class _DatasetEntryList extends StatelessWidget {
           topRight: Radius.circular(16),
         ),
       ),
-      child: Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-            child: Expanded(
+      child: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          if (!isDesktop)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: DatasetCharacterBarGraph(
+                  entries: entries,
+                  isDarkMode: isDarkMode,
+                ),
+              ),
+            ),
+          SliverToBoxAdapter(
+            child: Container(
+              width: double.infinity,
+              height: 4,
+              color: isDarkMode
+                  ? AppColors.darkBackground
+                  : AppColors.background,
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
               child: Row(
                 children: [
                   Text(
@@ -336,16 +361,23 @@ class _DatasetEntryList extends StatelessWidget {
               ),
             ),
           ),
-
-          Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.only(bottom: 156),
-              itemCount: reversedEntries.length,
-              cacheExtent: 1000,
-              physics: const BouncingScrollPhysics(),
-              itemBuilder: (context, index) {
-                final entry = reversedEntries[index];
-
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                if (index.isOdd) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: isDarkMode
+                          ? AppColors.darkListSeparator
+                          : AppColors.listSeparator,
+                    ),
+                  );
+                }
+                final itemIndex = index ~/ 2;
+                final entry = reversedEntries[itemIndex];
                 return DatasetEntryTile(
                   entry: entry,
                   isDarkMode: isDarkMode,
@@ -354,18 +386,12 @@ class _DatasetEntryList extends StatelessWidget {
                   onDelete: () => onDelete(entry),
                 );
               },
-              separatorBuilder: (context, index) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: isDarkMode
-                      ? AppColors.darkListSeparator
-                      : AppColors.listSeparator,
-                ),
-              ),
+              childCount: reversedEntries.isEmpty
+                  ? 0
+                  : reversedEntries.length * 2 - 1,
             ),
           ),
+          const SliverPadding(padding: EdgeInsets.only(bottom: 156)),
         ],
       ),
     );
