@@ -5,6 +5,12 @@ import "package:fl_chart/fl_chart.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/features/dataset/domain/entities/dataset_entry.dart";
 
+// Bar graph colors
+const Color baseColor = AppColors.primary;
+const Color topColor = Colors.orange;
+const Color bottomColor = Colors.red;
+const Color pamudpodColor = Colors.green;
+
 class DatasetCharacterBarGraph extends StatelessWidget {
   final List<DatasetEntry> entries;
   final bool isDarkMode;
@@ -77,7 +83,7 @@ class DatasetCharacterBarGraph extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
           ),
           child: Padding(
-            padding: const EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.only(top: 8, bottom: 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -95,10 +101,10 @@ class DatasetCharacterBarGraph extends StatelessWidget {
                   runSpacing: 6,
                   alignment: WrapAlignment.center,
                   children: [
-                    _buildLegendItem("Base Character", AppColors.primary),
-                    _buildLegendItem("Top Dot (i/e)", Colors.deepPurple),
-                    _buildLegendItem("Bottom Dot (o/u)", Colors.cyan),
-                    _buildLegendItem("Pamudpod (+)", Colors.green),
+                    _buildLegendItem("Base", baseColor),
+                    _buildLegendItem("Top Dot (e/i)", topColor),
+                    _buildLegendItem("Bottom Dot (o/u)", bottomColor),
+                    _buildLegendItem("Pamudpod (+)", pamudpodColor),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -128,7 +134,7 @@ class DatasetCharacterBarGraph extends StatelessWidget {
                             },
                           ),
 
-                          barTouchData: BarTouchData(enabled: true),
+                          barTouchData: BarTouchData(enabled: false),
 
                           titlesData: FlTitlesData(
                             topTitles: const AxisTitles(
@@ -148,7 +154,7 @@ class DatasetCharacterBarGraph extends StatelessWidget {
                                   }
                                   return SideTitleWidget(
                                     meta: meta,
-                                    space: 4,
+                                    space: 8,
                                     child: Text(
                                       value.toInt().toString(),
                                       style: TextStyle(
@@ -205,28 +211,28 @@ class DatasetCharacterBarGraph extends StatelessWidget {
                             final List<_Segment> activeSegments = [];
                             if (item.noneCount > 0) {
                               activeSegments.add(
-                                _Segment(item.noneCount, AppColors.primary),
+                                _Segment(item.noneCount, baseColor),
                               );
                             }
                             if (item.topCount > 0) {
                               activeSegments.add(
-                                _Segment(item.topCount, Colors.deepPurple),
+                                _Segment(item.topCount, topColor),
                               );
                             }
                             if (item.bottomCount > 0) {
                               activeSegments.add(
-                                _Segment(item.bottomCount, Colors.cyan),
+                                _Segment(item.bottomCount, bottomColor),
                               );
                             }
                             if (item.killerCount > 0) {
                               activeSegments.add(
-                                _Segment(item.killerCount, Colors.green),
+                                _Segment(item.killerCount, pamudpodColor),
                               );
                             }
 
                             final List<BarChartRodStackItem> stackItems = [];
                             double currentY = 0;
-                            const double gapSize = 0.2;
+                            const double gapSize = 0.5;
 
                             for (int j = 0; j < activeSegments.length; j++) {
                               final seg = activeSegments[j];
@@ -274,7 +280,7 @@ class DatasetCharacterBarGraph extends StatelessWidget {
                                         (isDarkMode
                                                 ? Colors.white
                                                 : Colors.black)
-                                            .withOpacity(0.08),
+                                            .withOpacity(0.05),
                                   ),
                                 ),
                               ],
@@ -300,7 +306,11 @@ class DatasetCharacterBarGraph extends StatelessWidget {
         Container(
           width: 10,
           height: 10,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.rectangle,
+            borderRadius: BorderRadius.circular(3),
+          ),
         ),
         const SizedBox(width: 4),
         Text(
