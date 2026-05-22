@@ -9,7 +9,7 @@ import "package:baybai/features/dataset/domain/entities/dataset_entry.dart";
 const Color baseColor = AppColors.primary;
 const Color topColor = Colors.orange;
 const Color bottomColor = Colors.red;
-const Color pamudpodColor = Colors.green;
+const Color viramaColor = Colors.green;
 
 class DatasetCharacterBarGraph extends StatelessWidget {
   final List<DatasetEntry> entries;
@@ -79,7 +79,7 @@ class DatasetCharacterBarGraph extends StatelessWidget {
               children: [
                 Center(
                   child: Text(
-                    "Character Counts",
+                    "Baybayin Characters",
                     style: AppTextStyles.bigbody.copyWith(
                       color: isDarkMode ? AppColors.darkText : AppColors.text,
                     ),
@@ -106,7 +106,7 @@ class DatasetCharacterBarGraph extends StatelessWidget {
                     _buildLegendItem("Base", baseColor),
                     _buildLegendItem("Top Dot (e/i)", topColor),
                     _buildLegendItem("Bottom Dot (o/u)", bottomColor),
-                    _buildLegendItem("Pamudpod (+)", pamudpodColor),
+                    _buildLegendItem("Virama (+)", viramaColor),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -226,7 +226,7 @@ class DatasetCharacterBarGraph extends StatelessWidget {
                             }
                             if (item.killerCount > 0) {
                               activeSegments.add(
-                                _Segment(item.killerCount, pamudpodColor),
+                                _Segment(item.killerCount, viramaColor),
                               );
                             }
 
