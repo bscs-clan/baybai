@@ -27,7 +27,7 @@ class DatasetCharacterBarGraph extends StatelessWidget {
       return _buildEmptyState("No entries");
     }
 
-    // Initialize ALL characters with zero counts (so they always show)
+    // Initialize ALL characters with zero counts
     final Map<String, _BaseCharStats> statsMap = {};
     for (final base in _abakadaOrder) {
       statsMap[base] = _BaseCharStats(base);
@@ -55,6 +55,9 @@ class DatasetCharacterBarGraph extends StatelessWidget {
 
     final items = statsMap.values.toList();
 
+    // Calculate overall total sum of all characters
+    final int totalCharacters = items.fold(0, (sum, item) => sum + item.total);
+
     final counts = items.map((e) => e.total).toList();
     final maxValue = counts.isEmpty ? 0.0 : counts.reduce(max).toDouble();
     final yConfig = _calculateYAxisConfig(maxValue);
@@ -76,13 +79,25 @@ class DatasetCharacterBarGraph extends StatelessWidget {
               children: [
                 Center(
                   child: Text(
-                    "Baybayin Characters",
+                    "Character Counts",
                     style: AppTextStyles.bigbody.copyWith(
                       color: isDarkMode ? AppColors.darkText : AppColors.text,
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 8),
+                Center(
+                  child: Text(
+                    "$totalCharacters total samples",
+                    style: AppTextStyles.mbody.copyWith(
+                      color: isDarkMode
+                          ? AppColors.darkTextGrey
+                          : AppColors.textGrey,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 Wrap(
                   spacing: 8,
                   runSpacing: 6,
@@ -92,7 +107,6 @@ class DatasetCharacterBarGraph extends StatelessWidget {
                     _buildLegendItem("Top Dot (e/i)", topColor),
                     _buildLegendItem("Bottom Dot (o/u)", bottomColor),
                     _buildLegendItem("Pamudpod (+)", pamudpodColor),
-                    _buildLegendItem("Space", Colors.grey),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -380,27 +394,27 @@ List<_BaybayinChar> _parseBaybayinString(String text) {
 }
 
 const List<String> _abakadaOrder = [
-  'ᜀ', // A
-  'ᜁ', // I / E
-  'ᜂ', // U / O
-  'ᜊ', // Ba
-  'ᜃ', // Ka
-  'ᜇ', // Da
-  'ᜄ', // Ga
-  'ᜑ', // Ha
-  'ᜎ', // La
-  'ᜋ', // Ma
-  'ᜈ', // Na
-  'ᜅ', // Nga
-  'ᜉ', // Pa
-  'ᜍ', // Ra
-  'ᜐ', // Sa
-  'ᜆ', // Ta
-  'ᜏ', // Wa
-  'ᜌ', // Ya
-  '᜵', // Single punctuation (traditional period/comma)
-  '᜶', // Double punctuation (traditional sentence end)
-  ' ', // Space
+  'ᜀ',
+  'ᜁ',
+  'ᜂ',
+  'ᜊ',
+  'ᜃ',
+  'ᜇ',
+  'ᜄ',
+  'ᜑ',
+  'ᜎ',
+  'ᜋ',
+  'ᜈ',
+  'ᜅ',
+  'ᜉ',
+  'ᜍ',
+  'ᜐ',
+  'ᜆ',
+  'ᜏ',
+  'ᜌ',
+  '᜵',
+  '᜶',
+  ' ',
 ];
 
 class _Segment {
