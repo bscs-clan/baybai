@@ -27,49 +27,36 @@ class DatasetCharacterBarGraph extends StatelessWidget {
       return _buildEmptyState("No entries");
     }
 
+    // Initialize ALL characters with zero counts (so they always show)
     final Map<String, _BaseCharStats> statsMap = {};
+    for (final base in _abakadaOrder) {
+      statsMap[base] = _BaseCharStats(base);
+    }
+
+    // Count actual data
     for (final entry in entries) {
       final title = entry.titleBaybayin;
       final parsed = _parseBaybayinString(title);
       for (final char in parsed) {
-        final stats = statsMap.putIfAbsent(
-          char.base,
-          () => _BaseCharStats(char.base),
-        );
-        if (char.modifier == null) {
-          stats.noneCount++;
-        } else if (char.modifier == '\u1712') {
-          stats.topCount++;
-        } else if (char.modifier == '\u1713') {
-          stats.bottomCount++;
-        } else if (char.modifier == '\u1714') {
-          stats.killerCount++;
+        final stats = statsMap[char.base];
+        if (stats != null) {
+          if (char.modifier == null) {
+            stats.noneCount++;
+          } else if (char.modifier == '\u1712') {
+            stats.topCount++;
+          } else if (char.modifier == '\u1713') {
+            stats.bottomCount++;
+          } else if (char.modifier == '\u1714') {
+            stats.killerCount++;
+          }
         }
       }
     }
 
-    if (statsMap.isEmpty) {
-      return _buildEmptyState("No character data");
-    }
+    final items = statsMap.values.toList();
 
-    // Sort by Abakada order: vowels first, then consonants (abakada), then comma/period
-    final sortedStats = statsMap.values.toList()
-      ..sort((a, b) {
-        int indexA = _abakadaOrder.indexOf(a.base);
-        int indexB = _abakadaOrder.indexOf(b.base);
-
-        if (indexA == -1) indexA = 999;
-        if (indexB == -1) indexB = 999;
-
-        if (indexA != indexB) {
-          return indexA.compareTo(indexB);
-        }
-        return a.base.compareTo(b.base);
-      });
-
-    final items = sortedStats;
     final counts = items.map((e) => e.total).toList();
-    final maxValue = counts.reduce(max).toDouble();
+    final maxValue = counts.isEmpty ? 0.0 : counts.reduce(max).toDouble();
     final yConfig = _calculateYAxisConfig(maxValue);
 
     return LayoutBuilder(
@@ -105,6 +92,7 @@ class DatasetCharacterBarGraph extends StatelessWidget {
                     _buildLegendItem("Top Dot (e/i)", topColor),
                     _buildLegendItem("Bottom Dot (o/u)", bottomColor),
                     _buildLegendItem("Pamudpod (+)", pamudpodColor),
+                    _buildLegendItem("Space", Colors.grey),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -133,9 +121,7 @@ class DatasetCharacterBarGraph extends StatelessWidget {
                               );
                             },
                           ),
-
                           barTouchData: BarTouchData(enabled: false),
-
                           titlesData: FlTitlesData(
                             topTitles: const AxisTitles(
                               sideTitles: SideTitles(showTitles: false),
@@ -183,14 +169,15 @@ class DatasetCharacterBarGraph extends StatelessWidget {
                                   }
 
                                   final label = items[index].base;
+                                  final isSpace = label == " ";
 
                                   return SideTitleWidget(
                                     meta: meta,
                                     space: 8,
                                     child: Text(
-                                      label,
+                                      isSpace ? "␣" : label,
                                       style: TextStyle(
-                                        fontFamily: 'Baybayin',
+                                        fontFamily: isSpace ? null : 'Baybayin',
                                         fontSize: 14,
                                         fontWeight: FontWeight.bold,
                                         color: isDarkMode
@@ -203,7 +190,6 @@ class DatasetCharacterBarGraph extends StatelessWidget {
                               ),
                             ),
                           ),
-
                           barGroups: List.generate(items.length, (index) {
                             final item = items[index];
                             final double totalValue = item.total.toDouble();
@@ -344,6 +330,8 @@ class DatasetCharacterBarGraph extends StatelessWidget {
   }
 }
 
+// ==================== Helper Classes ====================
+
 class _BaybayinChar {
   final String base;
   final String? modifier;
@@ -366,11 +354,12 @@ class _BaseCharStats {
 List<_BaybayinChar> _parseBaybayinString(String text) {
   final List<_BaybayinChar> result = [];
   final runes = text.runes.toList();
+
   for (int i = 0; i < runes.length; i++) {
     final rune = runes[i];
     final charStr = String.fromCharCode(rune);
 
-    if (charStr.trim().isEmpty) continue;
+    if (charStr.trim().isEmpty && charStr != " ") continue;
 
     if (rune == 0x1712 || rune == 0x1713 || rune == 0x1714) {
       continue;
@@ -391,31 +380,27 @@ List<_BaybayinChar> _parseBaybayinString(String text) {
 }
 
 const List<String> _abakadaOrder = [
-  // Vowels
-  'ᜀ', // A (U+1700)
-  'ᜁ', // I/E (U+1701)
-  'ᜂ', // O/U (U+1702)
-  // Consonants in Abakada order: B, K, D, G, H, L, M, N, NG, P, R, S, T, W, Y
-  'ᜊ', // Ba (U+170A)
-  'ᜃ', // Ka (U+1703)
-  'ᜇ', // Da (U+1707)
-  'ᜄ', // Ga (U+1704)
-  'ᜑ', // Ha (U+1710)
-  'ᜎ', // La (U+170D)
-  'ᜋ', // Ma (U+170B)
-  'ᜈ', // Na (U+1708)
-  'ᜅ', // Nga (U+1705)
-  'ᜉ', // Pa (U+1709)
-  'ᜟ', // Ra (U+171F)
-  'ᜐ', // Sa (U+170F)
-  'ᜆ', // Ta (U+1706)
-  'ᜏ', // Wa (U+170E)
-  'ᜌ', // Ya (U+170C)
-  // Punctuation (comma and period: both Baybayin dandas and standard western characters)
-  '᜵', // Single danda (comma) (U+1735)
-  ',', // Western comma
-  '᜶', // Double danda (period) (U+1736)
-  '.', // Western period
+  'ᜀ', // A
+  'ᜁ', // I / E
+  'ᜂ', // U / O
+  'ᜊ', // Ba
+  'ᜃ', // Ka
+  'ᜇ', // Da
+  'ᜄ', // Ga
+  'ᜑ', // Ha
+  'ᜎ', // La
+  'ᜋ', // Ma
+  'ᜈ', // Na
+  'ᜅ', // Nga
+  'ᜉ', // Pa
+  'ᜍ', // Ra
+  'ᜐ', // Sa
+  'ᜆ', // Ta
+  'ᜏ', // Wa
+  'ᜌ', // Ya
+  '᜵', // Single punctuation (traditional period/comma)
+  '᜶', // Double punctuation (traditional sentence end)
+  ' ', // Space
 ];
 
 class _Segment {
@@ -433,36 +418,26 @@ class _YAxisConfig {
 }
 
 _YAxisConfig _calculateYAxisConfig(double maxValue) {
-  if (maxValue <= 0) {
-    return _YAxisConfig(5, 1);
-  }
-  if (maxValue <= 5) {
-    return _YAxisConfig(5, 1);
-  }
+  if (maxValue <= 0) return _YAxisConfig(5, 1);
+  if (maxValue <= 5) return _YAxisConfig(5, 1);
 
-  // We want to divide the range into roughly 4 intervals
-  final double rawStep = (maxValue * 1.1) / 4;
+  double niceMax = _getNiceNumber(maxValue);
+  double interval = _getNiceInterval(niceMax);
 
-  // Find the magnitude (power of 10) of the raw step
-  final double log10 = log(rawStep) / ln10;
-  final double magnitude = pow(10, log10.floor()).toDouble();
+  return _YAxisConfig(niceMax, interval);
+}
 
-  final double normalizedStep = rawStep / magnitude;
+double _getNiceNumber(double value) {
+  if (value <= 10) return (value / 5).ceil() * 5;
+  if (value <= 50) return (value / 10).ceil() * 10;
+  if (value <= 100) return (value / 25).ceil() * 25;
+  return (value / 50).ceil() * 50;
+}
 
-  double step;
-  if (normalizedStep <= 1) {
-    step = 1;
-  } else if (normalizedStep <= 2) {
-    step = 2;
-  } else if (normalizedStep <= 5) {
-    step = 5;
-  } else {
-    step = 10;
-  }
-  step *= magnitude;
-
-  // Round the max Y to the next step
-  final double maxY = (maxValue * 1.1 / step).ceil() * step;
-
-  return _YAxisConfig(maxY, step);
+double _getNiceInterval(double maxY) {
+  if (maxY <= 10) return 2;
+  if (maxY <= 25) return 5;
+  if (maxY <= 50) return 10;
+  if (maxY <= 100) return 25;
+  return 50;
 }
