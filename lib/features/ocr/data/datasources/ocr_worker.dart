@@ -22,6 +22,10 @@ const int _recInputWidth = 512;
 const int _recMinChars = 1;
 const int _liveFrameMaxLongSide = 1280;
 const int _photoMaxLongSide = 1600;
+const int _recMaxWordSegments = 8;
+const int _recMinWordSegmentWidthPx = 8;
+const double _recWordGapHeightRatio = 0.22;
+const double _recWordGapMedianRatio = 2.4;
 
 // Vocabulary for recognition (from training script)
 const List<String> _vocabulary = [
@@ -47,6 +51,7 @@ const List<String> _vocabulary = [
   '\u1712',
   '\u1714',
   '\u1713',
+  ' ',
 ];
 
 void ocrWorkerEntry(SendPort sendPort) {
@@ -311,9 +316,9 @@ class _OcrWorker {
 
     for (final region in regions) {
       final cropped = _cropTextRegion(image, region);
-      final recognition = _runRecognition(cropped);
+      final recognition = _runLineRecognition(cropped);
 
-      if (recognition.text.runes.length < _recMinChars) {
+      if (!_hasMinimumRecognizedText(recognition.text)) {
         rejectedEmpty++;
         continue;
       }
@@ -388,7 +393,7 @@ class _OcrWorker {
     double? bestRejectedConfidence;
     final results = <_OcrResult>[];
 
-    if (recognition.text.runes.length < _recMinChars) {
+    if (!_hasMinimumRecognizedText(recognition.text)) {
       rejectedEmpty = 1;
     } else if (!_isBaybayinText(recognition.text)) {
       rejectedNonBaybayin = 1;
@@ -857,8 +862,199 @@ class _OcrWorker {
 
   bool _isBaybayinText(String text) {
     return text.runes.every((codePoint) {
-      return codePoint >= 0x1700 && codePoint <= 0x1714;
+      return codePoint == 0x20 || (codePoint >= 0x1700 && codePoint <= 0x1714);
     });
+  }
+
+  bool _hasMinimumRecognizedText(String text) {
+    return text.replaceAll(' ', '').runes.length >= _recMinChars;
+  }
+
+  _RecognitionResult _runLineRecognition(img.Image image) {
+    final wordSegments = _segmentWordImages(image);
+    if (wordSegments.length <= 1) {
+      return _runRecognition(image);
+    }
+
+    final recognizedWords = <_RecognitionResult>[];
+    for (final segment in wordSegments) {
+      final recognition = _runRecognition(segment);
+      if (!_hasMinimumRecognizedText(recognition.text)) continue;
+      if (!_isBaybayinText(recognition.text)) continue;
+      recognizedWords.add(recognition);
+    }
+
+    if (recognizedWords.length <= 1) {
+      return _runRecognition(image);
+    }
+
+    final text = recognizedWords.map((word) => word.text).join(' ');
+    final confidence =
+        recognizedWords.fold<double>(0, (sum, word) => sum + word.confidence) /
+        recognizedWords.length;
+
+    return _RecognitionResult(text: text, confidence: confidence);
+  }
+
+  List<img.Image> _segmentWordImages(img.Image image) {
+    if (image.width < _recMinWordSegmentWidthPx * 3 || image.height < 8) {
+      return const [];
+    }
+
+    final projection = _buildForegroundColumnProjection(image);
+    final spans = _findInkSpans(projection, image.height);
+    if (spans.length < 2) return const [];
+
+    final gaps = <int>[];
+    for (var i = 1; i < spans.length; i++) {
+      gaps.add(spans[i].start - spans[i - 1].end - 1);
+    }
+
+    final positiveGaps = gaps.where((gap) => gap > 0).toList()..sort();
+    if (positiveGaps.isEmpty) return const [];
+
+    final medianGap = positiveGaps[positiveGaps.length ~/ 2].toDouble();
+    final wordGapThreshold =
+        math
+            .max(
+              image.height * _recWordGapHeightRatio,
+              medianGap * _recWordGapMedianRatio,
+            )
+            .round();
+
+    final wordRanges = <_ColumnRange>[];
+    var wordStart = spans.first.start;
+    var previousEnd = spans.first.end;
+
+    for (var i = 1; i < spans.length; i++) {
+      final gap = spans[i].start - previousEnd - 1;
+      if (gap >= wordGapThreshold) {
+        wordRanges.add(_ColumnRange(wordStart, previousEnd));
+        wordStart = spans[i].start;
+      }
+      previousEnd = spans[i].end;
+    }
+    wordRanges.add(_ColumnRange(wordStart, previousEnd));
+
+    final filtered =
+        wordRanges
+            .where((range) => range.width >= _recMinWordSegmentWidthPx)
+            .toList();
+    if (filtered.length <= 1 || filtered.length > _recMaxWordSegments) {
+      return const [];
+    }
+
+    final padding = math.max(2, (image.height * 0.06).round());
+    return [
+      for (final range in filtered)
+        img.copyCrop(
+          image,
+          x: math.max(0, range.start - padding),
+          y: 0,
+          width:
+              math.min(image.width, range.end + padding + 1) -
+              math.max(0, range.start - padding),
+          height: image.height,
+        ),
+    ];
+  }
+
+  Int32List _buildForegroundColumnProjection(img.Image image) {
+    final histogram = List<int>.filled(256, 0);
+    final gray = Uint8List(image.width * image.height);
+    var index = 0;
+
+    for (var y = 0; y < image.height; y++) {
+      for (var x = 0; x < image.width; x++) {
+        final pixel = image.getPixel(x, y);
+        final value =
+            (0.299 * pixel.r + 0.587 * pixel.g + 0.114 * pixel.b)
+                .round()
+                .clamp(0, 255)
+                .toInt();
+        gray[index++] = value;
+        histogram[value]++;
+      }
+    }
+
+    final threshold = _otsuThreshold(histogram, gray.length);
+    var darkerCount = 0;
+    for (final value in gray) {
+      if (value <= threshold) darkerCount++;
+    }
+
+    final foregroundIsDark = darkerCount <= gray.length - darkerCount;
+    final projection = Int32List(image.width);
+
+    index = 0;
+    for (var y = 0; y < image.height; y++) {
+      for (var x = 0; x < image.width; x++) {
+        final value = gray[index++];
+        final isForeground =
+            foregroundIsDark ? value <= threshold : value > threshold;
+        if (isForeground) projection[x]++;
+      }
+    }
+
+    return projection;
+  }
+
+  int _otsuThreshold(List<int> histogram, int total) {
+    var sum = 0.0;
+    for (var i = 0; i < histogram.length; i++) {
+      sum += i * histogram[i];
+    }
+
+    var backgroundWeight = 0;
+    var backgroundSum = 0.0;
+    var maxVariance = -1.0;
+    var threshold = 127;
+
+    for (var i = 0; i < histogram.length; i++) {
+      backgroundWeight += histogram[i];
+      if (backgroundWeight == 0) continue;
+
+      final foregroundWeight = total - backgroundWeight;
+      if (foregroundWeight == 0) break;
+
+      backgroundSum += i * histogram[i];
+      final backgroundMean = backgroundSum / backgroundWeight;
+      final foregroundMean = (sum - backgroundSum) / foregroundWeight;
+      final variance =
+          backgroundWeight *
+          foregroundWeight *
+          (backgroundMean - foregroundMean) *
+          (backgroundMean - foregroundMean);
+
+      if (variance > maxVariance) {
+        maxVariance = variance;
+        threshold = i;
+      }
+    }
+
+    return threshold;
+  }
+
+  List<_ColumnRange> _findInkSpans(Int32List projection, int imageHeight) {
+    final minInkPixels = math.max(1, (imageHeight * 0.025).ceil());
+    final spans = <_ColumnRange>[];
+    var start = -1;
+
+    for (var x = 0; x < projection.length; x++) {
+      final hasInk = projection[x] >= minInkPixels;
+      if (hasInk && start == -1) {
+        start = x;
+      } else if (!hasInk && start != -1) {
+        if (x - start >= 2) spans.add(_ColumnRange(start, x - 1));
+        start = -1;
+      }
+    }
+
+    if (start != -1 && projection.length - start >= 2) {
+      spans.add(_ColumnRange(start, projection.length - 1));
+    }
+
+    return spans;
   }
 
   _RecognitionResult _runRecognition(img.Image image) {
@@ -997,6 +1193,15 @@ class _RecognitionResult {
   final double confidence;
 
   const _RecognitionResult({required this.text, required this.confidence});
+}
+
+class _ColumnRange {
+  final int start;
+  final int end;
+
+  const _ColumnRange(this.start, this.end);
+
+  int get width => end - start + 1;
 }
 
 class _TextRegion {
