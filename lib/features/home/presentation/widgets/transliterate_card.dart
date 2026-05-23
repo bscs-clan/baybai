@@ -21,6 +21,7 @@ final RegExp _wordPattern = RegExp(
 final RegExp _wordOrSeparatorPattern = RegExp(
   r"[A-Za-z\u1700-\u1714]+(?:-[A-Za-z\u1700-\u1714]+)*|[^A-Za-z\u1700-\u1714-]+|-",
 );
+const int _maxSuggestionAmbiguityTypes = 10;
 
 class _TransliterateCardState extends State<TransliterateCard> {
   bool isFilipinoToBaybayin = true;
@@ -408,7 +409,7 @@ Future<List<String>> loadWordlist() async {
   final raw = await rootBundle.loadString("assets/docs/baybayin_wordlist.txt");
   final words = raw
       .split(RegExp(r"\r?\n"))
-      .map((word) => word.trim())
+      .map((word) => Transliterator.normalizeBaybayinText(word.trim()))
       .where((word) => word.isNotEmpty)
       .toSet()
       .toList();
@@ -557,6 +558,8 @@ List<String> findFilipinoSuggestions(
   if (baybayinWord.trim().isEmpty || wordlist.isEmpty) return const [];
 
   final ambigTypes = Transliterator.getAmbigTypes(baybayinWord);
+  if (ambigTypes.length > _maxSuggestionAmbiguityTypes) return const [];
+
   final possibleWords = ambigTypes.isEmpty
       ? <String>{Transliterator.transliterateWithChoices(baybayinWord, {})}
       : Transliterator.generateCombinations(ambigTypes).map((choices) {
@@ -598,7 +601,28 @@ List<TextSpan> highlightErrors(
 }
 
 List<String> _unicodeSymbols(String text) {
-  return text.runes.map(String.fromCharCode).toList(growable: false);
+  final normalized = Transliterator.normalizeBaybayinText(text);
+  final symbols = <String>[];
+  final runes = normalized.runes.toList(growable: false);
+
+  for (var i = 0; i < runes.length; i++) {
+    final codePoint = runes[i];
+    final isBaybayinBase = codePoint >= 0x1700 && codePoint <= 0x1711;
+    final hasFollowingMark =
+        i + 1 < runes.length &&
+            runes[i + 1] >= 0x1712 &&
+            runes[i + 1] <= 0x1714;
+
+    if (isBaybayinBase && hasFollowingMark) {
+      symbols.add(
+        String.fromCharCode(codePoint) + String.fromCharCode(runes[++i]),
+      );
+    } else {
+      symbols.add(String.fromCharCode(codePoint));
+    }
+  }
+
+  return symbols;
 }
 
 int _levenshtein(List<String> source, List<String> target) {

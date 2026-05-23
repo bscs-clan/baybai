@@ -9,12 +9,65 @@ import "package:baybai/features/dataset/domain/usecases/save_dataset_capture.dar
 import "package:baybai/features/dataset/domain/usecases/save_dataset_entry.dart";
 import "package:baybai/features/dataset/presentation/bloc/dataset_bloc.dart";
 import "package:baybai/features/dataset/presentation/bloc/dataset_capture_cubit.dart";
+import "package:baybai/features/ocr/data/datasources/camera_service.dart";
+import "package:baybai/features/ocr/data/datasources/ocr_service.dart";
+import "package:baybai/features/ocr/data/repositories/ocr_repository_impl.dart";
+import "package:baybai/features/ocr/domain/repositories/ocr_repository.dart";
+import "package:baybai/features/ocr/domain/usecases/dispose_ocr.dart";
+import "package:baybai/features/ocr/domain/usecases/initialize_ocr.dart";
+import "package:baybai/features/ocr/domain/usecases/process_ocr_frame.dart";
+import "package:baybai/features/ocr/domain/usecases/process_ocr_photo.dart";
+import "package:baybai/features/ocr/domain/usecases/recognize_ocr_image.dart";
 import "package:baybai/features/settings/presentation/view_models/scan_settings_cubit.dart";
 import "package:baybai/features/settings/presentation/view_models/theme_cubit.dart";
 
 final serviceLoc = GetIt.instance;
 
 Future<void> initDependencies() async {
+  if (!serviceLoc.isRegistered<CameraService>()) {
+    serviceLoc.registerLazySingleton<CameraService>(CameraService.new);
+  }
+
+  if (!serviceLoc.isRegistered<OCRService>()) {
+    serviceLoc.registerLazySingleton<OCRService>(OCRService.new);
+  }
+
+  if (!serviceLoc.isRegistered<OcrRepository>()) {
+    serviceLoc.registerLazySingleton<OcrRepository>(
+      () => OcrRepositoryImpl(serviceLoc<OCRService>()),
+    );
+  }
+
+  if (!serviceLoc.isRegistered<InitializeOcr>()) {
+    serviceLoc.registerLazySingleton<InitializeOcr>(
+      () => InitializeOcr(serviceLoc<OcrRepository>()),
+    );
+  }
+
+  if (!serviceLoc.isRegistered<ProcessOcrFrame>()) {
+    serviceLoc.registerLazySingleton<ProcessOcrFrame>(
+      () => ProcessOcrFrame(serviceLoc<OcrRepository>()),
+    );
+  }
+
+  if (!serviceLoc.isRegistered<ProcessOcrPhoto>()) {
+    serviceLoc.registerLazySingleton<ProcessOcrPhoto>(
+      () => ProcessOcrPhoto(serviceLoc<OcrRepository>()),
+    );
+  }
+
+  if (!serviceLoc.isRegistered<RecognizeOcrImage>()) {
+    serviceLoc.registerLazySingleton<RecognizeOcrImage>(
+      () => RecognizeOcrImage(serviceLoc<OcrRepository>()),
+    );
+  }
+
+  if (!serviceLoc.isRegistered<DisposeOcr>()) {
+    serviceLoc.registerLazySingleton<DisposeOcr>(
+      () => DisposeOcr(serviceLoc<OcrRepository>()),
+    );
+  }
+
   if (!serviceLoc.isRegistered<DatasetLocalDataSource>()) {
     serviceLoc.registerLazySingleton<DatasetLocalDataSource>(
       DatasetLocalDataSource.new,
@@ -81,8 +134,6 @@ Future<void> initDependencies() async {
   }
 
   if (!serviceLoc.isRegistered<ScanSettingsCubit>()) {
-    serviceLoc.registerFactory<ScanSettingsCubit>(
-      ScanSettingsCubit.new,
-    );
+    serviceLoc.registerFactory<ScanSettingsCubit>(ScanSettingsCubit.new);
   }
 }

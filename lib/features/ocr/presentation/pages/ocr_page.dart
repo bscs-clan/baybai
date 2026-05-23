@@ -1,8 +1,12 @@
 import "package:flutter/material.dart";
 import "package:camera/camera.dart";
 import "package:baybai/core/models/detection.dart";
+import "package:baybai/core/usecases/usecase.dart";
 import "package:baybai/features/ocr/data/datasources/camera_service.dart";
-import "package:baybai/features/ocr/data/datasources/ocr_service.dart";
+import "package:baybai/features/ocr/domain/usecases/dispose_ocr.dart";
+import "package:baybai/features/ocr/domain/usecases/initialize_ocr.dart";
+import "package:baybai/features/ocr/domain/usecases/process_ocr_frame.dart";
+import "package:baybai/injection_container.dart";
 import "dart:async";
 
 class OCRPage extends StatefulWidget {
@@ -14,6 +18,10 @@ class OCRPage extends StatefulWidget {
 
 class _OCRPageState extends State<OCRPage> with WidgetsBindingObserver {
   CameraController? _controller;
+  late final CameraService _cameraService;
+  late final InitializeOcr _initializeOcr;
+  late final ProcessOcrFrame _processOcrFrame;
+  late final DisposeOcr _disposeOcr;
   bool _isProcessing = false;
   List<Detection> _detections = [];
   Timer? _processingTimer;
@@ -21,22 +29,38 @@ class _OCRPageState extends State<OCRPage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    _initializeCamera();
-    _initializeOCR();
+    _cameraService = serviceLoc<CameraService>();
+    _initializeOcr = serviceLoc<InitializeOcr>();
+    _processOcrFrame = serviceLoc<ProcessOcrFrame>();
+    _disposeOcr = serviceLoc<DisposeOcr>();
+    unawaited(_initialize());
+  }
+
+  Future<void> _initialize() async {
+    await _initializeOCR();
+    if (!mounted) return;
+    await _initializeCamera();
   }
 
   Future<void> _initializeCamera() async {
-    final cameraService = CameraService();
-    await cameraService.init();
-    _controller = cameraService.controller;
+    await _cameraService.init();
+    _controller = _cameraService.controller;
 
     if (_controller != null) {
       await _controller!.startImageStream(_processImage);
     }
+
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> _initializeOCR() async {
-    await OCRService().initialize();
+    final result = await _initializeOcr(const NoParams());
+    result.fold(
+      (failure) => debugPrint('OCR init error: ${failure.message}'),
+      (_) {},
+    );
   }
 
   void _processImage(CameraImage image) async {
@@ -44,10 +68,16 @@ class _OCRPageState extends State<OCRPage> with WidgetsBindingObserver {
 
     _isProcessing = true;
     try {
-      final detections = await OCRService().processFrame(image);
-      setState(() {
-        _detections = detections;
-      });
+      final result = await _processOcrFrame(ProcessOcrFrameParams(image));
+      result.fold(
+        (failure) => debugPrint('OCR processing error: ${failure.message}'),
+        (detections) {
+          if (!mounted) return;
+          setState(() {
+            _detections = detections;
+          });
+        },
+      );
     } catch (e) {
       debugPrint('OCR processing error: $e');
     } finally {
@@ -58,9 +88,10 @@ class _OCRPageState extends State<OCRPage> with WidgetsBindingObserver {
   @override
   void dispose() {
     _controller?.stopImageStream();
-    _controller?.dispose();
+    _cameraService.dispose();
+    _controller = null;
     _processingTimer?.cancel();
-    OCRService().dispose();
+    unawaited(_disposeOcr(const NoParams()).then((_) {}));
     super.dispose();
   }
 

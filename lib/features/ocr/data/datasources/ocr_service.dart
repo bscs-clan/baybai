@@ -150,15 +150,16 @@ class OCRService {
     final response = await _sendRequest(
       _OcrFrameRequest(
         requestId: _nextRequestId++,
-        planes: cameraImage.planes
-            .map(
-              (plane) => _OcrPlaneData(
-                bytes: Uint8List.fromList(plane.bytes),
-                bytesPerRow: plane.bytesPerRow,
-                bytesPerPixel: plane.bytesPerPixel,
-              ),
-            )
-            .toList(),
+        planes:
+            cameraImage.planes
+                .map(
+                  (plane) => _OcrPlaneData(
+                    bytes: Uint8List.fromList(plane.bytes),
+                    bytesPerRow: plane.bytesPerRow,
+                    bytesPerPixel: plane.bytesPerPixel,
+                  ),
+                )
+                .toList(),
         width: cameraImage.width,
         height: cameraImage.height,
         formatGroup: cameraImage.format.group,
@@ -210,22 +211,21 @@ class OCRService {
   }
 
   List<Detection> _toDetections(_OcrResponse response) {
-    return response.results
-        .map(
-          (result) => Detection(
-            box: Rect.fromLTRB(
-              result.left,
-              result.top,
-              result.right,
-              result.bottom,
-            ),
-            label: result.text,
-            transliteratedText: Transliterator.toFilipino(result.text),
-            confidence: result.confidence,
-            rotation: result.rotation,
-          ),
-        )
-        .toList();
+    return response.results.map((result) {
+      final label = Transliterator.normalizeBaybayinText(result.text);
+      return Detection(
+        box: Rect.fromLTRB(
+          result.left,
+          result.top,
+          result.right,
+          result.bottom,
+        ),
+        label: label,
+        transliteratedText: Transliterator.toFilipino(label),
+        confidence: result.confidence,
+        rotation: result.rotation,
+      );
+    }).toList();
   }
 
   void _logRecognitionDebug(_OcrResponse response, {required String source}) {

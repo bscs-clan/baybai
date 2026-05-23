@@ -14,9 +14,18 @@ class CameraService {
   CameraController? controller;
 
   Future<void> init() async {
-    cameras = await availableCameras();
+    if (controller?.value.isInitialized ?? false) return;
 
-    controller = CameraController(cameras[0], ResolutionPreset.max);
+    cameras = await availableCameras();
+    if (cameras.isEmpty) {
+      throw CameraException("noCamera", "No camera is available.");
+    }
+
+    controller = CameraController(
+      cameras[0],
+      ResolutionPreset.high,
+      enableAudio: false,
+    );
 
     await controller!.initialize();
   }

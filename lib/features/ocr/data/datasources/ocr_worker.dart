@@ -20,6 +20,8 @@ const List<double> _detStd = [0.229, 0.224, 0.225];
 const int _recInputHeight = 48;
 const int _recInputWidth = 512;
 const int _recMinChars = 1;
+const int _liveFrameMaxLongSide = 1280;
+const int _photoMaxLongSide = 1600;
 
 // Vocabulary for recognition (from training script)
 const List<String> _vocabulary = [
@@ -249,7 +251,10 @@ class _OcrWorker {
 
   _OcrResponse processFrame(_OcrFrameRequest request) {
     final stopwatch = Stopwatch()..start();
-    final image = _convertCameraImageToImage(request);
+    final image = _resizeIfNeeded(
+      _convertCameraImageToImage(request),
+      _liveFrameMaxLongSide,
+    );
     return _processImage(
       requestId: request.requestId,
       image: image,
@@ -265,7 +270,10 @@ class _OcrWorker {
       return _emptyResponse(request.requestId, stopwatch);
     }
 
-    final image = img.bakeOrientation(decoded);
+    final image = _resizeIfNeeded(
+      img.bakeOrientation(decoded),
+      _photoMaxLongSide,
+    );
     return _processImage(
       requestId: request.requestId,
       image: image,
@@ -517,6 +525,19 @@ class _OcrWorker {
     return rotated;
   }
 
+  img.Image _resizeIfNeeded(img.Image source, int maxLongSide) {
+    final longSide = math.max(source.width, source.height);
+    if (longSide <= maxLongSide) return source;
+
+    final scale = maxLongSide / longSide;
+    return img.copyResize(
+      source,
+      width: math.max(1, (source.width * scale).round()),
+      height: math.max(1, (source.height * scale).round()),
+      interpolation: img.Interpolation.linear,
+    );
+  }
+
   List<_TextRegion> _runDetection(img.Image image) {
     final resized = img.copyResize(
       image,
@@ -710,12 +731,14 @@ class _OcrWorker {
     if (rawWidth <= 0 || rawHeight <= 0) return null;
 
     final lineHeight = math.max(rawHeight, 1.0);
-    final inlinePadding = (lineHeight * _detInlinePaddingRatio)
-        .clamp(_detMinInlinePaddingPx, _detMaxInlinePaddingPx)
-        .toDouble();
-    final crossPadding = (lineHeight * _detCrossPaddingRatio)
-        .clamp(_detMinCrossPaddingPx, _detMaxCrossPaddingPx)
-        .toDouble();
+    final inlinePadding =
+        (lineHeight * _detInlinePaddingRatio)
+            .clamp(_detMinInlinePaddingPx, _detMaxInlinePaddingPx)
+            .toDouble();
+    final crossPadding =
+        (lineHeight * _detCrossPaddingRatio)
+            .clamp(_detMinCrossPaddingPx, _detMaxCrossPaddingPx)
+            .toDouble();
 
     final centerU = (minU + maxU) / 2;
     final centerV = (minV + maxV) / 2;
@@ -773,18 +796,22 @@ class _OcrWorker {
     int imageWidth,
     int imageHeight,
   ) {
-    final left = ((region.centerX - region.width / 2) / imageWidth)
-        .clamp(0.0, 1.0)
-        .toDouble();
-    final top = ((region.centerY - region.height / 2) / imageHeight)
-        .clamp(0.0, 1.0)
-        .toDouble();
-    final right = ((region.centerX + region.width / 2) / imageWidth)
-        .clamp(0.0, 1.0)
-        .toDouble();
-    final bottom = ((region.centerY + region.height / 2) / imageHeight)
-        .clamp(0.0, 1.0)
-        .toDouble();
+    final left =
+        ((region.centerX - region.width / 2) / imageWidth)
+            .clamp(0.0, 1.0)
+            .toDouble();
+    final top =
+        ((region.centerY - region.height / 2) / imageHeight)
+            .clamp(0.0, 1.0)
+            .toDouble();
+    final right =
+        ((region.centerX + region.width / 2) / imageWidth)
+            .clamp(0.0, 1.0)
+            .toDouble();
+    final bottom =
+        ((region.centerY + region.height / 2) / imageHeight)
+            .clamp(0.0, 1.0)
+            .toDouble();
 
     return Rect.fromLTRB(
       left,
@@ -836,9 +863,8 @@ class _OcrWorker {
 
   _RecognitionResult _runRecognition(img.Image image) {
     final inputShape = _recInterpreter!.getInputTensor(0).shape;
-    final inputHeight = inputShape.length >= 3
-        ? inputShape[1]
-        : _recInputHeight;
+    final inputHeight =
+        inputShape.length >= 3 ? inputShape[1] : _recInputHeight;
     final inputWidth = inputShape.length >= 3 ? inputShape[2] : _recInputWidth;
     final input = Float32List(inputShape.reduce((a, b) => a * b));
     input.fillRange(0, input.length, 1.0);
@@ -930,13 +956,16 @@ class _OcrWorker {
       previousIdx = maxIdx;
     }
 
-    final text = decoded
-        .where((idx) => idx > 0 && idx < _vocabulary.length)
-        .map((idx) => _vocabulary[idx])
-        .join();
-    final confidence = confidences.isEmpty
-        ? 0.0
-        : confidences.reduce((a, b) => a + b) / confidences.length;
+    final rawText =
+        decoded
+            .where((idx) => idx > 0 && idx < _vocabulary.length)
+            .map((idx) => _vocabulary[idx])
+            .join();
+    final text = Transliterator.normalizeBaybayinText(rawText);
+    final confidence =
+        confidences.isEmpty
+            ? 0.0
+            : confidences.reduce((a, b) => a + b) / confidences.length;
 
     return _RecognitionResult(text: text, confidence: confidence);
   }

@@ -7,6 +7,11 @@ class Transliterator {
   static const String kudlitI = "\u1712";
   static const String kudlitU = "\u1713";
   static const String virama = "\u1714";
+  static const int _baybayinBaseStart = 0x1700;
+  static const int _baybayinBaseEnd = 0x1711;
+  static const int _baybayinMarkStart = 0x1712;
+  static const int _baybayinMarkEnd = 0x1714;
+  static const int _maxDictionaryAmbiguityTypes = 10;
 
   // Mapping tables
   static final Map<String, String> toBaybayin = <String, String>{};
@@ -351,6 +356,48 @@ class Transliterator {
     return false;
   }
 
+  /// Removes invalid Baybayin mark stacks produced by OCR noise.
+  ///
+  /// Baybayin combining marks (kudlit/virama) are valid only after a base
+  /// character, and a base can have at most one mark. Repeated marks render as
+  /// several dots on a single glyph, so normalize before display or lookup.
+  static String normalizeBaybayinText(String text) {
+    if (text.isEmpty) return text;
+
+    final buffer = StringBuffer();
+    var hasPendingBaybayinBase = false;
+    var pendingBaseHasMark = false;
+
+    for (final codePoint in text.runes) {
+      final char = String.fromCharCode(codePoint);
+      final isBase =
+          codePoint >= _baybayinBaseStart && codePoint <= _baybayinBaseEnd;
+      final isMark =
+          codePoint >= _baybayinMarkStart && codePoint <= _baybayinMarkEnd;
+
+      if (isBase) {
+        buffer.write(char);
+        hasPendingBaybayinBase = true;
+        pendingBaseHasMark = false;
+        continue;
+      }
+
+      if (isMark) {
+        if (hasPendingBaybayinBase && !pendingBaseHasMark) {
+          buffer.write(char);
+          pendingBaseHasMark = true;
+        }
+        continue;
+      }
+
+      buffer.write(char);
+      hasPendingBaybayinBase = false;
+      pendingBaseHasMark = false;
+    }
+
+    return buffer.toString();
+  }
+
   /// Converts Latin Filipino text to Baybayin script.
   static String toBaybayinMap(String input) {
     ensureInitialized();
@@ -417,6 +464,7 @@ class Transliterator {
     String text,
     Map<int, String> choices,
   ) {
+    text = normalizeBaybayinText(text);
     final buffer = StringBuffer();
     int i = 0;
     int ambigIdx = 0;
@@ -482,6 +530,7 @@ class Transliterator {
   // ===================================================================
 
   static List<String> getAmbigTypes(String text) {
+    text = normalizeBaybayinText(text);
     final List<String> types = [];
     for (int i = 0; i < text.length; i++) {
       final c = text[i];
@@ -502,9 +551,8 @@ class Transliterator {
       final Map<int, String> choices = {};
       for (int j = 0; j < types.length; j++) {
         final bool first = ((mask >> j) & 1) == 0;
-        choices[j] = types[j] == "ie"
-            ? (first ? "i" : "e")
-            : (first ? "u" : "o");
+        choices[j] =
+            types[j] == "ie" ? (first ? "i" : "e") : (first ? "u" : "o");
       }
       result.add(choices);
     }
@@ -605,6 +653,7 @@ class Transliterator {
   /// Currently set to auto-select the best option (non-interactive).
   static String toFilipino(String text) {
     ensureInitialized();
+    text = normalizeBaybayinText(text);
 
     final ambigTypes = getAmbigTypes(text);
 
@@ -615,10 +664,17 @@ class Transliterator {
       return word;
     }
 
+    if (ambigTypes.length > _maxDictionaryAmbiguityTypes) {
+      final word = transliterateWithChoices(text, {});
+      return preferredSpelling[word.toLowerCase()] ?? word;
+    }
+
     // Generate all possible vowel combinations
-    final allWords = generateCombinations(
-      ambigTypes,
-    ).map((combo) => transliterateWithChoices(text, combo)).toSet().toList();
+    final allWords =
+        generateCombinations(ambigTypes)
+            .map((combo) => transliterateWithChoices(text, combo))
+            .toSet()
+            .toList();
 
     // Apply preferred spelling corrections
     final normalized = <String>[];

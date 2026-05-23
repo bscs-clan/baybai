@@ -4,9 +4,14 @@ import "package:image/image.dart" as img;
 import "package:loading_animation_widget/loading_animation_widget.dart";
 import "package:baybai/core/models/detection.dart";
 import "package:baybai/core/theme/colors.dart";
+import "package:baybai/core/usecases/usecase.dart";
 import "package:baybai/features/home/presentation/widgets/detection_overlay.dart";
+import "package:baybai/features/ocr/domain/usecases/dispose_ocr.dart";
+import "package:baybai/features/ocr/domain/usecases/initialize_ocr.dart";
+import "package:baybai/features/ocr/domain/usecases/process_ocr_frame.dart";
+import "package:baybai/features/ocr/domain/usecases/process_ocr_photo.dart";
 import "package:baybai/features/ocr/data/datasources/camera_service.dart";
-import "package:baybai/features/ocr/data/datasources/ocr_service.dart";
+import "package:baybai/injection_container.dart";
 import "dart:async";
 import "dart:io";
 import "dart:typed_data";
@@ -34,8 +39,11 @@ class CameraPreviewWidget extends StatefulWidget {
 }
 
 class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
-  final CameraService _cameraService = CameraService();
-  final OCRService _ocrService = OCRService();
+  late final CameraService _cameraService;
+  late final InitializeOcr _initializeOcr;
+  late final ProcessOcrFrame _processOcrFrame;
+  late final ProcessOcrPhoto _processOcrPhoto;
+  late final DisposeOcr _disposeOcr;
 
   bool _isInitialized = false;
 
@@ -57,11 +65,21 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
   @override
   void initState() {
     super.initState();
+    _cameraService = serviceLoc<CameraService>();
+    _initializeOcr = serviceLoc<InitializeOcr>();
+    _processOcrFrame = serviceLoc<ProcessOcrFrame>();
+    _processOcrPhoto = serviceLoc<ProcessOcrPhoto>();
+    _disposeOcr = serviceLoc<DisposeOcr>();
     _initAll();
   }
 
   Future<void> _initAll() async {
-    await Future.wait([_ocrService.initialize(), _initCamera()]);
+    final initResult = await _initializeOcr(const NoParams());
+    if (!mounted) return;
+
+    await initResult.fold((failure) async {
+      debugPrint('[Camera] OCR init error: ${failure.message}');
+    }, (_) => _initCamera());
   }
 
   Future<void> _initCamera() async {
@@ -121,18 +139,23 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
     _isProcessingFrame = true;
     _lastProcessTime = now;
 
-    _ocrService
-        .processFrame(image)
-        .then((detections) {
-          if (mounted && widget.liveEnabled && _capturedPhotoPath == null) {
-            widget.detectionNotifier.value = detections;
+    _processOcrFrame(ProcessOcrFrameParams(image))
+        .then((result) {
+          result.fold(
+            (failure) =>
+                debugPrint('[Camera] Inference error: ${failure.message}'),
+            (detections) {
+              if (mounted && widget.liveEnabled && _capturedPhotoPath == null) {
+                widget.detectionNotifier.value = detections;
 
-            // Cache source image bytes when interactive overlay is enabled so
-            // tapped detections can be cropped and saved.
-            if (widget.overlayInteractive) {
-              _cacheFrameBytes(image);
-            }
-          }
+                // Cache source image bytes when interactive overlay is enabled so
+                // tapped detections can be cropped and saved.
+                if (widget.overlayInteractive) {
+                  _cacheFrameBytes(image);
+                }
+              }
+            },
+          );
         })
         .catchError((e) {
           debugPrint('[Camera] Inference error: $e');
@@ -210,10 +233,16 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
         _cachePhotoBytes(file.path, photoSize);
       }
 
-      final detections = await _ocrService.processPhoto(file.path);
-      if (mounted && _capturedPhotoPath == file.path) {
-        widget.detectionNotifier.value = detections;
-      }
+      final result = await _processOcrPhoto(ProcessOcrPhotoParams(file.path));
+      result.fold(
+        (failure) =>
+            debugPrint('[Camera] Capture OCR error: ${failure.message}'),
+        (detections) {
+          if (mounted && _capturedPhotoPath == file.path) {
+            widget.detectionNotifier.value = detections;
+          }
+        },
+      );
     } catch (e) {
       debugPrint('[Camera] Capture OCR error: $e');
     } finally {
@@ -307,7 +336,7 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
   @override
   void dispose() {
     _cameraService.dispose();
-    _ocrService.dispose();
+    unawaited(_disposeOcr(const NoParams()).then((_) {}));
     super.dispose();
   }
 

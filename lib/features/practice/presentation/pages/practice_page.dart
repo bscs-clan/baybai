@@ -2,7 +2,10 @@ import "package:flutter/material.dart";
 import "package:fluttertoast/fluttertoast.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
-import "package:baybai/features/ocr/data/datasources/ocr_service.dart";
+import "package:baybai/core/usecases/usecase.dart";
+import "package:baybai/features/ocr/domain/usecases/initialize_ocr.dart";
+import "package:baybai/features/ocr/domain/usecases/recognize_ocr_image.dart";
+import "package:baybai/injection_container.dart";
 import "package:baybai/shared/widgets/button.dart";
 import "package:baybai/shared/widgets/solar_icon.dart";
 import "dart:math" as math;
@@ -57,10 +60,14 @@ class _PracticePageState extends State<PracticePage>
   String? _recognizedSymbol;
   double? _recognitionConfidence;
   late final AnimationController _demoController;
+  late final InitializeOcr _initializeOcr;
+  late final RecognizeOcrImage _recognizeOcrImage;
 
   @override
   void initState() {
     super.initState();
+    _initializeOcr = serviceLoc<InitializeOcr>();
+    _recognizeOcrImage = serviceLoc<RecognizeOcrImage>();
     _demoController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1800),
@@ -96,10 +103,7 @@ class _PracticePageState extends State<PracticePage>
     if (_isChecking) return;
 
     if (!_hasDrawableStroke) {
-      _showToast(
-        "Please draw the character first",
-        isError: true,
-      );
+      _showToast("Please draw the character first", isError: true);
       return;
     }
 
@@ -109,9 +113,22 @@ class _PracticePageState extends State<PracticePage>
     });
 
     try {
-      await OCRService().initialize();
+      final initResult = await _initializeOcr(const NoParams());
+      final initFailureMessage = initResult.fold<String?>(
+        (failure) => failure.message,
+        (_) => null,
+      );
+      if (initFailureMessage != null) {
+        throw StateError(initFailureMessage);
+      }
+
       final drawingBytes = await _renderDrawingForRecognition();
-      final detection = await OCRService().recognizeImageBytes(drawingBytes);
+      final recognitionResult = await _recognizeOcrImage(
+        RecognizeOcrImageParams(drawingBytes),
+      );
+      final detection = recognitionResult.fold((failure) {
+        throw StateError(failure.message);
+      }, (value) => value);
       final recognized = detection?.label;
       final expected = _characters[_currentIndex]["symbol"]!;
       final confidence = detection?.confidence ?? 0.0;
@@ -121,21 +138,16 @@ class _PracticePageState extends State<PracticePage>
         _recognizedSymbol = recognized;
         _recognitionConfidence = confidence;
         // Compare symbols while ignoring kudlit marks
-        _isPracticeCorrect = _stripKudlits(recognized ?? '') == _stripKudlits(expected);
+        _isPracticeCorrect =
+            _stripKudlits(recognized ?? '') == _stripKudlits(expected);
         _showResultButton = true;
       });
 
       // Show toast notification - success only if symbols match (ignoring kudlits)
       if (_stripKudlits(recognized ?? '') == _stripKudlits(expected)) {
-        _showToast(
-         "Perfect! Your drawing matched the symbol.",
-          isError: false,
-        );
+        _showToast("Perfect! Your drawing matched the symbol.", isError: false);
       } else {
-        _showToast(
-          "Your drawing did not match. Try again!",
-          isError: true,
-        );
+        _showToast("Your drawing did not match. Try again!", isError: true);
       }
     } catch (error) {
       debugPrint("Practice recognition error: $error");
@@ -146,10 +158,7 @@ class _PracticePageState extends State<PracticePage>
         _recognitionConfidence = null;
         _showResultButton = false;
       });
-      _showToast(
-        "Error recognizing drawing. Please try again.",
-        isError: true,
-      );
+      _showToast("Error recognizing drawing. Please try again.", isError: true);
     } finally {
       if (mounted) {
         setState(() {
@@ -219,11 +228,9 @@ class _PracticePageState extends State<PracticePage>
     const double targetHeight = 192;
     const double padding = 28;
     final aspectRatio = bounds.width / math.max(bounds.height, 1);
-    final targetWidth =
-        (aspectRatio * (targetHeight - padding * 2) + padding * 2).clamp(
-          96.0,
-          512.0,
-        );
+    final targetWidth = (aspectRatio * (targetHeight - padding * 2) +
+            padding * 2)
+        .clamp(96.0, 512.0);
     final scale = math.min(
       (targetWidth - padding * 2) / math.max(bounds.width, 1),
       (targetHeight - padding * 2) / math.max(bounds.height, 1),
@@ -240,11 +247,12 @@ class _PracticePageState extends State<PracticePage>
       Paint()..color = Colors.white,
     );
 
-    final paint = Paint()
-      ..color = Colors.black
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round
-      ..style = PaintingStyle.stroke;
+    final paint =
+        Paint()
+          ..color = Colors.black
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round
+          ..style = PaintingStyle.stroke;
 
     for (final stroke in _strokes) {
       if (stroke.isEmpty) continue;
@@ -338,9 +346,8 @@ class _PracticePageState extends State<PracticePage>
                       child: Text(
                         "Demonstration",
                         style: AppTextStyles.bigbody.copyWith(
-                          color: isDarkMode
-                              ? AppColors.darkWhite
-                              : AppColors.text,
+                          color:
+                              isDarkMode ? AppColors.darkWhite : AppColors.text,
                         ),
                       ),
                     ),
@@ -386,9 +393,8 @@ class _PracticePageState extends State<PracticePage>
     final character = _characters[_currentIndex];
 
     return Scaffold(
-      backgroundColor: isDarkMode
-          ? AppColors.darkBackground
-          : AppColors.background,
+      backgroundColor:
+          isDarkMode ? AppColors.darkBackground : AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -409,7 +415,11 @@ class _PracticePageState extends State<PracticePage>
                 ),
               ),
               child: Center(
-                child: SolarIcon(AppSolarIcons.arrowLeft, size: 24, color: isDarkMode ? AppColors.darkIcon : AppColors.icon),
+                child: SolarIcon(
+                  AppSolarIcons.arrowLeft,
+                  size: 24,
+                  color: isDarkMode ? AppColors.darkIcon : AppColors.icon,
+                ),
               ),
             ),
           ),
@@ -454,18 +464,16 @@ class _PracticePageState extends State<PracticePage>
                             child: Center(
                               child: Text(
                                 character["symbol"]!,
-                                style:
-                                    const TextStyle(
-                                      fontFamily: "Baybayin",
-                                      fontSize: 186,
-                                      fontWeight: FontWeight.w400,
-                                    ).copyWith(
-                                      color:
-                                          (isDarkMode
-                                                  ? AppColors.white
-                                                  : AppColors.dark)
-                                              .withValues(alpha: 0.14),
-                                    ),
+                                style: const TextStyle(
+                                  fontFamily: "Baybayin",
+                                  fontSize: 186,
+                                  fontWeight: FontWeight.w400,
+                                ).copyWith(
+                                  color: (isDarkMode
+                                          ? AppColors.white
+                                          : AppColors.dark)
+                                      .withValues(alpha: 0.14),
+                                ),
                               ),
                             ),
                           ),
@@ -510,9 +518,10 @@ class _PracticePageState extends State<PracticePage>
                                   Text(
                                     "Draw character here",
                                     style: AppTextStyles.body.copyWith(
-                                      color: isDarkMode
-                                          ? AppColors.white
-                                          : AppColors.textGrey,
+                                      color:
+                                          isDarkMode
+                                              ? AppColors.white
+                                              : AppColors.textGrey,
                                     ),
                                   ),
                                 ],
@@ -526,9 +535,14 @@ class _PracticePageState extends State<PracticePage>
                           child: Row(
                             children: [
                               _buildActionButton(
-                                child: SolarIcon(AppSolarIcons.undo, size: 24, color: isDarkMode
-                                        ? AppColors.darkIcon
-                                        : AppColors.icon),
+                                child: SolarIcon(
+                                  AppSolarIcons.undo,
+                                  size: 24,
+                                  color:
+                                      isDarkMode
+                                          ? AppColors.darkIcon
+                                          : AppColors.icon,
+                                ),
                                 onTap: _undo,
                                 isDarkMode: isDarkMode,
                               ),
@@ -539,11 +553,12 @@ class _PracticePageState extends State<PracticePage>
                                 child: Icon(
                                   Icons.gesture,
                                   size: 22,
-                                  color: _showStrokeGuide
-                                      ? AppColors.primary
-                                      : (isDarkMode
-                                            ? AppColors.darkIcon
-                                            : AppColors.icon),
+                                  color:
+                                      _showStrokeGuide
+                                          ? AppColors.primary
+                                          : (isDarkMode
+                                              ? AppColors.darkIcon
+                                              : AppColors.icon),
                                 ),
                                 onTap: _toggleStrokeGuide,
                                 isDarkMode: isDarkMode,
@@ -553,9 +568,10 @@ class _PracticePageState extends State<PracticePage>
                                 child: Icon(
                                   Icons.play_circle_outline,
                                   size: 24,
-                                  color: isDarkMode
-                                      ? AppColors.darkIcon
-                                      : AppColors.icon,
+                                  color:
+                                      isDarkMode
+                                          ? AppColors.darkIcon
+                                          : AppColors.icon,
                                 ),
                                 onTap: _showDemonstrationGif,
                                 isDarkMode: isDarkMode,
@@ -608,8 +624,6 @@ class _PracticePageState extends State<PracticePage>
       ),
     );
   }
-
-
 
   Widget _buildStrokeButton(bool isDarkMode) {
     return GestureDetector(
@@ -672,10 +686,11 @@ class _DrawPainter extends CustomPainter {
     for (final stroke in strokes) {
       if (stroke.length < 2) continue;
 
-      final paint = Paint()
-        ..color = isDarkMode ? Colors.white : Colors.black
-        ..strokeCap = StrokeCap.round
-        ..style = PaintingStyle.stroke;
+      final paint =
+          Paint()
+            ..color = isDarkMode ? Colors.white : Colors.black
+            ..strokeCap = StrokeCap.round
+            ..style = PaintingStyle.stroke;
 
       for (int i = 0; i < stroke.length - 1; i++) {
         paint.strokeWidth = stroke[i].strokeWidth;
@@ -727,18 +742,20 @@ class _DemoPainter extends CustomPainter {
     final start = Offset(size.width * 0.24, size.height * 0.76);
     final control = Offset(size.width * 0.48, size.height * 0.18);
     final end = Offset(size.width * 0.76, size.height * 0.68);
-    final path = Path()
-      ..moveTo(start.dx, start.dy)
-      ..quadraticBezierTo(control.dx, control.dy, end.dx, end.dy);
+    final path =
+        Path()
+          ..moveTo(start.dx, start.dy)
+          ..quadraticBezierTo(control.dx, control.dy, end.dx, end.dy);
 
     final metric = path.computeMetrics().first;
     final drawnPath = metric.extractPath(0, metric.length * progress);
-    final paint = Paint()
-      ..color = AppColors.primary
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 9;
+    final paint =
+        Paint()
+          ..color = AppColors.primary
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 9;
 
     canvas.drawPath(drawnPath, paint);
 
