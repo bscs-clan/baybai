@@ -7,10 +7,12 @@ class Transliterator {
   static const String kudlitI = "\u1712";
   static const String kudlitU = "\u1713";
   static const String virama = "\u1714";
-  static const int _baybayinBaseStart = 0x1700;
-  static const int _baybayinBaseEnd = 0x1711;
+  static const int _baybayinConsonantStart = 0x1703;
+  static const int _baybayinConsonantEnd = 0x1711;
   static const int _baybayinMarkStart = 0x1712;
   static const int _baybayinMarkEnd = 0x1714;
+  static const int _tagalogPamudpod = 0x1715;
+  static const int _hanunooPamudpod = 0x1734;
   static const int _maxDictionaryAmbiguityTypes = 10;
 
   // Mapping tables
@@ -358,41 +360,53 @@ class Transliterator {
 
   /// Removes invalid Baybayin mark stacks produced by OCR noise.
   ///
-  /// Baybayin combining marks (kudlit/virama) are valid only after a base
-  /// character, and a base can have at most one mark. Repeated marks render as
-  /// several dots on a single glyph, so normalize before display or lookup.
+  /// Baybayin combining marks are valid only after consonants, and each
+  /// consonant can have at most one supported mark: top dot, bottom dot, or
+  /// virama. Pamudpod marks are intentionally stripped.
   static String normalizeBaybayinText(String text) {
     if (text.isEmpty) return text;
 
     final buffer = StringBuffer();
-    var hasPendingBaybayinBase = false;
-    var pendingBaseHasMark = false;
+    var hasPendingBaybayinConsonant = false;
+    var pendingConsonantHasMark = false;
 
     for (final codePoint in text.runes) {
       final char = String.fromCharCode(codePoint);
-      final isBase =
-          codePoint >= _baybayinBaseStart && codePoint <= _baybayinBaseEnd;
+      final isConsonant =
+          codePoint >= _baybayinConsonantStart &&
+          codePoint <= _baybayinConsonantEnd;
       final isMark =
           codePoint >= _baybayinMarkStart && codePoint <= _baybayinMarkEnd;
 
-      if (isBase) {
+      if (codePoint == _tagalogPamudpod || codePoint == _hanunooPamudpod) {
+        continue;
+      }
+
+      if (isConsonant) {
         buffer.write(char);
-        hasPendingBaybayinBase = true;
-        pendingBaseHasMark = false;
+        hasPendingBaybayinConsonant = true;
+        pendingConsonantHasMark = false;
+        continue;
+      }
+
+      if (codePoint >= 0x1700 && codePoint <= 0x1702) {
+        buffer.write(char);
+        hasPendingBaybayinConsonant = false;
+        pendingConsonantHasMark = false;
         continue;
       }
 
       if (isMark) {
-        if (hasPendingBaybayinBase && !pendingBaseHasMark) {
+        if (hasPendingBaybayinConsonant && !pendingConsonantHasMark) {
           buffer.write(char);
-          pendingBaseHasMark = true;
+          pendingConsonantHasMark = true;
         }
         continue;
       }
 
       buffer.write(char);
-      hasPendingBaybayinBase = false;
-      pendingBaseHasMark = false;
+      hasPendingBaybayinConsonant = false;
+      pendingConsonantHasMark = false;
     }
 
     return buffer.toString();
