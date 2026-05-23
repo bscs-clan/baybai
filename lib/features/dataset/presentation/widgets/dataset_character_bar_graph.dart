@@ -4,6 +4,8 @@ import "package:flutter/material.dart";
 import "package:fl_chart/fl_chart.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/features/dataset/domain/entities/dataset_entry.dart";
+import "package:baybai/core/constants/abakada.dart";
+import "package:number_display/number_display.dart";
 
 // Bar graph colors
 const Color baseColor = AppColors.primary;
@@ -29,7 +31,7 @@ class DatasetCharacterBarGraph extends StatelessWidget {
 
     // Initialize ALL characters with zero counts
     final Map<String, _BaseCharStats> statsMap = {};
-    for (final base in _abakadaOrder) {
+    for (final base in abakadaOrder) {
       statsMap[base] = _BaseCharStats(base);
     }
 
@@ -61,6 +63,7 @@ class DatasetCharacterBarGraph extends StatelessWidget {
     final counts = items.map((e) => e.total).toList();
     final maxValue = counts.isEmpty ? 0.0 : counts.reduce(max).toDouble();
     final yConfig = _calculateYAxisConfig(maxValue);
+    final display = createDisplay(length: 8);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -88,7 +91,7 @@ class DatasetCharacterBarGraph extends StatelessWidget {
                 const SizedBox(height: 8),
                 Center(
                   child: Text(
-                    "$totalCharacters total samples",
+                    "${display(totalCharacters)} total samples",
                     style: AppTextStyles.mbody.copyWith(
                       color: isDarkMode
                           ? AppColors.darkTextGrey
@@ -392,30 +395,6 @@ List<_BaybayinChar> _parseBaybayinString(String text) {
   }
   return result;
 }
-
-const List<String> _abakadaOrder = [
-  'ᜀ',
-  'ᜁ',
-  'ᜂ',
-  'ᜊ',
-  'ᜃ',
-  'ᜇ',
-  'ᜄ',
-  'ᜑ',
-  'ᜎ',
-  'ᜋ',
-  'ᜈ',
-  'ᜅ',
-  'ᜉ',
-  'ᜍ',
-  'ᜐ',
-  'ᜆ',
-  'ᜏ',
-  'ᜌ',
-  '᜵',
-  '᜶',
-  ' ',
-];
 
 class _Segment {
   final int value;

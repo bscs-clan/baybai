@@ -37,6 +37,7 @@ dependencies:
   solar_icons: ^0.0.5
   flutter_slidable: ^4.0.3
   fl_chart: ^1.2.0
+  number_display: ^3.0.0
 
 dev_dependencies:
   flutter_test:
