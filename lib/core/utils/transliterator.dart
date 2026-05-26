@@ -67,14 +67,28 @@ class Transliterator {
   static final List<String> infixes = ["um", "in"];
 
   static bool _initialized = false;
+  static Future<void>? _initializing;
 
   /// Ensures the transliterator is initialized before use.
   static Future<void> ensureInitialized() async {
     if (_initialized) return;
+    final initializing = _initializing;
+    if (initializing != null) {
+      await initializing;
+      return;
+    }
 
-    _initializeMaps();
-    await loadDictionary();
-    _initialized = true;
+    _initializing = () async {
+      _initializeMaps();
+      await loadDictionary();
+      _initialized = true;
+    }();
+
+    try {
+      await _initializing;
+    } finally {
+      _initializing = null;
+    }
   }
 
   /// Initializes all mapping tables and built-in dictionary.
@@ -565,8 +579,9 @@ class Transliterator {
       final Map<int, String> choices = {};
       for (int j = 0; j < types.length; j++) {
         final bool first = ((mask >> j) & 1) == 0;
-        choices[j] =
-            types[j] == "ie" ? (first ? "i" : "e") : (first ? "u" : "o");
+        choices[j] = types[j] == "ie"
+            ? (first ? "i" : "e")
+            : (first ? "u" : "o");
       }
       result.add(choices);
     }
@@ -684,11 +699,9 @@ class Transliterator {
     }
 
     // Generate all possible vowel combinations
-    final allWords =
-        generateCombinations(ambigTypes)
-            .map((combo) => transliterateWithChoices(text, combo))
-            .toSet()
-            .toList();
+    final allWords = generateCombinations(
+      ambigTypes,
+    ).map((combo) => transliterateWithChoices(text, combo)).toSet().toList();
 
     // Apply preferred spelling corrections
     final normalized = <String>[];

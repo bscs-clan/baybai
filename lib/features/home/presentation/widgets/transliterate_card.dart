@@ -22,6 +22,7 @@ final RegExp _wordOrSeparatorPattern = RegExp(
   r"[A-Za-z\u1700-\u1714]+(?:-[A-Za-z\u1700-\u1714]+)*|[^A-Za-z\u1700-\u1714-]+|-",
 );
 const int _maxSuggestionAmbiguityTypes = 10;
+const Duration _baybayinInputDebounce = Duration(milliseconds: 80);
 
 class _TransliterateCardState extends State<TransliterateCard> {
   bool isFilipinoToBaybayin = true;
@@ -37,6 +38,7 @@ class _TransliterateCardState extends State<TransliterateCard> {
   final Map<int, String> _filipinoSelections = {};
   TextRange _suggestionRange = TextRange.empty;
   bool _isSuggestionSheetOpen = false;
+  Timer? _inputDebounce;
 
   @override
   void initState() {
@@ -48,11 +50,13 @@ class _TransliterateCardState extends State<TransliterateCard> {
 
   @override
   void dispose() {
+    _inputDebounce?.cancel();
     _inputController.dispose();
     super.dispose();
   }
 
   void toggleLanguage() {
+    _inputDebounce?.cancel();
     setState(() {
       isFilipinoToBaybayin = !isFilipinoToBaybayin;
       _inputController.clear();
@@ -69,16 +73,32 @@ class _TransliterateCardState extends State<TransliterateCard> {
   }
 
   void _onInputChanged(String text) {
-    final validation = _validateBaybayinInput(text);
+    _inputDebounce?.cancel();
+
+    if (isFilipinoToBaybayin) {
+      setState(() {
+        inputText = text;
+        _filipinoSelections.clear();
+        _baybayinErrorIndices = const {};
+        _baybayinSuggestions = const [];
+        _suggestionRange = TextRange.empty;
+        _inputController.errorIndices = const {};
+        _filipinoOutputTokens = const [];
+        _resultText = text.isEmpty ? "" : Transliterator.toBaybayinMap(text);
+      });
+      return;
+    }
+
+    final normalizedText = Transliterator.normalizeBaybayinText(text);
+    final hasWordInput = _wordPattern.hasMatch(normalizedText);
 
     setState(() {
       inputText = text;
       _filipinoSelections.clear();
-      _baybayinErrorIndices = validation.errorIndices;
-      _baybayinSuggestions = validation.suggestions;
-      _suggestionRange = validation.suggestionRange;
-      _inputController.errorIndices =
-          !isFilipinoToBaybayin ? _baybayinErrorIndices : const {};
+      _baybayinErrorIndices = const {};
+      _baybayinSuggestions = const [];
+      _suggestionRange = TextRange.empty;
+      _inputController.errorIndices = const {};
 
       if (text.isEmpty) {
         _resultText = "";
@@ -86,12 +106,29 @@ class _TransliterateCardState extends State<TransliterateCard> {
         return;
       }
 
-      if (isFilipinoToBaybayin) {
-        _resultText = Transliterator.toBaybayinMap(text);
+      if (!hasWordInput) {
+        _resultText = normalizedText;
         _filipinoOutputTokens = const [];
-      } else {
-        _refreshFilipinoOutput();
       }
+    });
+
+    if (text.isEmpty || !hasWordInput) return;
+
+    _inputDebounce = Timer(_baybayinInputDebounce, () {
+      if (!mounted || isFilipinoToBaybayin) return;
+      final currentText = _inputController.text;
+      final validation = _validateBaybayinInput(currentText);
+      final output = _buildFilipinoOutput(currentText);
+
+      setState(() {
+        inputText = currentText;
+        _baybayinErrorIndices = validation.errorIndices;
+        _baybayinSuggestions = validation.suggestions;
+        _suggestionRange = validation.suggestionRange;
+        _inputController.errorIndices = _baybayinErrorIndices;
+        _resultText = output.text;
+        _filipinoOutputTokens = output.tokens;
+      });
     });
   }
 
@@ -241,44 +278,40 @@ class _TransliterateCardState extends State<TransliterateCard> {
                   child: Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children:
-                        _baybayinSuggestions.map((word) {
-                          return ActionChip(
-                            label: Text(
-                              word,
-                              style: AppTextStyles.bigbody.copyWith(
-                                fontFamily: "Baybayin",
-                                fontFamilyFallback: const [
-                                  "Roboto",
-                                  "NotoSans",
-                                  "sans-serif",
-                                ],
-                                color: textColor,
-                              ),
-                            ),
-                            onPressed: () {
-                              final oldText = _inputController.text;
-                              final nextText =
-                                  _suggestionRange.isValid
-                                      ? oldText.replaceRange(
-                                        _suggestionRange.start,
-                                        _suggestionRange.end,
-                                        word,
-                                      )
-                                      : word;
-                              _inputController.text = nextText;
-                              _inputController
-                                  .selection = TextSelection.collapsed(
-                                offset:
-                                    _suggestionRange.isValid
-                                        ? _suggestionRange.start + word.length
-                                        : word.length,
-                              );
-                              Navigator.pop(context);
-                              _onInputChanged(nextText);
-                            },
+                    children: _baybayinSuggestions.map((word) {
+                      return ActionChip(
+                        label: Text(
+                          word,
+                          style: AppTextStyles.bigbody.copyWith(
+                            fontFamily: "Baybayin",
+                            fontFamilyFallback: const [
+                              "Roboto",
+                              "NotoSans",
+                              "sans-serif",
+                            ],
+                            color: textColor,
+                          ),
+                        ),
+                        onPressed: () {
+                          final oldText = _inputController.text;
+                          final nextText = _suggestionRange.isValid
+                              ? oldText.replaceRange(
+                                  _suggestionRange.start,
+                                  _suggestionRange.end,
+                                  word,
+                                )
+                              : word;
+                          _inputController.text = nextText;
+                          _inputController.selection = TextSelection.collapsed(
+                            offset: _suggestionRange.isValid
+                                ? _suggestionRange.start + word.length
+                                : word.length,
                           );
-                        }).toList(),
+                          Navigator.pop(context);
+                          _onInputChanged(nextText);
+                        },
+                      );
+                    }).toList(),
                   ),
                 ),
               ],
@@ -326,24 +359,23 @@ class _TransliterateCardState extends State<TransliterateCard> {
                   child: Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children:
-                        token.suggestions.map((word) {
-                          return ActionChip(
-                            label: Text(
-                              word,
-                              style: AppTextStyles.bigbody.copyWith(
-                                color: textColor,
-                              ),
-                            ),
-                            onPressed: () {
-                              Navigator.pop(context);
-                              setState(() {
-                                _filipinoSelections[token.index] = word;
-                                _refreshFilipinoOutput();
-                              });
-                            },
-                          );
-                        }).toList(),
+                    children: token.suggestions.map((word) {
+                      return ActionChip(
+                        label: Text(
+                          word,
+                          style: AppTextStyles.bigbody.copyWith(
+                            color: textColor,
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          setState(() {
+                            _filipinoSelections[token.index] = word;
+                            _refreshFilipinoOutput();
+                          });
+                        },
+                      );
+                    }).toList(),
                   ),
                 ),
               ],
@@ -375,6 +407,7 @@ class _TransliterateCardState extends State<TransliterateCard> {
           controller: _inputController,
           onChanged: _onInputChanged,
           onClear: () {
+            _inputDebounce?.cancel();
             setState(() {
               _inputController.clear();
               _inputController.errorIndices = const {};
@@ -401,8 +434,9 @@ class _TransliterateCardState extends State<TransliterateCard> {
             await SharePlus.instance.share(ShareParams(text: _resultText));
           },
           isBaybayin: isFilipinoToBaybayin,
-          filipinoOutputTokens:
-              !isFilipinoToBaybayin ? _filipinoOutputTokens : const [],
+          filipinoOutputTokens: !isFilipinoToBaybayin
+              ? _filipinoOutputTokens
+              : const [],
           onFilipinoWordLongPress: _showFilipinoSuggestions,
         ),
       ],
@@ -412,13 +446,12 @@ class _TransliterateCardState extends State<TransliterateCard> {
 
 Future<List<String>> loadWordlist() async {
   final raw = await rootBundle.loadString("assets/docs/baybayin_wordlist.txt");
-  final words =
-      raw
-          .split(RegExp(r"\r?\n"))
-          .map((word) => Transliterator.normalizeBaybayinText(word.trim()))
-          .where((word) => word.isNotEmpty)
-          .toSet()
-          .toList();
+  final words = raw
+      .split(RegExp(r"\r?\n"))
+      .map((word) => Transliterator.normalizeBaybayinText(word.trim()))
+      .where((word) => word.isNotEmpty)
+      .toSet()
+      .toList();
   words.sort((a, b) => a.length.compareTo(b.length));
   return words;
 }
@@ -517,27 +550,25 @@ List<String> findSuggestions(
   final inputSymbols = _unicodeSymbols(input);
   final firstSymbol = inputSymbols.isEmpty ? "" : inputSymbols.first;
   final maxLengthGap = math.max(2, (inputSymbols.length / 2).ceil());
-  var candidates =
-      wordlist.where((word) {
-        final symbols = _unicodeSymbols(word);
-        if ((symbols.length - inputSymbols.length).abs() > maxLengthGap) {
-          return false;
-        }
-        return firstSymbol.isEmpty ||
-            symbols.isEmpty ||
-            symbols.first == firstSymbol ||
-            inputSymbols.length <= 2;
-      }).toList();
+  var candidates = wordlist.where((word) {
+    final symbols = _unicodeSymbols(word);
+    if ((symbols.length - inputSymbols.length).abs() > maxLengthGap) {
+      return false;
+    }
+    return firstSymbol.isEmpty ||
+        symbols.isEmpty ||
+        symbols.first == firstSymbol ||
+        inputSymbols.length <= 2;
+  }).toList();
 
   if (candidates.isEmpty) {
-    candidates =
-        wordlist
-            .where(
-              (word) =>
-                  (_unicodeSymbols(word).length - inputSymbols.length).abs() <=
-                  maxLengthGap,
-            )
-            .toList();
+    candidates = wordlist
+        .where(
+          (word) =>
+              (_unicodeSymbols(word).length - inputSymbols.length).abs() <=
+              maxLengthGap,
+        )
+        .toList();
   }
 
   final scored = [
@@ -568,22 +599,17 @@ List<String> findFilipinoSuggestions(
   final ambigTypes = Transliterator.getAmbigTypes(baybayinWord);
   if (ambigTypes.length > _maxSuggestionAmbiguityTypes) return const [];
 
-  final possibleWords =
-      ambigTypes.isEmpty
-          ? <String>{Transliterator.transliterateWithChoices(baybayinWord, {})}
-          : Transliterator.generateCombinations(ambigTypes).map((choices) {
-            return Transliterator.transliterateWithChoices(
-              baybayinWord,
-              choices,
-            );
-          }).toSet();
+  final possibleWords = ambigTypes.isEmpty
+      ? <String>{Transliterator.transliterateWithChoices(baybayinWord, {})}
+      : Transliterator.generateCombinations(ambigTypes).map((choices) {
+          return Transliterator.transliterateWithChoices(baybayinWord, choices);
+        }).toSet();
 
-  final suggestions =
-      possibleWords
-          .map((word) => word.toLowerCase())
-          .where(wordlist.contains)
-          .toSet()
-          .toList();
+  final suggestions = possibleWords
+      .map((word) => word.toLowerCase())
+      .where(wordlist.contains)
+      .toSet()
+      .toList();
 
   suggestions.sort((a, b) {
     final preferredA = Transliterator.builtInWords.contains(a) ? 0 : 1;
@@ -872,19 +898,18 @@ class _TranslationCard extends StatelessWidget {
 
     final TextStyle baseStyle = AppTextStyles.bigbody;
 
-    final TextStyle displayStyle =
-        isBaybayin
-            ? baseStyle.copyWith(
-              fontFamily: "Baybayin",
-              fontFamilyFallback: const ["Roboto", "NotoSans", "sans-serif"],
-              height: 1.44,
-              color: isDarkMode ? AppColors.darkText : AppColors.text,
-            )
-            : baseStyle.copyWith(
-              // Ensure good Latin rendering when showing Filipino text
-              fontFamilyFallback: const ["Roboto", "NotoSans", "sans-serif"],
-              color: isDarkMode ? AppColors.darkText : AppColors.text,
-            );
+    final TextStyle displayStyle = isBaybayin
+        ? baseStyle.copyWith(
+            fontFamily: "Baybayin",
+            fontFamilyFallback: const ["Roboto", "NotoSans", "sans-serif"],
+            height: 1.44,
+            color: isDarkMode ? AppColors.darkText : AppColors.text,
+          )
+        : baseStyle.copyWith(
+            // Ensure good Latin rendering when showing Filipino text
+            fontFamilyFallback: const ["Roboto", "NotoSans", "sans-serif"],
+            color: isDarkMode ? AppColors.darkText : AppColors.text,
+          );
 
     return Container(
       height: 224,
@@ -906,46 +931,43 @@ class _TranslationCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Expanded(
-            child:
-                isInput
-                    ? _RepeatedLongPressRegion(
-                      enabled: baybayinErrorIndices.isNotEmpty,
-                      onLongPress: onLongPress,
-                      child: TextField(
-                        controller: controller,
-                        onChanged: onChanged,
-                        style: displayStyle,
-                        maxLines: null,
-                        expands: true,
-                        enableInteractiveSelection:
-                            baybayinErrorIndices.isEmpty,
-                        contextMenuBuilder:
-                            baybayinErrorIndices.isNotEmpty
-                                ? (context, editableTextState) =>
-                                    const SizedBox.shrink()
-                                : null,
-                        textAlignVertical: TextAlignVertical.top,
-                        decoration: InputDecoration(
-                          hintText: "Type here",
-                          hintStyle: AppTextStyles.bigbody.copyWith(
-                            color: AppColors.compGrey,
-                          ),
-                          border: InputBorder.none,
+            child: isInput
+                ? _RepeatedLongPressRegion(
+                    enabled: baybayinErrorIndices.isNotEmpty,
+                    onLongPress: onLongPress,
+                    child: TextField(
+                      controller: controller,
+                      onChanged: onChanged,
+                      style: displayStyle,
+                      maxLines: null,
+                      expands: true,
+                      enableInteractiveSelection: baybayinErrorIndices.isEmpty,
+                      contextMenuBuilder: baybayinErrorIndices.isNotEmpty
+                          ? (context, editableTextState) =>
+                                const SizedBox.shrink()
+                          : null,
+                      textAlignVertical: TextAlignVertical.top,
+                      decoration: InputDecoration(
+                        hintText: "Type here",
+                        hintStyle: AppTextStyles.bigbody.copyWith(
+                          color: AppColors.compGrey,
                         ),
+                        border: InputBorder.none,
                       ),
-                    )
-                    : SingleChildScrollView(
-                      child:
-                          filipinoOutputTokens.isNotEmpty &&
-                                  onFilipinoWordLongPress != null
-                              ? _FilipinoOutputText(
-                                text: resultText ?? "",
-                                tokens: filipinoOutputTokens,
-                                style: displayStyle,
-                                onWordLongPress: onFilipinoWordLongPress!,
-                              )
-                              : Text(resultText ?? "", style: displayStyle),
                     ),
+                  )
+                : SingleChildScrollView(
+                    child:
+                        filipinoOutputTokens.isNotEmpty &&
+                            onFilipinoWordLongPress != null
+                        ? _FilipinoOutputText(
+                            text: resultText ?? "",
+                            tokens: filipinoOutputTokens,
+                            style: displayStyle,
+                            onWordLongPress: onFilipinoWordLongPress!,
+                          )
+                        : Text(resultText ?? "", style: displayStyle),
+                  ),
           ),
           Align(
             alignment: Alignment.bottomRight,
@@ -1069,19 +1091,17 @@ class _FilipinoOutputText extends StatelessWidget {
           baseline: TextBaseline.alphabetic,
           child: GestureDetector(
             behavior: HitTestBehavior.translucent,
-            onLongPress:
-                token.suggestions.isNotEmpty
-                    ? () => onWordLongPress(token)
-                    : null,
+            onLongPress: token.suggestions.isNotEmpty
+                ? () => onWordLongPress(token)
+                : null,
             child: Text(
               token.text,
-              style:
-                  token.suggestions.length > 1
-                      ? style.copyWith(
-                        decoration: TextDecoration.underline,
-                        decorationStyle: TextDecorationStyle.dotted,
-                      )
-                      : style,
+              style: token.suggestions.length > 1
+                  ? style.copyWith(
+                      decoration: TextDecoration.underline,
+                      decorationStyle: TextDecorationStyle.dotted,
+                    )
+                  : style,
             ),
           ),
         ),
@@ -1093,7 +1113,9 @@ class _FilipinoOutputText extends StatelessWidget {
       children.add(TextSpan(text: text.substring(cursor)));
     }
 
-    return RichText(text: TextSpan(style: style, children: children));
+    return RichText(
+      text: TextSpan(style: style, children: children),
+    );
   }
 }
 

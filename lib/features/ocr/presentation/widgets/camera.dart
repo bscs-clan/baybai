@@ -5,12 +5,12 @@ import "package:loading_animation_widget/loading_animation_widget.dart";
 import "package:baybai/core/models/detection.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/usecases/usecase.dart";
-import "package:baybai/features/home/presentation/widgets/detection_overlay.dart";
 import "package:baybai/features/ocr/domain/usecases/dispose_ocr.dart";
 import "package:baybai/features/ocr/domain/usecases/initialize_ocr.dart";
 import "package:baybai/features/ocr/domain/usecases/process_ocr_frame.dart";
 import "package:baybai/features/ocr/domain/usecases/process_ocr_photo.dart";
 import "package:baybai/features/ocr/data/datasources/camera_service.dart";
+import "package:baybai/features/ocr/presentation/widgets/detection_overlay.dart";
 import "package:baybai/injection_container.dart";
 import "dart:async";
 import "dart:io";
@@ -21,6 +21,7 @@ class CameraPreviewWidget extends StatefulWidget {
   final ValueChanged<bool>? onPhotoPreviewChanged;
   final ValueNotifier<List<Detection>> detectionNotifier;
   final bool liveEnabled;
+  final ScanTranslationDirection translationDirection;
 
   /// When true, detection overlay boxes are tappable (Developer Mode).
   final bool overlayInteractive;
@@ -30,6 +31,7 @@ class CameraPreviewWidget extends StatefulWidget {
     this.onInitialized,
     this.onPhotoPreviewChanged,
     this.liveEnabled = true,
+    this.translationDirection = ScanTranslationDirection.baybayinToFilipino,
     this.overlayInteractive = false,
     ValueNotifier<List<Detection>>? detectionNotifier,
   }) : detectionNotifier = detectionNotifier ?? ValueNotifier([]);
@@ -374,6 +376,7 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
               DetectionOverlayLayer(
                 detectionNotifier: widget.detectionNotifier,
                 interactive: widget.overlayInteractive,
+                translationDirection: widget.translationDirection,
                 sourceImageBytesGetter: () => _sourceImageBytes,
                 sourceImageSizeGetter: () => _sourceImageSize,
               ),
@@ -408,6 +411,7 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
               DetectionOverlayLayer(
                 detectionNotifier: widget.detectionNotifier,
                 interactive: widget.overlayInteractive,
+                translationDirection: widget.translationDirection,
                 sourceImageBytesGetter: () => _sourceImageBytes,
                 sourceImageSizeGetter: () => _sourceImageSize,
               ),
@@ -422,6 +426,7 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
 class DetectionOverlayLayer extends StatelessWidget {
   final ValueNotifier<List<Detection>> detectionNotifier;
   final bool interactive;
+  final ScanTranslationDirection translationDirection;
   final Uint8List? Function() sourceImageBytesGetter;
   final Size? Function() sourceImageSizeGetter;
 
@@ -430,6 +435,7 @@ class DetectionOverlayLayer extends StatelessWidget {
     required this.detectionNotifier,
     required this.sourceImageBytesGetter,
     required this.sourceImageSizeGetter,
+    required this.translationDirection,
     this.interactive = false,
   });
 
@@ -441,6 +447,7 @@ class DetectionOverlayLayer extends StatelessWidget {
         return DetectionOverlay(
           detections: detections,
           interactive: interactive,
+          translationDirection: translationDirection,
           sourceImageBytes: sourceImageBytesGetter(),
           sourceImageSize: sourceImageSizeGetter(),
         );

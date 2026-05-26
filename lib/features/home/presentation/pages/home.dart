@@ -2,9 +2,7 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_bloc/flutter_bloc.dart";
 import "package:baybai/core/utils/app_security.dart";
-import "package:baybai/features/dataset/presentation/pages/dataset_tab.dart";
 import "package:baybai/features/home/presentation/pages/tab_learn.dart";
-import "package:baybai/features/home/presentation/pages/tab_scan.dart";
 import "package:baybai/features/home/presentation/pages/tab_transliterate.dart";
 import "package:baybai/features/home/presentation/widgets/app_bar.dart";
 import "package:baybai/features/home/presentation/widgets/bottom_nav.dart";
@@ -54,23 +52,11 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /// Build pages dynamically (no stale widget cache)
-  List<Widget> _buildPages(bool developerModeEnabled) {
-    return [
-      const TabLearn(),
-      const TabScan(),
-      const TabTransliterate(),
-
-      // Dataset tab only exists if enabled
-      if (developerModeEnabled) const DatasetTab(),
-    ];
-  }
-
-  int _safeIndex(List<Widget> pages) {
-    if (_selectedIndex >= pages.length) {
-      return 0;
-    }
-    return _selectedIndex;
+  Widget _buildSelectedPage() {
+    return IndexedStack(
+      index: _selectedIndex == 2 ? 1 : 0,
+      children: const [TabLearn(), TabTransliterate()],
+    );
   }
 
   @override
@@ -78,26 +64,29 @@ class _HomeScreenState extends State<HomeScreen> {
     return BlocConsumer<ScanSettingsCubit, ScanSettings>(
       listener: (context, state) {
         if (!state.developerModeEnabled && _selectedIndex == 3) {
-          setState(() {
-            _selectedIndex = 0;
-          });
+          setState(() => _selectedIndex = 0);
         }
       },
-      builder: (context, state) {
-        final pages = _buildPages(state.developerModeEnabled);
-        final index = _safeIndex(pages);
-
+      builder: (context, _) {
         return Scaffold(
           extendBody: true,
-          extendBodyBehindAppBar: index == 1,
+          extendBodyBehindAppBar: false,
           appBar: CustomAppBar(),
 
-          body: IndexedStack(index: index, children: pages),
+          body: _buildSelectedPage(),
 
           bottomNavigationBar: SafeArea(
             child: Navbar(
-              selectedIndex: index,
+              selectedIndex: _selectedIndex,
               onTap: (i) {
+                if (i == 1) {
+                  Navigator.pushNamed(context, "/scan");
+                  return;
+                }
+                if (i == 3) {
+                  Navigator.pushNamed(context, "/dataset");
+                  return;
+                }
                 setState(() {
                   _selectedIndex = i;
                 });

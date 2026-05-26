@@ -16,9 +16,48 @@ import "package:baybai/features/dataset/presentation/widgets/dataset_empty_state
 import "package:baybai/features/dataset/presentation/widgets/dataset_entry_tile.dart";
 import "package:baybai/features/dataset/presentation/widgets/dataset_preview_pane.dart";
 import "package:baybai/features/dataset/presentation/widgets/dataset_character_bar_graph.dart";
+import "package:solar_icons/solar_icons.dart";
+
+class DatasetScreen extends StatelessWidget {
+  const DatasetScreen({super.key});
+
+  Color _iconColor(BuildContext context, bool isDark) =>
+      isDark ? AppColors.darkIcon : AppColors.icon;
+
+  Color _textColor(BuildContext context, bool isDark) =>
+      isDark ? AppColors.darkText : AppColors.text;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(
+            SolarIconsOutline.arrowLeft,
+            color: _iconColor(context, isDarkMode),
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          "Datasets",
+          style: TextStyle(
+            color: _textColor(context, isDarkMode),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      body: const DatasetTab(bottomPadding: 32),
+    );
+  }
+}
 
 class DatasetTab extends StatefulWidget {
-  const DatasetTab({super.key});
+  final double bottomPadding;
+
+  const DatasetTab({super.key, this.bottomPadding = 156});
 
   @override
   State<DatasetTab> createState() => _DatasetTabState();
@@ -245,6 +284,7 @@ class _DatasetTabState extends State<DatasetTab> with WidgetsBindingObserver {
                       onDelete: (entry) => _deleteEntry(context, entry),
                       onMobileEdit: (entry) =>
                           _showMobileEditSheet(context, entry),
+                      bottomPadding: widget.bottomPadding,
                     ),
                   ),
 
@@ -275,6 +315,7 @@ class _DatasetTabState extends State<DatasetTab> with WidgetsBindingObserver {
                   context.read<DatasetBloc>().add(DatasetEntrySelected(entry)),
               onDelete: (entry) => _deleteEntry(context, entry),
               onMobileEdit: (entry) => _showMobileEditSheet(context, entry),
+              bottomPadding: widget.bottomPadding,
             );
           },
         );
@@ -291,6 +332,7 @@ class _DatasetEntryList extends StatelessWidget {
   final ValueChanged<DatasetEntry> onSelected;
   final ValueChanged<DatasetEntry> onDelete;
   final ValueChanged<DatasetEntry> onMobileEdit;
+  final double bottomPadding;
 
   const _DatasetEntryList({
     required this.entries,
@@ -300,6 +342,7 @@ class _DatasetEntryList extends StatelessWidget {
     required this.onSelected,
     required this.onDelete,
     required this.onMobileEdit,
+    required this.bottomPadding,
   });
 
   @override
@@ -391,7 +434,7 @@ class _DatasetEntryList extends StatelessWidget {
                   : reversedEntries.length * 2 - 1,
             ),
           ),
-          const SliverPadding(padding: EdgeInsets.only(bottom: 156)),
+          SliverPadding(padding: EdgeInsets.only(bottom: bottomPadding)),
         ],
       ),
     );

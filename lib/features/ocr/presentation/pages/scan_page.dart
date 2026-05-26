@@ -3,20 +3,35 @@ import "package:flutter/services.dart";
 import "package:flutter_bloc/flutter_bloc.dart";
 import "package:baybai/core/models/detection.dart";
 import "package:baybai/core/theme/colors.dart";
-import "package:baybai/features/home/presentation/widgets/camera.dart";
+import "package:baybai/features/ocr/presentation/widgets/camera.dart";
+import "package:baybai/features/ocr/presentation/widgets/detection_overlay.dart";
 import "package:baybai/features/settings/presentation/view_models/scan_settings_cubit.dart";
 import "package:baybai/shared/widgets/icon_button.dart";
+import "package:solar_icons/solar_icons.dart";
 
 enum _ScanMode { live, photo }
 
-class TabScan extends StatefulWidget {
-  const TabScan({super.key});
+class ScanPage extends StatelessWidget {
+  const ScanPage({super.key});
 
   @override
-  State<TabScan> createState() => _TabScanState();
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      extendBody: true,
+      extendBodyBehindAppBar: true,
+      body: ScanView(),
+    );
+  }
 }
 
-class _TabScanState extends State<TabScan> {
+class ScanView extends StatefulWidget {
+  const ScanView({super.key});
+
+  @override
+  State<ScanView> createState() => _ScanViewState();
+}
+
+class _ScanViewState extends State<ScanView> {
   final GlobalKey<CameraPreviewWidgetState> _cameraKey =
       GlobalKey<CameraPreviewWidgetState>();
   final ValueNotifier<List<Detection>> _detectionNotifier = ValueNotifier(
@@ -27,6 +42,8 @@ class _TabScanState extends State<TabScan> {
   bool _isCapturing = false;
   bool _isViewingCapture = false;
   _ScanMode _mode = _ScanMode.photo;
+  ScanTranslationDirection _translationDirection =
+      ScanTranslationDirection.baybayinToFilipino;
 
   @override
   void dispose() {
@@ -48,6 +65,7 @@ class _TabScanState extends State<TabScan> {
           detectionNotifier: _detectionNotifier,
           liveEnabled: _mode == _ScanMode.live,
           overlayInteractive: developerMode && _mode == _ScanMode.photo,
+          translationDirection: _translationDirection,
           onInitialized: () {
             setState(() => _isCameraReady = true);
           },
@@ -58,24 +76,46 @@ class _TabScanState extends State<TabScan> {
         ),
         if (_isCameraReady && !_isViewingCapture)
           Positioned(
-            left: 24,
-            right: 24,
+            left: 76,
+            right: 76,
             top: MediaQuery.paddingOf(context).top + 14,
             child: Center(
-              child: _ModeSwitch(
-                mode: _mode,
-                onChanged: (mode) {
-                  if (_mode == mode) return;
-                  setState(() => _mode = mode);
-                },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _ModeSwitch(
+                    mode: _mode,
+                    onChanged: (mode) {
+                      if (_mode == mode) return;
+                      setState(() => _mode = mode);
+                    },
+                  ),
+                  const SizedBox(height: 6),
+                  _LanguageFlowText(direction: _translationDirection),
+                ],
               ),
+            ),
+          ),
+        if (_isCameraReady && !_isViewingCapture)
+          Positioned(
+            top: MediaQuery.paddingOf(context).top + 14,
+            left: 20,
+            child: _BackButton(onPressed: () => Navigator.maybePop(context)),
+          ),
+        if (_isCameraReady && !_isViewingCapture)
+          Positioned(
+            top: MediaQuery.paddingOf(context).top + 14,
+            right: 20,
+            child: _LanguageDirectionButton(
+              direction: _translationDirection,
+              onPressed: _toggleTranslationDirection,
             ),
           ),
         if (_isCameraReady && !_isViewingCapture && _mode == _ScanMode.photo)
           Positioned(
             left: 24,
             right: 24,
-            bottom: 145,
+            bottom: 48 + MediaQuery.paddingOf(context).bottom,
             child: Center(
               child: CustomIconButton(
                 onPressed: _handleCapture,
@@ -115,6 +155,16 @@ class _TabScanState extends State<TabScan> {
       setState(() => _isViewingCapture = false);
     }
   }
+
+  void _toggleTranslationDirection() {
+    HapticFeedback.selectionClick();
+    setState(() {
+      _translationDirection =
+          _translationDirection == ScanTranslationDirection.baybayinToFilipino
+          ? ScanTranslationDirection.filipinoToBaybayin
+          : ScanTranslationDirection.baybayinToFilipino;
+    });
+  }
 }
 
 class _CloseCaptureButton extends StatelessWidget {
@@ -137,6 +187,117 @@ class _CloseCaptureButton extends StatelessWidget {
         color: Colors.white,
         iconSize: 24,
         tooltip: "Close photo",
+      ),
+    );
+  }
+}
+
+class _BackButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const _BackButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        color: Colors.black.withValues(alpha: 0.55),
+        shape: RoundedSuperellipseBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+      child: IconButton(
+        onPressed: onPressed,
+        icon: const Icon(SolarIconsOutline.arrowLeft),
+        color: Colors.white,
+        iconSize: 24,
+        tooltip: "Back",
+      ),
+    );
+  }
+}
+
+class _LanguageFlowText extends StatelessWidget {
+  final ScanTranslationDirection direction;
+
+  const _LanguageFlowText({required this.direction});
+
+  @override
+  Widget build(BuildContext context) {
+    final isBaybayinToFilipino =
+        direction == ScanTranslationDirection.baybayinToFilipino;
+
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        color: Colors.black.withValues(alpha: 0.45),
+        shape: RoundedSuperellipseBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              isBaybayinToFilipino ? "Baybayin" : "Filipino",
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(width: 6),
+            const Icon(
+              SolarIconsOutline.arrowRight,
+              color: Colors.white,
+              size: 14,
+              fontWeight: FontWeight.bold,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              isBaybayinToFilipino ? "Filipino" : "Baybayin",
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LanguageDirectionButton extends StatelessWidget {
+  final ScanTranslationDirection direction;
+  final VoidCallback onPressed;
+
+  const _LanguageDirectionButton({
+    required this.direction,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final label = direction == ScanTranslationDirection.baybayinToFilipino
+        ? "Baybayin to Filipino"
+        : "Filipino to Baybayin";
+
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        color: Colors.black.withValues(alpha: 0.55),
+        shape: RoundedSuperellipseBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+      child: IconButton(
+        onPressed: onPressed,
+        icon: const Icon(SolarIconsOutline.transferHorizontal),
+        color: Colors.white,
+        iconSize: 24,
+        tooltip: label,
       ),
     );
   }

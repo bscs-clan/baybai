@@ -7,15 +7,17 @@ import "package:baybai/core/theme/colors.dart";
 import "package:baybai/features/dataset/domain/entities/dataset_capture.dart";
 import "package:baybai/features/dataset/presentation/bloc/dataset_capture_cubit.dart";
 import "dart:math" as math;
-import "dart:typed_data";
 import "dart:ui" as ui;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public overlay widget
 // ─────────────────────────────────────────────────────────────────────────────
 
+enum ScanTranslationDirection { baybayinToFilipino, filipinoToBaybayin }
+
 class DetectionOverlay extends StatelessWidget {
   final List<Detection> detections;
+  final ScanTranslationDirection translationDirection;
 
   /// When true, each detection box is tappable and shows the save menu.
   final bool interactive;
@@ -31,6 +33,7 @@ class DetectionOverlay extends StatelessWidget {
   const DetectionOverlay({
     super.key,
     required this.detections,
+    this.translationDirection = ScanTranslationDirection.baybayinToFilipino,
     this.interactive = false,
     this.sourceImageBytes,
     this.sourceImageSize,
@@ -59,6 +62,7 @@ class DetectionOverlay extends StatelessWidget {
                 detection: det,
                 rect: rect,
                 interactive: interactive,
+                translationDirection: translationDirection,
                 sourceImageBytes: sourceImageBytes,
                 sourceImageSize: sourceImageSize,
               );
@@ -78,6 +82,7 @@ class _DetectionBox extends StatelessWidget {
   final Detection detection;
   final Rect rect;
   final bool interactive;
+  final ScanTranslationDirection translationDirection;
   final Uint8List? sourceImageBytes;
   final Size? sourceImageSize;
 
@@ -85,6 +90,7 @@ class _DetectionBox extends StatelessWidget {
     required this.detection,
     required this.rect,
     required this.interactive,
+    required this.translationDirection,
     this.sourceImageBytes,
     this.sourceImageSize,
   });
@@ -123,6 +129,38 @@ class _DetectionBox extends StatelessWidget {
     final transliterated = detection.transliteratedText.isNotEmpty
         ? detection.transliteratedText
         : detection.label;
+    final showBaybayinFirst =
+        translationDirection == ScanTranslationDirection.baybayinToFilipino;
+    final primaryText = showBaybayinFirst ? detection.label : transliterated;
+    final secondaryText = showBaybayinFirst ? transliterated : detection.label;
+    final primaryStyle = showBaybayinFirst
+        ? TextStyle(
+            color: Colors.white,
+            fontFamily: 'Baybayin',
+            fontWeight: FontWeight.w700,
+            fontSize: baybayinFontSize,
+            height: 1.05,
+          )
+        : TextStyle(
+            color: Colors.white,
+            fontSize: latinFontSize + 2,
+            fontWeight: FontWeight.w800,
+            height: 1.15,
+          );
+    final secondaryStyle = showBaybayinFirst
+        ? TextStyle(
+            color: Colors.white,
+            fontSize: latinFontSize,
+            fontWeight: FontWeight.w800,
+            height: 1.15,
+          )
+        : TextStyle(
+            color: Colors.white,
+            fontFamily: 'Baybayin',
+            fontWeight: FontWeight.w700,
+            fontSize: baybayinFontSize,
+            height: 1.05,
+          );
 
     Widget content = Transform.rotate(
       angle: detection.rotation,
@@ -156,25 +194,8 @@ class _DetectionBox extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 text: TextSpan(
                   children: [
-                    TextSpan(
-                      text: detection.label,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontFamily: 'Baybayin',
-                        fontWeight: FontWeight.w700,
-                        fontSize: baybayinFontSize,
-                        height: 1.05,
-                      ),
-                    ),
-                    TextSpan(
-                      text: '\n$transliterated',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: latinFontSize,
-                        fontWeight: FontWeight.w800,
-                        height: 1.15,
-                      ),
-                    ),
+                    TextSpan(text: primaryText, style: primaryStyle),
+                    TextSpan(text: '\n$secondaryText', style: secondaryStyle),
                   ],
                 ),
               ),

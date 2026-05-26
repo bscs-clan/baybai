@@ -8,6 +8,7 @@ import "package:baybai/core/utils/device_info.dart";
 import "package:baybai/core/utils/device_location.dart";
 import "package:baybai/features/account_settings/presentation/pages/account_settings.dart";
 import "package:baybai/features/characters/presentation/pages/characters_page.dart";
+import "package:baybai/features/dataset/presentation/pages/dataset_tab.dart";
 import "package:baybai/features/dataset/presentation/bloc/dataset_bloc.dart";
 import "package:baybai/features/dataset/presentation/bloc/dataset_capture_cubit.dart";
 import "package:baybai/features/dataset/presentation/bloc/dataset_event.dart";
@@ -15,6 +16,7 @@ import "package:baybai/features/flashcard/presentation/pages/flashcard_page.dart
 import "package:baybai/features/home/presentation/pages/home.dart";
 import "package:baybai/features/lessons/presentation/pages/lesson_page.dart";
 import "package:baybai/features/ocr/presentation/pages/ocr_page.dart";
+import "package:baybai/features/ocr/presentation/pages/scan_page.dart";
 import "package:baybai/features/onboarding/presentation/pages/onboarding.dart";
 import "package:baybai/features/practice/presentation/pages/practice_page.dart";
 import "package:baybai/features/quiz/presentation/pages/quiz_setup.dart";
@@ -48,8 +50,8 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => serviceLoc<ThemeCubit>()),
         BlocProvider(create: (_) => serviceLoc<ScanSettingsCubit>()),
         BlocProvider(
-          create: (_) => serviceLoc<DatasetBloc>()
-            ..add(const DatasetLoadRequested()),
+          create: (_) =>
+              serviceLoc<DatasetBloc>()..add(const DatasetLoadRequested()),
         ),
         BlocProvider(create: (_) => serviceLoc<DatasetCaptureCubit>()),
       ],
@@ -71,6 +73,8 @@ class MyApp extends StatelessWidget {
             "/characters": (context) => const CharactersPage(),
             "/practice": (context) => const PracticePage(),
             "/ocr": (context) => const OCRPage(),
+            "/scan": (context) => const ScanPage(),
+            "/dataset": (context) => const DatasetScreen(),
             "/account-settings": (context) => AccountSettingsScreen(),
           },
         ),
