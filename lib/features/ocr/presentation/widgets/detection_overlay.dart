@@ -13,8 +13,6 @@ import "dart:ui" as ui;
 // Public overlay widget
 // ─────────────────────────────────────────────────────────────────────────────
 
-enum ScanTranslationDirection { baybayinToFilipino, filipinoToBaybayin }
-
 class DetectionOverlay extends StatelessWidget {
   final List<Detection> detections;
   final ScanTranslationDirection translationDirection;

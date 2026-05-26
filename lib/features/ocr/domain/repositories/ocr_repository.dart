@@ -7,11 +7,18 @@ import "dart:typed_data";
 abstract class OcrRepository {
   Future<Either<Failure, void>> initialize();
 
-  Future<Either<Failure, List<Detection>>> processFrame(
-    CameraImage cameraImage,
-  );
+  Future<Either<Failure, List<Detection>>> processFrame({
+    required CameraImage cameraImage,
+    required ScanTranslationDirection direction,
+    required int sensorOrientation,
+    required int deviceOrientationDegrees,
+    required bool isFrontCamera,
+  });
 
-  Future<Either<Failure, List<Detection>>> processPhoto(String imagePath);
+  Future<Either<Failure, List<Detection>>> processPhoto({
+    required String imagePath,
+    required ScanTranslationDirection direction,
+  });
 
   Future<Either<Failure, Detection?>> recognizeImageBytes(
     Uint8List encodedImageBytes,

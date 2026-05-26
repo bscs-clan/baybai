@@ -11,6 +11,7 @@ import "package:baybai/features/dataset/presentation/bloc/dataset_bloc.dart";
 import "package:baybai/features/dataset/presentation/bloc/dataset_capture_cubit.dart";
 import "package:baybai/features/ocr/data/datasources/camera_service.dart";
 import "package:baybai/features/ocr/data/datasources/ocr_service.dart";
+import "package:baybai/features/ocr/data/datasources/ml_kit_service.dart";
 import "package:baybai/features/ocr/data/repositories/ocr_repository_impl.dart";
 import "package:baybai/features/ocr/domain/repositories/ocr_repository.dart";
 import "package:baybai/features/ocr/domain/usecases/dispose_ocr.dart";
@@ -32,9 +33,16 @@ Future<void> initDependencies() async {
     serviceLoc.registerLazySingleton<OCRService>(OCRService.new);
   }
 
+  if (!serviceLoc.isRegistered<MlKitService>()) {
+    serviceLoc.registerLazySingleton<MlKitService>(MlKitService.new);
+  }
+
   if (!serviceLoc.isRegistered<OcrRepository>()) {
     serviceLoc.registerLazySingleton<OcrRepository>(
-      () => OcrRepositoryImpl(serviceLoc<OCRService>()),
+      () => OcrRepositoryImpl(
+        serviceLoc<OCRService>(),
+        serviceLoc<MlKitService>(),
+      ),
     );
   }
 

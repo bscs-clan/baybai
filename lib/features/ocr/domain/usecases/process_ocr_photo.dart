@@ -12,12 +12,19 @@ class ProcessOcrPhoto
 
   @override
   Future<Either<Failure, List<Detection>>> call(ProcessOcrPhotoParams params) {
-    return repository.processPhoto(params.imagePath);
+    return repository.processPhoto(
+      imagePath: params.imagePath,
+      direction: params.direction,
+    );
   }
 }
 
 class ProcessOcrPhotoParams {
   final String imagePath;
+  final ScanTranslationDirection direction;
 
-  const ProcessOcrPhotoParams(this.imagePath);
+  const ProcessOcrPhotoParams({
+    required this.imagePath,
+    required this.direction,
+  });
 }

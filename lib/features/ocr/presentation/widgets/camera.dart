@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:camera/camera.dart";
 import "package:image/image.dart" as img;
 import "package:loading_animation_widget/loading_animation_widget.dart";
@@ -141,7 +142,25 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
     _isProcessingFrame = true;
     _lastProcessTime = now;
 
-    _processOcrFrame(ProcessOcrFrameParams(image))
+    final controller = _cameraService.controller;
+    if (controller == null) {
+      _isProcessingFrame = false;
+      return;
+    }
+
+    final sensorOrientation = controller.description.sensorOrientation;
+    final isFrontCamera =
+        controller.description.lensDirection == CameraLensDirection.front;
+    final deviceOrientationDegrees =
+        _getDeviceOrientationDegrees(controller.value.deviceOrientation);
+
+    _processOcrFrame(ProcessOcrFrameParams(
+      cameraImage: image,
+      direction: widget.translationDirection,
+      sensorOrientation: sensorOrientation,
+      deviceOrientationDegrees: deviceOrientationDegrees,
+      isFrontCamera: isFrontCamera,
+    ))
         .then((result) {
           result.fold(
             (failure) =>
@@ -165,6 +184,19 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
         .whenComplete(() {
           _isProcessingFrame = false;
         });
+  }
+
+  int _getDeviceOrientationDegrees(DeviceOrientation orientation) {
+    switch (orientation) {
+      case DeviceOrientation.portraitUp:
+        return 0;
+      case DeviceOrientation.landscapeLeft:
+        return 90;
+      case DeviceOrientation.portraitDown:
+        return 180;
+      case DeviceOrientation.landscapeRight:
+        return 270;
+    }
   }
 
   /// Converts the last YUV camera frame to JPEG bytes and caches them.
@@ -235,7 +267,12 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
         _cachePhotoBytes(file.path, photoSize);
       }
 
-      final result = await _processOcrPhoto(ProcessOcrPhotoParams(file.path));
+      final result = await _processOcrPhoto(
+        ProcessOcrPhotoParams(
+          imagePath: file.path,
+          direction: widget.translationDirection,
+        ),
+      );
       result.fold(
         (failure) =>
             debugPrint('[Camera] Capture OCR error: ${failure.message}'),

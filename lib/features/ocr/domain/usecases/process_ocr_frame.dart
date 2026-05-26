@@ -13,12 +13,28 @@ class ProcessOcrFrame
 
   @override
   Future<Either<Failure, List<Detection>>> call(ProcessOcrFrameParams params) {
-    return repository.processFrame(params.cameraImage);
+    return repository.processFrame(
+      cameraImage: params.cameraImage,
+      direction: params.direction,
+      sensorOrientation: params.sensorOrientation,
+      deviceOrientationDegrees: params.deviceOrientationDegrees,
+      isFrontCamera: params.isFrontCamera,
+    );
   }
 }
 
 class ProcessOcrFrameParams {
   final CameraImage cameraImage;
+  final ScanTranslationDirection direction;
+  final int sensorOrientation;
+  final int deviceOrientationDegrees;
+  final bool isFrontCamera;
 
-  const ProcessOcrFrameParams(this.cameraImage);
+  const ProcessOcrFrameParams({
+    required this.cameraImage,
+    required this.direction,
+    required this.sensorOrientation,
+    required this.deviceOrientationDegrees,
+    required this.isFrontCamera,
+  });
 }

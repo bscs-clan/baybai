@@ -1,6 +1,9 @@
 import "package:flutter/material.dart";
 
+enum ScanTranslationDirection { baybayinToFilipino, filipinoToBaybayin }
+
 /// A single object detection result, with all coordinates normalised to 0..1
+
 /// relative to the source image dimensions.
 class Detection {
   final Rect box; // Normalised rect, with each edge in [0,1].
