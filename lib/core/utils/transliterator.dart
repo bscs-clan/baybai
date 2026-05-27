@@ -2,6 +2,8 @@ import "package:flutter/foundation.dart";
 import "package:flutter/services.dart" show rootBundle;
 import "dart:convert";
 
+import "transliterator_data.dart";
+
 class Transliterator {
   // Baybayin diacritics and virama
   static const String kudlitI = "\u1712";
@@ -15,56 +17,19 @@ class Transliterator {
   static const int _hanunooPamudpod = 0x1734;
   static const int _maxDictionaryAmbiguityTypes = 10;
 
-  // Mapping tables
-  static final Map<String, String> toBaybayin = <String, String>{};
-  static final Map<String, String> toLatin = <String, String>{};
+  // Mapping tables (populated from data file)
+  static final Map<String, String> toBaybayin = {};
+  static final Map<String, String> toLatin = {};
 
   // Dictionary and spelling preferences
-  static final Set<String> dictionary = <String>{};
-  static final Set<String> builtInWords = <String>{};
-  static final Map<String, String> preferredSpelling = <String, String>{};
+  static final Set<String> dictionary = {};
+  static final Set<String> builtInWords = {};
+  static final Map<String, String> preferredSpelling = {};
 
-  // Affixes for stemming
-  static final List<String> prefixes = [
-    "nakapagpa",
-    "nakapag",
-    "makakapag",
-    "magpapaka",
-    "magpapa",
-    "mapapag",
-    "nakipag",
-    "makipag",
-    "nagpaka",
-    "nagpapa",
-    "napaka",
-    "magpa",
-    "napa",
-    "mapa",
-    "pina",
-    "pag",
-    "mag",
-    "nag",
-    "naka",
-    "maka",
-    "maki",
-    "naki",
-    "ipa",
-    "pa",
-    "ma",
-    "na",
-    "i",
-  ];
-
-  static final List<String> suffixes = [
-    "syon",
-    "uhan",
-    "han",
-    "in",
-    "an",
-    "ng",
-  ];
-
-  static final List<String> infixes = ["um", "in"];
+  // Affixes for stemming (sourced from data file)
+  static List<String> get prefixes => kPrefixes;
+  static List<String> get suffixes => kSuffixes;
+  static List<String> get infixes => kInfixes;
 
   static bool _initialized = false;
   static Future<void>? _initializing;
@@ -91,230 +56,13 @@ class Transliterator {
     }
   }
 
-  /// Initializes all mapping tables and built-in dictionary.
+  /// Populates mapping tables and built-in dictionary from [transliterator_data.dart].
   static void _initializeMaps() {
-    // ========================
-    // Preferred Spelling Corrections
-    // ========================
-    preferredSpelling.addAll({
-      "aku": "ako",
-      "te": "te",
-      "ku": "ko",
-      "mu": "mo",
-      "malake": "malaki",
-      "ulo": "ulo",
-      "olo": "ulo",
-      "hinde": "hindi",
-      "kame": "kami",
-      "namen": "namin",
-      "amen": "amin",
-      "eyo": "iyo",
-      "koya": "kuya",
-      "lulu": "lolo",
-      "mona": "muna",
-      "den": "din",
-      "ren": "rin",
-      "tau": "tao",
-      "poso": "puso",
-      "sampo": "sampu",
-      "peto": "pito",
-      "teto": "tito",
-      "bego": "bigo",
-      "uo": "oo",
-      // Standalone vowel ambiguity
-      "itao": "ito",
-      "etao": "ito",
-      "etau": "ito",
-      "itau": "ito",
-      "anao": "ano",
-      "anau": "ano",
-      "etong": "itong",
-      "eton": "iton",
-      "iyan": "iyan",
-      "eyan": "iyan",
-      "iyon": "iyon",
-      "eyon": "iyon",
-      "eyong": "iyong",
-      "iyong": "iyong",
-      "enyo": "inyo",
-      "eto": "ito",
-      "anu": "ano",
-      "enyong": "inyong",
-      // Additional corrections
-      "alen": "alin",
-      "anoman": "anuman",
-      "baket": "bakit",
-      "duon": "doon",
-      "gayun": "gayon",
-      "gayondin": "gayundin",
-      "hu": "ho",
-      "eba": "iba",
-      "neto": "nito",
-      "iyun": "iyon",
-      "iyung": "iyong",
-      "kase": "kasi",
-      "kong": "kung",
-      "ne": "ni",
-      "nena": "nina",
-      "nuon": "noon",
-      "noun": "noon",
-      "u": "o",
-      "pate": "pati",
-      "piro": "pero",
-      "peru": "pero",
-      "pu": "po",
-      "se": "si",
-      "sena": "sina",
-      "sinoman": "sinuman",
-      "item": "itim",
-    });
+    preferredSpelling.addAll(kPreferredSpelling);
+    toBaybayin.addAll(kToBaybayinMap);
+    toLatin.addAll(kToLatinMap);
 
-    // ========================
-    // Latin → Baybayin Mapping
-    // ========================
-    toBaybayin.addAll({
-      "a": "\u1700",
-      "e": "\u1701",
-      "i": "\u1701",
-      "o": "\u1702",
-      "u": "\u1702",
-      "ng": "\u1705",
-      "b": "\u170A",
-      "k": "\u1703",
-      "d": "\u1707",
-      "g": "\u1704",
-      "h": "\u1711",
-      "l": "\u170E",
-      "m": "\u170B",
-      "n": "\u1708",
-      "p": "\u1709",
-      "r": "\u170D",
-      "s": "\u1710",
-      "t": "\u1706",
-      "w": "\u170F",
-      "y": "\u170C",
-      // Common substitutions
-      "f": "\u1709",
-      "v": "\u170A",
-      "c": "\u1703",
-      "z": "\u1710",
-      "x": "\u1710",
-    });
-
-    // ========================
-    // Baybayin → Latin Mapping
-    // ========================
-    toLatin.addAll({
-      "\u1700": "a",
-      "\u1701": "i",
-      "\u1702": "u",
-      "\u1705": "ng",
-      "\u170A": "b",
-      "\u1703": "k",
-      "\u1707": "d",
-      "\u1704": "g",
-      "\u1711": "h",
-      "\u170E": "l",
-      "\u170B": "m",
-      "\u1708": "n",
-      "\u1709": "p",
-      "\u170D": "r",
-      "\u1710": "s",
-      "\u1706": "t",
-      "\u170F": "w",
-      "\u170C": "y",
-    });
-
-    // ========================
-    // Built-in Dictionary
-    // ========================
-    const List<String> builtIn = [
-      // Core vocabulary (kept as-is for clarity)
-      "aklat", "alon", "anak", "anito", "araw", "aso", "asawa", "ate", "alis",
-      "abot", "ayaw", "alab", "agos", "alok", "antig", "aruga", "asa", "asal",
-      "asul", "atip", "bago", "bahay", "baboy", "bait", "bala", "balat",
-      "bansa", "bato", "bayan", "bibig", "bigay", "binti", "biro", "boses",
-      "bote", "bukas", "bulaklak", "buwan", "buhay", "buhok", "bukid", "bungo",
-      "butil", "buti", "butiki", "basa", "batas", "bayad", "bili", "buong",
-      "buo", "daan", "dagat", "dahil", "dalawa", "damo", "diwa", "doktor",
-      "dulo", "damit", "dating", "dugo", "dunong", "dumi", "dala", "daloy",
-      "dampi", "dangal", "gabi", "gatas", "ginto", "gitna", "gobyerno", "guro",
-      "galit", "ganda", "gawa", "gilid", "gulat", "gusto", "gutom", "galing",
-      "gamit", "gapos", "hangin", "hapon", "hari", "hirap", "hindi", "hinto",
-      "hukay", "hugis", "haba", "habang", "hagod", "hamon", "haplos", "hapis",
-      "harana", "hatid", "higpit", "hilom", "hiwalay", "hubog", "hugas", "hula",
-      "hulog", "ibon", "ilaw", "init", "isda", "ito", "ibig", "isip", "iyak",
-      "ingat", "kamay", "kamusta", "kanin", "kanta", "katawan", "kilay",
-      "kilala", "kotse", "kulay", "kulot", "kuya", "kain", "kuha", "kibo",
-      "kilos", "kisap", "kulang", "kapit", "katip", "kaya", "kahoy", "kamot",
-      "katay", "katas", "kawit", "lalaki", "langit", "laro", "lason", "layo",
-      "liham", "likod", "linis", "lupa", "luha", "luto", "lakas", "laman",
-      "lamig", "landas", "langoy", "lapit", "laya", "layaw", "ligaya", "lipad",
-      "litaw", "liyab", "loob", "lubog", "lunan", "maganda", "mahal", "mata",
-      "mesa", "mundo", "mukha", "multo", "mano", "manok", "mura", "muli",
-      "mabuti", "mabait", "matanda", "malakas", "maliit", "malaki", "mabilis",
-      "mabagal", "madali", "mahirap", "mayaman", "ngiti", "ngalan", "ngipin",
-      "ngayon", "nais", "nawa", "pagmamahal", "pala", "pamilya", "pari", "pera",
-      "pinto",
-      "piso",
-      "poon",
-      "puso",
-      "putik",
-      "puno",
-      "patak",
-      "patay",
-      "payo",
-      "pilit", "pinta", "pitik", "pugad", "pula", "pulot", "punla", "purok",
-      "pusok", "putol", "reyna", "rosas", "ruta", "regalo", "rito", "saging",
-      "salamat", "sama", "saya", "sela", "simbahan", "sinag", "sining", "sipa",
-      "sombrero", "subok", "sulat", "sunog", "sabi", "sagot", "sakit", "salita",
-      "samyo", "sandali", "sanhi", "santo", "sarili", "sigaw", "sigla", "sikap",
-      "sili", "simoy", "sikat", "sinta", "sira", "siyasat", "sukat", "sulong",
-      "tabi", "taho", "tao", "tapat", "telepono", "tingin", "tono", "totoo",
-      "tubig", "tulong", "tunog", "taas", "tabas", "takbo", "takot", "tali",
-      "talon", "tanaw", "tangis", "tapang", "tapos", "tasa", "tawid", "tayog",
-      "tigas", "tikim", "tipon", "titig", "tiwala", "tugtog", "tukso", "tulad",
-      "tuloy", "tumba", "tunaw", "tupad", "tuwa", "ulan", "ulap", "ulo", "upo",
-      "ugali", "ugnay", "ulit", "umaga", "unawa", "ungol", "upuan", "usap",
-      "usbong", "wika", "walo", "wagi", "wagas", "wala", "yelo", "yunit",
-      "yaman", "yukod",
-
-      // Pronouns, particles, common words, verbs, numbers, etc.
-      "ako", "ikaw", "siya", "tayo", "kami", "kayo", "sila",
-      "ko", "mo", "niya", "natin", "namin", "ninyo", "nila",
-      "akin", "iyo", "kanya", "atin", "amin", "inyo", "kanila",
-      "nako", "kanino", "sino", "ano", "saan", "kailan", "bakit", "paano",
-      "ito", "iyan", "iyon", "itong", "iyang", "iyong", "dito", "diyan", "doon",
-      "nito", "niyan", "niyon", "rito", "riyan", "roon", "dini",
-      "alin", "ilan", "magkano", "lahat", "iba", "bawat", "kada", "sinuman",
-      "anuman", "sarili", "si", "ni", "kay", "sina", "nina", "kina",
-      "ngunit", "subalit", "kundi", "sapagkat", "upang", "kapag", "pagka",
-      "habang", "hanggang", "bagaman", "gayunman", "samantalang", "gayundin",
-      "gayon", "maging", "bukod", "liban", "maliban",
-      "po", "ho", "sana", "yata", "pala", "noon", "man", "ay", "ang", "ng",
-      "sa", "at", "na", "pa", "nga", "ba", "raw", "daw", "din", "rin", "nang",
-      "kung", "pero", "kasi", "dahil", "para", "pati", "kahit", "basta",
-      "oo", "hindi", "huwag", "wag", "sige", "naman", "muna", "lang", "lamang",
-      "pumunta", "umalis", "bumalik", "lumabas", "pumasok", "kumain", "uminom",
-      "matulog", "gumawa", "maglaro", "mahal", "mahalin", "gusto", "gustuhin",
-      "ibig", "ibigay", "sabihin", "tanungin", "sagutin", "tulungan", "bigyan",
-      "pumili", "piliin", "gawin", "gamitin", "dalhin", "kunin",
-      "isa", "dalawa", "tatlo", "apat", "lima", "anim", "pito", "walo", "siyam",
-      "sampu", "labing-isa", "dalawampu", "tatlumpu", "isang", "dalawang",
-      "tatlong", "ngayon", "kahapon", "bukas", "mamaya", "kanina", "palagi",
-      "minsan", "lagi", "umaga", "tanghali", "hapon", "gabi", "madaling-araw",
-      "maganda", "pangit", "mabuti", "masama", "malaki", "maliit", "bago",
-      "luma", "mahal", "mura", "mabilis", "mabagal", "malakas", "mahina",
-      "mainit", "malamig", "masaya", "malungkot", "galit", "takot", "gutom",
-      "uhaw", "pagod", "antok", "tatay", "nanay", "kuya", "ate", "bunso",
-      "kapatid", "lolo", "lola", "tito", "tita", "pinsan", "pamilya", "anak",
-      "asawa", "biyenan", "bahay", "eskwela", "palengke", "simbahan", "ospital",
-      "tanggapan", "kalye", "daan", "tulay", "ilog", "bundok", "dagat", "gubat",
-      "bukid", "paaralan", "toyota", "aeroplano", "barko", "bangka", "sasakyan",
-      "kotse", "mitsubishi",
-    ];
-
-    for (final word in builtIn) {
+    for (final word in kBuiltInWords) {
       final lower = word.toLowerCase();
       dictionary.add(lower);
       builtInWords.add(lower);
