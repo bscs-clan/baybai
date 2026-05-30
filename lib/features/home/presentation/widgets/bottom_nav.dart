@@ -64,72 +64,64 @@ class Navbar extends StatelessWidget {
         .state
         .developerModeEnabled;
 
-    final visibleItems = items.where((i) {
-      if (!i.requiresDeveloperMode) return true;
+    final visibleItems = items.where((item) {
+      if (!item.requiresDeveloperMode) return true;
       return developerModeEnabled;
     }).toList();
 
-    final safeSelectedIndex =
-        visibleItems.any((item) => item.index == selectedIndex)
-        ? selectedIndex
-        : (visibleItems.isNotEmpty ? visibleItems.first.index : selectedIndex);
-
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-        decoration: BoxDecoration(
-          color: isDarkMode ? AppColors.darkBox : AppColors.box,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 32,
-              spreadRadius: 8,
-              offset: const Offset(0, -6),
-            ),
-          ],
-        ),
-        child: Row(
-          children: visibleItems
-              .map((item) => _navItem(context, item, safeSelectedIndex))
-              .toList(),
-        ),
-      ),
-    );
-  }
-
-  Widget _navItem(BuildContext context, _NavItem item, int safeSelectedIndex) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final isSelected = safeSelectedIndex == item.index;
-
-    final Color iconColor = isSelected
-        ? AppColors.primary
-        : (isDarkMode ? AppColors.darkIcon : AppColors.icon);
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => onTap(item.index),
-        behavior: HitTestBehavior.opaque,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                isSelected ? item.activeIcon : item.inactiveIcon,
-                size: 24,
-                color: iconColor,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                item.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.mbody.copyWith(color: iconColor),
+    return SafeArea(
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+          decoration: BoxDecoration(
+            color: isDarkMode ? AppColors.darkBox : AppColors.box,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 32,
+                spreadRadius: 8,
+                offset: const Offset(0, -6),
               ),
             ],
+          ),
+          child: Row(
+            children: visibleItems.map((item) {
+              final bool isSelected = selectedIndex == item.index;
+
+              final Color iconColor = isSelected
+                  ? AppColors.primary
+                  : (isDarkMode ? AppColors.darkIcon : AppColors.icon);
+
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => onTap(item.index),
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isSelected ? item.activeIcon : item.inactiveIcon,
+                          size: 24,
+                          color: iconColor,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          item.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.mbody.copyWith(color: iconColor),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         ),
       ),

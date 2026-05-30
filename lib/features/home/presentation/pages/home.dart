@@ -1,12 +1,16 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_bloc/flutter_bloc.dart";
+import "package:fluttertoast/fluttertoast.dart";
+
 import "package:baybai/core/utils/app_security.dart";
 import "package:baybai/features/home/presentation/pages/tab_learn.dart";
 import "package:baybai/features/home/presentation/pages/tab_transliterate.dart";
 import "package:baybai/features/home/presentation/widgets/app_bar.dart";
 import "package:baybai/features/home/presentation/widgets/bottom_nav.dart";
 import "package:baybai/features/settings/presentation/view_models/scan_settings_cubit.dart";
+
+enum TabPage { learn, convert }
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,7 +20,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
+  TabPage _tab = TabPage.learn;
+  DateTime? _lastBackPress;
 
   @override
   void initState() {
@@ -32,69 +37,94 @@ class _HomeScreenState extends State<HomeScreen> {
       await showDialog(
         barrierDismissible: false,
         context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text("Unsecure environment detected!"),
-            content: const Text(
-              "Emulator/rooted device or untrusted install detected.",
-            ),
-            actions: [
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Got It"),
-              ),
-            ],
-          );
-        },
+        builder: (_) => const AlertDialog(
+          title: Text("Unsecure environment detected!"),
+          content: Text(
+            "Emulator/rooted device or untrusted install detected.",
+          ),
+        ),
       );
 
       SystemNavigator.pop();
     }
   }
 
-  Widget _buildSelectedPage() {
+  Widget _buildPage() {
     return IndexedStack(
-      index: _selectedIndex == 2 ? 1 : 0,
+      index: _tab == TabPage.convert ? 1 : 0,
       children: const [TabLearn(), TabTransliterate()],
+    );
+  }
+
+  int _navIndexFromTab(TabPage tab) {
+    switch (tab) {
+      case TabPage.learn:
+        return 0;
+      case TabPage.convert:
+        return 2;
+    }
+  }
+
+  void _handleBack() {
+    final now = DateTime.now();
+
+    final isSecond =
+        _lastBackPress != null &&
+        now.difference(_lastBackPress!) < const Duration(seconds: 2);
+
+    if (isSecond) {
+      SystemNavigator.pop();
+      return;
+    }
+
+    _lastBackPress = now;
+
+    Fluttertoast.showToast(
+      msg: "Double click to quit",
+      toastLength: Toast.LENGTH_SHORT,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<ScanSettingsCubit, ScanSettings>(
-      listener: (context, state) {
-        if (!state.developerModeEnabled && _selectedIndex == 3) {
-          setState(() => _selectedIndex = 0);
-        }
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (_) {
+        _handleBack();
       },
-      builder: (context, _) {
-        return Scaffold(
-          extendBody: true,
-          extendBodyBehindAppBar: false,
-          appBar: CustomAppBar(),
+      child: BlocBuilder<ScanSettingsCubit, ScanSettings>(
+        builder: (context, state) {
+          return Scaffold(
+            extendBody: true,
+            appBar: CustomAppBar(),
+            body: _buildPage(),
 
-          body: _buildSelectedPage(),
+            bottomNavigationBar: Navbar(
+              selectedIndex: _navIndexFromTab(_tab),
 
-          bottomNavigationBar: SafeArea(
-            child: Navbar(
-              selectedIndex: _selectedIndex,
               onTap: (i) {
+                // Scan route (NOT tab)
                 if (i == 1) {
                   Navigator.pushNamed(context, "/scan");
                   return;
                 }
+
+                // Dataset route (NOT tab)
                 if (i == 3) {
                   Navigator.pushNamed(context, "/dataset");
                   return;
                 }
+
+                // REAL TAB SWITCHING ONLY
                 setState(() {
-                  _selectedIndex = i;
+                  if (i == 0) _tab = TabPage.learn;
+                  if (i == 2) _tab = TabPage.convert;
                 });
               },
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
