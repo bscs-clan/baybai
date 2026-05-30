@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
+import "package:baybai/shared/components/cards/app_card.dart";
 import "dart:math";
 
 class FlashcardDisplay extends StatelessWidget {
@@ -59,21 +60,18 @@ class _FrontCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppCard(
       width: double.infinity,
-      decoration: ShapeDecoration(
-        color: isDarkMode ? AppColors.darkBox : AppColors.box,
-        shape: RoundedSuperellipseBorder(
-          borderRadius: BorderRadius.circular(32),
+      padding: EdgeInsets.zero,
+      backgroundColor: isDarkMode ? AppColors.darkBox : AppColors.box,
+      borderRadius: BorderRadius.circular(32),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: isDarkMode ? 0.2 : 0.05),
+          blurRadius: 20,
+          offset: const Offset(0, 8),
         ),
-        shadows: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDarkMode ? 0.2 : 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
+      ],
       child: Stack(
         children: [
           Align(
@@ -119,21 +117,18 @@ class _BackCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppCard(
       width: double.infinity,
-      decoration: ShapeDecoration(
-        color: AppColors.box,
-        shape: RoundedSuperellipseBorder(
-          borderRadius: BorderRadius.circular(32),
+      padding: EdgeInsets.zero,
+      backgroundColor: AppColors.box,
+      borderRadius: BorderRadius.circular(32),
+      boxShadow: [
+        BoxShadow(
+          color: AppColors.dark.withValues(alpha: isDarkMode ? 0.1 : 0.05),
+          blurRadius: 12,
+          offset: const Offset(0, 8),
         ),
-        shadows: [
-          BoxShadow(
-            color: AppColors.dark.withValues(alpha: isDarkMode ? 0.1 : 0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
+      ],
       child: Stack(
         children: [
           Align(

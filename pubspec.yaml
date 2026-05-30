@@ -39,6 +39,7 @@ dependencies:
   fl_chart: ^1.2.0
   number_display: ^3.0.0
   google_mlkit_text_recognition: ^0.15.1
+  shadcn_flutter: ^0.0.52
 
 dev_dependencies:
   flutter_test:

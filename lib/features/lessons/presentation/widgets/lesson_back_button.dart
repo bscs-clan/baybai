@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 import "package:baybai/core/theme/colors.dart";
-import "package:baybai/shared/widgets/solar_icon.dart";
+import "package:baybai/shared/components/icons/solar_icon.dart";
 
 class CustomBackButton extends StatelessWidget {
   const CustomBackButton({super.key});

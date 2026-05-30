@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
-import "package:baybai/core/theme/colors.dart";
 import "package:baybai/features/dataset/domain/entities/dataset_entry.dart";
+import "package:baybai/shared/components/buttons/button.dart";
+import "package:baybai/shared/components/toast/toast.dart";
 import "dart:io";
 import "dart:ui";
 
@@ -49,9 +50,11 @@ class _DatasetEditSheetState extends State<DatasetEditSheet> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
+        AppToast.show(
           context,
-        ).showSnackBar(SnackBar(content: Text('Save failed: $e')));
+          message: 'Save failed: $e',
+          variant: AppToastVariant.error,
+        );
       }
     } finally {
       if (mounted) {
@@ -184,55 +187,23 @@ class _DatasetEditSheetState extends State<DatasetEditSheet> {
                         child: Row(
                           children: [
                             Expanded(
-                              child: OutlinedButton(
-                                onPressed: () => Navigator.pop(context),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: onSurface,
-                                  side: BorderSide(
-                                    color: onSurface.withValues(alpha: 0.18),
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 14,
-                                  ),
-                                ),
-                                child: const Text('Cancel'),
+                              child: Button(
+                                label: 'Cancel',
+                                type: ButtonType.outline,
+                                onTap: () => Navigator.pop(context),
+                                width: double.infinity,
                               ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               flex: 2,
-                              child: FilledButton.icon(
-                                onPressed: canSave ? _save : null,
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: AppColors.primary,
-                                  disabledBackgroundColor: AppColors.primary
-                                      .withValues(alpha: 0.35),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 14,
-                                  ),
-                                ),
-                                icon: _isSaving
-                                    ? const SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : const Icon(
-                                        Icons.save_alt_rounded,
-                                        size: 18,
-                                      ),
-                                label: Text(
-                                  _isSaving ? 'Saving...' : 'Save Changes',
-                                ),
+                              child: Button(
+                                label: _isSaving ? 'Saving...' : 'Save Changes',
+                                leftIcon: _isSaving
+                                    ? null
+                                    : Icons.save_alt_rounded,
+                                onTap: canSave ? _save : null,
+                                width: double.infinity,
                               ),
                             ),
                           ],

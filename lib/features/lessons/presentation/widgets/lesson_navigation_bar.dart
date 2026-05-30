@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
-import "package:baybai/shared/widgets/button.dart";
-import "package:baybai/shared/widgets/solar_icon.dart";
+import "package:baybai/shared/components/buttons/button.dart";
+import "package:baybai/shared/components/icons/solar_icon.dart";
 
 class LessonNavigationBar extends StatelessWidget {
   final int currentIndex;

@@ -1,8 +1,9 @@
 import "package:flutter/material.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
-import "package:baybai/shared/widgets/button.dart";
-import "package:baybai/shared/widgets/solar_icon.dart";
+import "package:baybai/shared/components/buttons/button.dart";
+import "package:baybai/shared/components/cards/app_card.dart";
+import "package:baybai/shared/components/icons/solar_icon.dart";
 
 class LearnCard extends StatelessWidget {
   final String lessonNumber;
@@ -31,15 +32,11 @@ class LearnCard extends StatelessWidget {
   Widget build(BuildContext context) {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
+    return AppCard(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
-      decoration: ShapeDecoration(
-        color: isDarkMode ? AppColors.darkBox : AppColors.box,
-        shape: RoundedSuperellipseBorder(
-          borderRadius: BorderRadius.circular(32),
-        ),
-      ),
+      backgroundColor: isDarkMode ? AppColors.darkBox : AppColors.box,
+      borderRadius: BorderRadius.circular(32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -49,7 +46,9 @@ class LearnCard extends StatelessWidget {
               Text(
                 lessonNumber,
                 style: AppTextStyles.body.copyWith(
-                  color: isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey,
+                  color: isDarkMode
+                      ? AppColors.darkTextGrey
+                      : AppColors.textGrey,
                 ),
               ),
               if (!isLocked)
@@ -58,7 +57,9 @@ class LearnCard extends StatelessWidget {
                       ? "$totalPages/$totalPages"
                       : "${currentPage + 1}/$totalPages",
                   style: AppTextStyles.body.copyWith(
-                    color: isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey,
+                    color: isDarkMode
+                        ? AppColors.darkTextGrey
+                        : AppColors.textGrey,
                   ),
                 ),
             ],
@@ -75,18 +76,19 @@ class LearnCard extends StatelessWidget {
             label: isLocked
                 ? "Locked"
                 : (isCompleted
-                    ? "Complete"
-                    : (currentPage > 0 ? "Continue" : "Start Lesson")),
+                      ? "Complete"
+                      : (currentPage > 0 ? "Continue" : "Start Lesson")),
             onTap: isLocked
                 ? null
                 : (onTap ??
-                    () {
-                      Navigator.pushNamed(
-                        context,
-                        "/lesson",
-                        arguments: lessonId ?? 1,
-                      );
-                    }),
+                      () {
+                        Navigator.pushNamed(
+                          context,
+                          "/lesson",
+                          arguments: lessonId ?? 1,
+                        );
+                      }),
+            size: ButtonSize.md,
             type: ButtonType.primary,
             rightIcon: isLocked ? null : AppSolarIcons.arrowRightUp,
           ),

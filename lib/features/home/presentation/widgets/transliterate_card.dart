@@ -4,7 +4,7 @@ import "package:share_plus/share_plus.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
 import "package:baybai/core/utils/transliterator.dart";
-import "package:baybai/shared/widgets/solar_icon.dart";
+import "package:baybai/shared/components/icons/solar_icon.dart";
 import "dart:async";
 import "dart:math" as math;
 

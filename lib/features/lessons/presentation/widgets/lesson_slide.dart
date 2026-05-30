@@ -4,7 +4,7 @@ import "package:google_fonts/google_fonts.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
 import "package:baybai/features/lessons/domain/entities/lesson_content.dart";
-import "package:baybai/shared/widgets/solar_icon.dart";
+import "package:baybai/shared/components/icons/solar_icon.dart";
 
 class LessonSlide extends StatefulWidget {
   final LessonContent lesson;

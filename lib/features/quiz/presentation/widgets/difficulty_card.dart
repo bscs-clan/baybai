@@ -1,7 +1,8 @@
 import "package:flutter/material.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
-import "package:baybai/shared/widgets/solar_icon.dart";
+import "package:baybai/shared/components/cards/app_card.dart";
+import "package:baybai/shared/components/icons/solar_icon.dart";
 
 enum QuizMode { practice, challenge }
 
@@ -66,92 +67,85 @@ class ModeCard extends StatelessWidget {
 
     final Color baseColor = isDarkMode ? AppColors.darkBox : AppColors.box;
 
-    return GestureDetector(
+    return AppCard(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        width: double.infinity,
-        padding: const EdgeInsets.all(24),
-        decoration: ShapeDecoration(
-          color: baseColor,
-          shape: RoundedSuperellipseBorder(
-            borderRadius: BorderRadius.circular(28),
-          ),
-          shadows: isSelected
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.16),
-                    blurRadius: 18,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : [], // 👈 NO SHADOW when unselected
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: ShapeDecoration(
-                    color: info.accentColor.withValues(alpha: 0.15),
-                    shape: RoundedSuperellipseBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: Center(
-                    child: SolarIcon(
-                      info.icon,
-                      size: 24,
-                      color: info.accentColor,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    info.title,
-                    style: AppTextStyles.bigbody.copyWith(
-                      color: isDarkMode ? AppColors.darkText : AppColors.text,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            Text(
-              info.description,
-              style: AppTextStyles.mbody.copyWith(
-                color: isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey,
-                height: 1.4,
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      backgroundColor: baseColor,
+      borderRadius: BorderRadius.circular(28),
+      boxShadow: isSelected
+          ? [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.16),
+                blurRadius: 18,
+                offset: const Offset(0, 2),
               ),
-            ),
-            const SizedBox(height: 16),
+            ]
+          : null,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: ShapeDecoration(
+                  color: info.accentColor.withValues(alpha: 0.15),
+                  shape: RoundedSuperellipseBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: Center(
+                  child: SolarIcon(
+                    info.icon,
+                    size: 24,
+                    color: info.accentColor,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  info.title,
+                  style: AppTextStyles.bigbody.copyWith(
+                    color: isDarkMode ? AppColors.darkText : AppColors.text,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
 
-            Row(
-              children: [
-                _InfoChip(
-                  icon: info.hasTimer
-                      ? AppSolarIcons.alarm
-                      : AppSolarIcons.alarmOff,
-                  label: info.hasTimer ? "Timer on" : "No timer",
-                  isDarkMode: isDarkMode,
-                ),
-                const SizedBox(width: 6),
-                _InfoChip(
-                  icon: info.hasHints
-                      ? AppSolarIcons.lightbulb
-                      : AppSolarIcons.close,
-                  label: info.hasHints ? "Hints on" : "No hints",
-                  isDarkMode: isDarkMode,
-                ),
-              ],
+          Text(
+            info.description,
+            style: AppTextStyles.mbody.copyWith(
+              color: isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey,
+              height: 1.4,
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 16),
+
+          Row(
+            children: [
+              _InfoChip(
+                icon: info.hasTimer
+                    ? AppSolarIcons.alarm
+                    : AppSolarIcons.alarmOff,
+                label: info.hasTimer ? "Timer on" : "No timer",
+                isDarkMode: isDarkMode,
+              ),
+              const SizedBox(width: 6),
+              _InfoChip(
+                icon: info.hasHints
+                    ? AppSolarIcons.lightbulb
+                    : AppSolarIcons.close,
+                label: info.hasHints ? "Hints on" : "No hints",
+                isDarkMode: isDarkMode,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

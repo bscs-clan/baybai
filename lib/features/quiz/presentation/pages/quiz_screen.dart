@@ -4,8 +4,8 @@ import "package:baybai/core/theme/text.dart";
 import "package:baybai/features/lessons/presentation/widgets/lesson_back_button.dart";
 import "package:baybai/features/quiz/domain/entities/quiz_question.dart";
 import "package:baybai/features/quiz/presentation/widgets/difficulty_card.dart";
-import "package:baybai/shared/widgets/button.dart";
-import "package:baybai/shared/widgets/solar_icon.dart";
+import "package:baybai/shared/components/buttons/button.dart";
+import "package:baybai/shared/components/icons/solar_icon.dart";
 import "dart:async";
 
 class QuizScreen extends StatefulWidget {

@@ -3,10 +3,12 @@ import "package:flutter_bloc/flutter_bloc.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:hydrated_bloc/hydrated_bloc.dart";
 import "package:path_provider/path_provider.dart";
+import "package:shadcn_flutter/shadcn_flutter.dart" as shadcn;
 import "package:baybai/core/theme/app_theme.dart";
 import "package:baybai/core/utils/device_info.dart";
 import "package:baybai/core/utils/device_location.dart";
 import "package:baybai/features/login/presentation/pages/login.dart";
+import "package:baybai/features/signup/presentation/pages/signup.dart";
 import "package:baybai/features/account_settings/presentation/pages/account_settings.dart";
 import "package:baybai/features/characters/presentation/pages/characters_page.dart";
 import "package:baybai/features/dataset/presentation/pages/dataset_tab.dart";
@@ -57,16 +59,27 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (_) => serviceLoc<DatasetCaptureCubit>()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
-        builder: (context, mode) => MaterialApp(
+        builder: (context, mode) => shadcn.ShadcnApp(
+          title: "Baybai",
           debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          themeMode: mode,
+          theme: shadcn.ThemeData(
+            colorScheme: shadcn.LegacyColorSchemes.lightZinc(),
+            radius: 0.7,
+          ),
+          darkTheme: shadcn.ThemeData(
+            colorScheme: shadcn.LegacyColorSchemes.darkZinc(),
+            radius: 0.7,
+          ),
+          materialTheme: mode == ThemeMode.dark
+              ? AppTheme.darkTheme
+              : AppTheme.lightTheme,
+          themeMode: _toShadcnThemeMode(mode),
           initialRoute: "/",
           routes: {
             "/": (context) => const SplashScreen(),
             "/onboarding": (context) => const OnboardingScreen(),
             "/login": (context) => const LoginScreen(),
+            "/signup": (context) => const SignUpScreen(),
             "/home": (context) => const HomeScreen(),
             "/settings": (context) => const SettingsScreen(),
             "/quiz-setup": (context) => const QuizSetupScreen(),
@@ -82,5 +95,13 @@ class MyApp extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  shadcn.ThemeMode _toShadcnThemeMode(ThemeMode mode) {
+    return switch (mode) {
+      ThemeMode.system => shadcn.ThemeMode.system,
+      ThemeMode.light => shadcn.ThemeMode.light,
+      ThemeMode.dark => shadcn.ThemeMode.dark,
+    };
   }
 }

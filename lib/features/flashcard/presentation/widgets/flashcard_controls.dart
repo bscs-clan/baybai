@@ -1,5 +1,5 @@
 import "package:flutter/material.dart";
-import "package:baybai/shared/widgets/button.dart";
+import "package:baybai/shared/components/buttons/button.dart";
 
 class FlashcardControls extends StatelessWidget {
   final VoidCallback? onPrevious;

@@ -4,7 +4,7 @@ import "package:baybai/core/theme/text.dart";
 import "package:baybai/features/lessons/presentation/widgets/lesson_back_button.dart";
 import "package:baybai/features/quiz/presentation/pages/quiz_screen.dart";
 import "package:baybai/features/quiz/presentation/widgets/difficulty_card.dart";
-import "package:baybai/shared/widgets/button.dart";
+import "package:baybai/shared/components/buttons/button.dart";
 
 class QuizSetupScreen extends StatefulWidget {
   const QuizSetupScreen({super.key});

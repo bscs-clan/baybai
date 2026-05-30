@@ -1,5 +1,7 @@
 import "package:flutter/material.dart";
 import "package:baybai/features/dataset/domain/entities/dataset_entry.dart";
+import "package:baybai/shared/components/buttons/button.dart";
+import "package:baybai/shared/components/toast/toast.dart";
 
 Future<void> showDatasetEditDialog({
   required BuildContext context,
@@ -34,13 +36,16 @@ Future<void> showDatasetEditDialog({
             ),
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
+            Button(
+              label: 'Cancel',
+              type: ButtonType.outline,
+              size: ButtonSize.sm,
+              onTap: () => Navigator.pop(context, false),
             ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Save'),
+            Button(
+              label: 'Save',
+              size: ButtonSize.sm,
+              onTap: () => Navigator.pop(context, true),
             ),
           ],
         );
@@ -53,9 +58,11 @@ Future<void> showDatasetEditDialog({
       await onSave(titleCtrl.text, descCtrl.text);
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(
+      AppToast.show(
         context,
-      ).showSnackBar(SnackBar(content: Text('Save failed: $e')));
+        message: 'Save failed: $e',
+        variant: AppToastVariant.error,
+      );
     }
   } finally {
     titleCtrl.dispose();

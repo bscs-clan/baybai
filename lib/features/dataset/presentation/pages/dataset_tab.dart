@@ -16,6 +16,7 @@ import "package:baybai/features/dataset/presentation/widgets/dataset_empty_state
 import "package:baybai/features/dataset/presentation/widgets/dataset_entry_tile.dart";
 import "package:baybai/features/dataset/presentation/widgets/dataset_preview_pane.dart";
 import "package:baybai/features/dataset/presentation/widgets/dataset_character_bar_graph.dart";
+import "package:baybai/shared/components/toast/toast.dart";
 import "package:solar_icons/solar_icons.dart";
 
 class DatasetScreen extends StatelessWidget {
@@ -224,9 +225,11 @@ class _DatasetTabState extends State<DatasetTab> with WidgetsBindingObserver {
           previous.errorMessage != current.errorMessage &&
           current.errorMessage != null,
       listener: (context, state) {
-        ScaffoldMessenger.of(
+        AppToast.show(
           context,
-        ).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
+          message: state.errorMessage!,
+          variant: AppToastVariant.error,
+        );
       },
       builder: (context, state) {
         final isDarkMode = Theme.of(context).brightness == Brightness.dark;

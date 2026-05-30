@@ -1,7 +1,10 @@
+import "package:baybai/shared/components/buttons/icon_button.dart";
+import "package:baybai/shared/components/inputs/input.dart";
 import "package:flutter/material.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
-import "package:baybai/shared/widgets/solar_icon.dart";
+import "package:baybai/shared/components/icons/solar_icon.dart";
+import "package:solar_icons/solar_icons.dart";
 
 class CharactersPage extends StatefulWidget {
   const CharactersPage({super.key});
@@ -64,52 +67,19 @@ class _CharactersPageState extends State<CharactersPage> {
         toolbarHeight: 64,
         leadingWidth: 72,
         leading: Padding(
-          padding: const EdgeInsets.only(left: 24.0),
+          padding: EdgeInsets.only(left: 24.0),
           child: Center(
-            child: _buildHeaderButton(
-              context,
-              icon: AppSolarIcons.arrowLeft,
-              onTap: () => Navigator.pop(context),
-              isDarkMode: isDarkMode,
+            child: CustomIconButton(
+              onTap: () {
+                Navigator.pop(context);
+              },
+              icon: SolarIconsOutline.arrowLeft,
             ),
           ),
         ),
-        title: Container(
-          height: 48,
-          decoration: ShapeDecoration(
-            color: isDarkMode ? AppColors.darkBox : AppColors.compBg,
-            shape: RoundedSuperellipseBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-          child: Row(
-            children: [
-              const SizedBox(width: 12),
-              SolarIcon(
-                AppSolarIcons.magnifier,
-                size: 20,
-                color: isDarkMode ? AppColors.darkIcon : AppColors.icon,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  style: AppTextStyles.body.copyWith(
-                    color: isDarkMode ? AppColors.darkText : AppColors.text,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: "Search characters...",
-                    hintStyle: AppTextStyles.body.copyWith(
-                      color: isDarkMode
-                          ? AppColors.darkTextGrey
-                          : AppColors.textGrey,
-                    ),
-                    border: InputBorder.none,
-                    isDense: true,
-                  ),
-                ),
-              ),
-            ],
-          ),
+        title: Input(
+          leftIcon: SolarIconsOutline.magnifier,
+          hintText: "Search characters",
         ),
         centerTitle: false,
         actions: [],

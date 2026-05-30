@@ -1,7 +1,7 @@
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
-import "package:baybai/shared/widgets/button.dart";
-import "package:baybai/shared/widgets/input.dart";
+import "package:baybai/shared/components/buttons/button.dart";
+import "package:baybai/shared/components/inputs/input.dart";
 import "package:flutter/material.dart";
 import "package:solar_icons/solar_icons.dart";
 
@@ -18,9 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDarkMode
-          ? AppColors.darkBackground
-          : AppColors.background,
+      backgroundColor: isDarkMode ? AppColors.darkBox : AppColors.box,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -36,7 +34,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         const Spacer(),
                         const SizedBox(height: 56),
-                        Text("Sign In", style: AppTextStyles.heading),
+                        Text(
+                          "Sign In",
+                          style: AppTextStyles.heading.copyWith(
+                            color: isDarkMode
+                                ? AppColors.darkText
+                                : AppColors.text,
+                          ),
+                        ),
                         const SizedBox(height: 56),
                         Input(
                           leftIcon: SolarIconsBold.letter,
@@ -65,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               "Forgot password?",
                               style: AppTextStyles.body.copyWith(
                                 color: isDarkMode
-                                    ? AppColors.darkWhite
+                                    ? AppColors.darkText
                                     : AppColors.text,
                               ),
                             ),
@@ -93,7 +98,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               "Don't have an account?",
                               style: AppTextStyles.body.copyWith(
                                 color: isDarkMode
-                                    ? AppColors.darkWhite
+                                    ? AppColors.darkText
                                     : AppColors.text,
                               ),
                             ),
