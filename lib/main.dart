@@ -6,6 +6,7 @@ import "package:path_provider/path_provider.dart";
 import "package:baybai/core/theme/app_theme.dart";
 import "package:baybai/core/utils/device_info.dart";
 import "package:baybai/core/utils/device_location.dart";
+import "package:baybai/features/login/presentation/pages/login.dart";
 import "package:baybai/features/account_settings/presentation/pages/account_settings.dart";
 import "package:baybai/features/characters/presentation/pages/characters_page.dart";
 import "package:baybai/features/dataset/presentation/pages/dataset_tab.dart";
@@ -65,6 +66,7 @@ class MyApp extends StatelessWidget {
           routes: {
             "/": (context) => const SplashScreen(),
             "/onboarding": (context) => const OnboardingScreen(),
+            "/login": (context) => const LoginScreen(),
             "/home": (context) => const HomeScreen(),
             "/settings": (context) => const SettingsScreen(),
             "/quiz-setup": (context) => const QuizSetupScreen(),

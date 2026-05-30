@@ -14,6 +14,7 @@ class AppColors {
   static const Color compLight = Color(0xFFEEF2FD);
   static const Color icon = Color(0xFF1E1F24);
   static const Color listSeparator = Color(0xFFEFEFEF);
+  static const Color inputBackground = Color(0xFFF5F5F5);
 
   // Dark Theme
   static const Color darkPrimary = Color(0xFF5E77E8);
@@ -28,4 +29,5 @@ class AppColors {
   static const Color darkCompLight = Color(0xFF2F333D);
   static const Color darkIcon = Color(0xFF888888);
   static const Color darkListSeparator = Color(0xFF35363B);
+  static const Color darkInputBackground = Color(0xFF2A2C33);
 }

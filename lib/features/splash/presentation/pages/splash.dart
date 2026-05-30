@@ -28,9 +28,11 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(seconds: 3));
     if (!mounted) return;
     final prefs = await SharedPreferences.getInstance();
-    final seen = prefs.getBool("onboardingSeen") ?? false;
-    if (!mounted) return;
-    Navigator.pushReplacementNamed(context, seen ? "/home" : "/onboarding");
+    final token = prefs.getString("token");
+    Navigator.pushReplacementNamed(
+      context,
+      token != null && token.isNotEmpty ? "/home" : "/login",
+    );
   }
 
   @override

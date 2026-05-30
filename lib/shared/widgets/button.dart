@@ -4,12 +4,15 @@ import "package:baybai/core/theme/text.dart";
 
 enum ButtonType { primary, secondary, outline }
 
+enum ButtonSize { sm, md, lg }
+
 class Button extends StatelessWidget {
   final String label;
   final IconData? leftIcon;
   final IconData? rightIcon;
   final VoidCallback? onTap;
   final ButtonType type;
+  final ButtonSize size;
   final double? width;
 
   const Button({
@@ -19,13 +22,14 @@ class Button extends StatelessWidget {
     this.rightIcon,
     this.onTap,
     this.type = ButtonType.primary,
+    this.size = ButtonSize.md,
     this.width,
   });
 
   @override
   Widget build(BuildContext context) {
-    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    bool isEnabled = onTap != null;
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final bool isEnabled = onTap != null;
 
     final bool isPrimary = type == ButtonType.primary;
     final bool isSecondary = type == ButtonType.secondary;
@@ -36,8 +40,50 @@ class Button extends StatelessWidget {
       } else if (isSecondary) {
         return isDarkMode ? AppColors.darkWhite : AppColors.text;
       } else {
-        return AppColors.white;
+        return isDarkMode ? AppColors.darkWhite : AppColors.text;
       }
+    }
+
+    late final double horizontalPadding;
+    late final double verticalPadding;
+    late final double iconSize;
+    late final double borderRadius;
+    late final TextStyle textStyle;
+
+    switch (size) {
+      case ButtonSize.sm:
+        horizontalPadding = 14;
+        verticalPadding = 12;
+        iconSize = 16;
+        borderRadius = 14;
+        textStyle = AppTextStyles.wbody.copyWith(
+          fontWeight: FontWeight.bold,
+          color: getTextColor(),
+        );
+        break;
+
+      case ButtonSize.md:
+        horizontalPadding = 18;
+        verticalPadding = 16;
+        iconSize = 20;
+        borderRadius = 18;
+        textStyle = AppTextStyles.wbody.copyWith(
+          fontWeight: FontWeight.bold,
+          color: getTextColor(),
+        );
+        break;
+
+      case ButtonSize.lg:
+        horizontalPadding = 24;
+        verticalPadding = 20;
+        iconSize = 24;
+        borderRadius = 22;
+        textStyle = AppTextStyles.wbody.copyWith(
+          fontWeight: FontWeight.bold,
+          fontSize: 18,
+          color: getTextColor(),
+        );
+        break;
     }
 
     Widget buttonContent = Opacity(
@@ -45,7 +91,10 @@ class Button extends StatelessWidget {
       child: GestureDetector(
         onTap: isEnabled ? onTap : null,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          padding: EdgeInsets.symmetric(
+            horizontal: horizontalPadding,
+            vertical: verticalPadding,
+          ),
           decoration: ShapeDecoration(
             color: isPrimary
                 ? AppColors.primary
@@ -53,10 +102,13 @@ class Button extends StatelessWidget {
                       ? (isDarkMode ? AppColors.darkCompBg : AppColors.white)
                       : Colors.transparent),
             shape: RoundedSuperellipseBorder(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(borderRadius),
               side: isPrimary || isSecondary
                   ? BorderSide.none
-                  : BorderSide(color: AppColors.dark, width: 1),
+                  : BorderSide(
+                      color: isDarkMode ? AppColors.darkWhite : AppColors.dark,
+                      width: 1,
+                    ),
             ),
             shadows: isPrimary
                 ? [
@@ -76,19 +128,13 @@ class Button extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (leftIcon != null) ...[
-                Icon(leftIcon, size: 20, color: getTextColor()),
+                Icon(leftIcon, size: iconSize, color: getTextColor()),
                 const SizedBox(width: 8),
               ],
-              Text(
-                label,
-                style: AppTextStyles.wbody.copyWith(
-                  color: getTextColor(),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              Text(label, style: textStyle),
               if (rightIcon != null) ...[
                 const SizedBox(width: 8),
-                Icon(rightIcon, size: 20, color: getTextColor()),
+                Icon(rightIcon, size: iconSize, color: getTextColor()),
               ],
             ],
           ),

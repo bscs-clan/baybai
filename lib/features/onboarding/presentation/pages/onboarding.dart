@@ -18,7 +18,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     await prefs.setBool("onboardingSeen", true);
 
     if (!mounted) return;
-    Navigator.pushReplacementNamed(context, "/home");
+    Navigator.pushReplacementNamed(context, "/login");
   }
 
   @override
