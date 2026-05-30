@@ -1,13 +1,11 @@
-import "package:baybai/shared/components/base/component_tokens.dart";
 import "package:flutter/material.dart";
-import "package:shadcn_flutter/shadcn_flutter.dart" as shadcn;
+import "package:baybai/shared/components/base/component_tokens.dart";
 
 class AppCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
   final VoidCallback? onTap;
   final Color? backgroundColor;
-  final Color? borderColor;
   final List<BoxShadow>? boxShadow;
   final BorderRadiusGeometry? borderRadius;
   final double? width;
@@ -19,7 +17,6 @@ class AppCard extends StatelessWidget {
     this.padding = const EdgeInsets.all(ComponentSpacing.lg),
     this.onTap,
     this.backgroundColor,
-    this.borderColor,
     this.boxShadow,
     this.borderRadius,
     this.width,
@@ -28,30 +25,30 @@ class AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final card = SizedBox(
+    final resolvedRadius = borderRadius is BorderRadius
+        ? borderRadius as BorderRadius
+        : BorderRadius.circular(ComponentRadius.md);
+
+    final card = Container(
       width: width,
       height: height,
-      child: shadcn.SurfaceCard(
-        padding: padding,
-        filled: true,
-        fillColor: backgroundColor ?? ComponentColors.surface(context),
-        borderColor: borderColor ?? ComponentColors.border(context),
-        borderWidth: 1,
-        borderRadius: borderRadius ?? BorderRadius.circular(ComponentRadius.md),
+      decoration: BoxDecoration(
+        color: backgroundColor ?? ComponentColors.surface(context),
+
+        // fully resolved to BorderRadius (no type conflict)
+        borderRadius: resolvedRadius,
+
+        border: Border.all(color: Colors.transparent, width: 0),
         boxShadow: boxShadow,
-        child: child,
       ),
+      child: Padding(padding: padding, child: child),
     );
 
     if (onTap == null) return card;
 
-    return shadcn.Button(
-      style: shadcn.ButtonStyle.card()
-          .withPadding(padding: EdgeInsets.zero)
-          .withBackgroundColor(color: Colors.transparent)
-          .withBorder(border: Border.all(color: Colors.transparent)),
-      onPressed: onTap,
-      child: card,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(borderRadius: resolvedRadius, onTap: onTap, child: card),
     );
   }
 }
