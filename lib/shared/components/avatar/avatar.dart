@@ -4,6 +4,7 @@ import "package:shadcn_flutter/shadcn_flutter.dart" as shadcn;
 
 class AppAvatar extends StatelessWidget {
   final String name;
+  final String? assetImage;
   final String? imageUrl;
   final double size;
   final Color? backgroundColor;
@@ -12,6 +13,7 @@ class AppAvatar extends StatelessWidget {
   const AppAvatar({
     super.key,
     required this.name,
+    this.assetImage,
     this.imageUrl,
     this.size = 44,
     this.backgroundColor,
@@ -22,6 +24,16 @@ class AppAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final initials = shadcn.Avatar.getInitials(name);
     final color = backgroundColor ?? AppColors.primary.withValues(alpha: 0.14);
+
+    if (assetImage != null && assetImage!.isNotEmpty) {
+      return shadcn.Avatar(
+        initials: initials,
+        size: size,
+        backgroundColor: color,
+        badge: badge,
+        provider: AssetImage(assetImage!),
+      );
+    }
 
     if (imageUrl == null || imageUrl!.isEmpty) {
       return shadcn.Avatar(

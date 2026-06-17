@@ -19,14 +19,9 @@ class LearnHeader extends StatelessWidget {
           style: AppTextStyles.body.copyWith(
             color: isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey,
           ),
+        
         ),
-        const SizedBox(height: 12),
-        Text(
-          "Ready to learn Baybayin?",
-          style: AppTextStyles.heading.copyWith(
-            color: isDarkMode ? AppColors.darkText : AppColors.text,
-          ),
-        ),
+        SizedBox(height: 12),
       ],
     );
   }

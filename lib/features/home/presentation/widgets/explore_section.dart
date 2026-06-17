@@ -41,15 +41,15 @@ class ExploreSection extends StatelessWidget {
             Row(
               children: [
                 buildCard(
-                  icon: AppSolarIcons.questionSquare,
-                  label: "Quiz",
-                  route: "/quiz-setup",
+                  icon: AppSolarIcons.lesson,
+                  label: "Lessons",
+                  route: "/lessons",
                 ),
                 const SizedBox(width: 12),
                 buildCard(
-                  icon: AppSolarIcons.flashcard,
-                  label: "Flashcard",
-                  route: "/flashcard",
+                  icon: AppSolarIcons.game,
+                  label: "Games",
+                  route: "/game",
                 ),
               ],
             ),

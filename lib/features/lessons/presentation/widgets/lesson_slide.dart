@@ -5,10 +5,13 @@ import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
 import "package:baybai/features/lessons/domain/entities/lesson_content.dart";
 import "package:baybai/shared/components/icons/solar_icon.dart";
+import "package:baybai/features/lessons/presentation/widgets/baybayin_symbol_card.dart";
+import "package:baybai/features/lessons/presentation/widgets/sound_comparison_card.dart";
+import "package:baybai/features/lessons/presentation/widgets/word_breakdown_card.dart";
 
 class LessonSlide extends StatefulWidget {
   final LessonContent lesson;
-  final Function(bool)? onAnswered;
+  final Function(bool isAnswered, {String? selectedOption})? onAnswered;
 
   const LessonSlide({super.key, required this.lesson, this.onAnswered});
 
@@ -28,30 +31,6 @@ class _LessonSlideState extends State<LessonSlide> {
     super.dispose();
   }
 
-  String _getOptionLabel(String option) {
-    switch (option) {
-      // Baybayin to Roman
-      case "\u1700": return "A";
-      case "\u1701": return "I / E";
-      case "\u1702": return "O / U";
-      case "\u1703": return "KA";
-      case "\u170A": return "BA";
-      case "\u170B": return "MA";
-      // Roman to Baybayin
-      case "A": return "\u1700";
-      case "I": return "\u1701";
-      case "E": return "\u1701";
-      case "O": return "\u1702";
-      case "U": return "\u1702";
-      case "KA": return "\u1703";
-      case "BA": return "\u170A";
-      case "MA": return "\u170B";
-      case "MI": return "\u170B\u1732";
-      case "MO": return "\u170B\u1733";
-      default: return "";
-    }
-  }
-
   BoxFit _mapImageFit(LessonImageFit fit) {
     return switch (fit) {
       LessonImageFit.cover => BoxFit.cover,
@@ -68,7 +47,8 @@ class _LessonSlideState extends State<LessonSlide> {
   @override
   Widget build(BuildContext context) {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final descriptionStyle = (widget.lesson.descriptionFontFamily != null &&
+    final descriptionStyle =
+        (widget.lesson.descriptionFontFamily != null &&
             widget.lesson.descriptionFontFamily != 'Baybayin')
         ? GoogleFonts.getFont(
             widget.lesson.descriptionFontFamily!,
@@ -82,7 +62,6 @@ class _LessonSlideState extends State<LessonSlide> {
             height: 1.5,
           );
 
-    // Clear old recognizers before building new ones
     for (final recognizer in _recognizers) {
       recognizer.dispose();
     }
@@ -92,26 +71,10 @@ class _LessonSlideState extends State<LessonSlide> {
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(
-            width: widget.lesson.imageWidth ?? double.infinity,
-            height: widget.lesson.imageHeight,
-            child: widget.lesson.image != null
-                ? Image.asset(
-                    widget.lesson.image!,
-                    fit: _mapImageFit(widget.lesson.imageFit),
-                  )
-                : Icon(
-                    Icons.image_outlined,
-                    size: 64,
-                    color: isDarkMode
-                        ? AppColors.darkTextGrey
-                        : AppColors.textGrey,
-                  ),
-          ),
-          const SizedBox(height: 48),
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               if (widget.lesson.icon != null) ...[
                 SolarIcon(
@@ -121,148 +84,297 @@ class _LessonSlideState extends State<LessonSlide> {
                 ),
                 const SizedBox(width: 8),
               ],
-              Text(
-                widget.lesson.title,
-                style: (widget.lesson.titleFontFamily != null &&
-                        widget.lesson.titleFontFamily != 'Baybayin')
-                    ? GoogleFonts.getFont(
-                        widget.lesson.titleFontFamily!,
-                        fontSize: widget.lesson.titleFontSize ?? 18,
-                        fontWeight: FontWeight.w600,
-                        color: isDarkMode ? AppColors.darkText : AppColors.text,
-                      )
-                    : AppTextStyles.bigbody.copyWith(
-                        color: isDarkMode ? AppColors.darkText : AppColors.text,
-                        fontSize: widget.lesson.titleFontSize,
-                      ),
-                textAlign: TextAlign.center,
+              Expanded(
+                child: Text(
+                  widget.lesson.title,
+                  style:
+                      (widget.lesson.titleFontFamily != null &&
+                          widget.lesson.titleFontFamily != 'Baybayin')
+                      ? GoogleFonts.getFont(
+                          widget.lesson.titleFontFamily!,
+                          fontSize: widget.lesson.titleFontSize ?? 24,
+                          fontWeight: FontWeight.bold,
+                          color: isDarkMode
+                              ? AppColors.darkText
+                              : AppColors.text,
+                        )
+                      : AppTextStyles.heading.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: isDarkMode
+                              ? AppColors.darkText
+                              : AppColors.text,
+                          fontSize: widget.lesson.titleFontSize,
+                        ),
+                  textAlign: TextAlign.left,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text.rich(
-            TextSpan(
-              children: _parseDescription(
-                widget.lesson.description,
-                descriptionStyle,
-                context,
-                isDarkMode,
-              ),
-            ),
-            textAlign: TextAlign.center,
-          ),
-          if (widget.lesson.baybayinText.isNotEmpty) ...[
-            const SizedBox(height: 32),
-            Text(
-              widget.lesson.baybayinText,
-              style: (widget.lesson.baybayinFontFamily != null &&
-                      widget.lesson.baybayinFontFamily != 'Baybayin')
-                  ? GoogleFonts.getFont(
-                      widget.lesson.baybayinFontFamily!,
-                      fontSize: widget.lesson.baybayinFontSize ?? 40,
-                      color: isDarkMode ? AppColors.darkText : AppColors.text,
-                    )
-                  : TextStyle(
-                      fontFamily: widget.lesson.baybayinFontFamily ?? 'Baybayin',
-                      fontSize: widget.lesson.baybayinFontSize ?? 40,
-                      color: isDarkMode ? AppColors.darkText : AppColors.text,
+          const SizedBox(height: 24),
+          if (widget.lesson.wordBreakdown != null)
+            WordBreakdownCard(
+              word: widget.lesson.wordBreakdown!.word,
+              syllables: widget.lesson.wordBreakdown!.syllables,
+              meaning: widget.lesson.wordBreakdown!.meaning,
+              baybayinSyllables: widget.lesson.wordBreakdown!.baybayinSyllables,
+            )
+          else if (widget.lesson.soundComparison != null)
+            SoundComparisonCard(
+              englishFirst: widget.lesson.soundComparison!.englishFirst,
+              englishSecond: widget.lesson.soundComparison!.englishSecond,
+              englishResult: widget.lesson.soundComparison!.englishResult,
+              baybayinSymbol: widget.lesson.soundComparison!.baybayinSymbol,
+              baybayinResult: widget.lesson.soundComparison!.baybayinResult,
+            )
+          else if (widget.lesson.soundComparisons != null &&
+              widget.lesson.soundComparisons!.isNotEmpty)
+            Column(
+              children: widget.lesson.soundComparisons!.map((comparison) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12.0),
+                  child: SoundComparisonCard(
+                    englishFirst: comparison.englishFirst,
+                    englishSecond: comparison.englishSecond,
+                    englishResult: comparison.englishResult,
+                    baybayinSymbol: comparison.baybayinSymbol,
+                    baybayinResult: comparison.baybayinResult,
+                    baybayinSymbolLabel: _soundComparisonSymbolLabel,
+                    baybayinResultLabel: _soundComparisonResultLabel,
+                    showEnglishSection: false,
+                    showBaybayinLabel: false,
+                  ),
+                );
+              }).toList(),
+            )
+          else if (widget.lesson.symbols != null &&
+              widget.lesson.symbols!.isNotEmpty)
+            BaybyainSymbolCard(
+              symbols: widget.lesson.symbols!
+                  .map(
+                    (s) => BaybyainSymbol(
+                      unicode: s.unicode,
+                      romanization: s.romanization,
                     ),
-              textAlign: TextAlign.center,
+                  )
+                  .toList(),
+              title: widget.lesson.symbolsTitle ?? "Baybayin Symbols",
+            )
+          else if (widget.lesson.baybayinText.isNotEmpty &&
+              widget.lesson.options != null &&
+              widget.lesson.options!.isNotEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+                color: isDarkMode ? AppColors.darkCompBg : AppColors.white,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    widget.lesson.baybayinText,
+                    style:
+                        (widget.lesson.baybayinFontFamily != null &&
+                            widget.lesson.baybayinFontFamily != 'Baybayin')
+                        ? GoogleFonts.getFont(
+                            widget.lesson.baybayinFontFamily!,
+                            fontSize: widget.lesson.baybayinFontSize ?? 64,
+                            fontWeight: FontWeight.bold,
+                            color: isDarkMode
+                                ? AppColors.white
+                                : AppColors.dark,
+                            height: 1.0,
+                          )
+                        : TextStyle(
+                            fontFamily: 'Baybayin',
+                            fontSize: widget.lesson.baybayinFontSize ?? 96,
+                            color: isDarkMode
+                                ? AppColors.white
+                                : AppColors.dark,
+                            height: 1.0,
+                          ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text.rich(
+                    TextSpan(
+                      children: _parseDescription(
+                        widget.lesson.description,
+                        descriptionStyle,
+                        context,
+                        isDarkMode,
+                      ),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            )
+          else
+            SizedBox(
+              width: widget.lesson.imageWidth ?? double.infinity,
+              height: widget.lesson.imageHeight,
+              child: widget.lesson.image != null
+                  ? Image.asset(
+                      widget.lesson.image!,
+                      fit: _mapImageFit(widget.lesson.imageFit),
+                    )
+                  : Icon(
+                      Icons.image_outlined,
+                      size: 64,
+                      color: isDarkMode
+                          ? AppColors.darkTextGrey
+                          : AppColors.textGrey,
+                    ),
+            ),
+          if (!(widget.lesson.baybayinText.isNotEmpty &&
+              widget.lesson.options != null &&
+              widget.lesson.options!.isNotEmpty)) ...[
+            SizedBox(height: _descriptionTopPadding),
+            Text.rich(
+              TextSpan(
+                children: _parseDescription(
+                  widget.lesson.description,
+                  descriptionStyle,
+                  context,
+                  isDarkMode,
+                ),
+              ),
+              textAlign: TextAlign.left,
             ),
           ],
+
           if (widget.lesson.options != null &&
               widget.lesson.options!.isNotEmpty) ...[
-            const SizedBox(height: 48),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(height: 24),
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 2.2,
               children: List.generate(widget.lesson.options!.length, (index) {
                 final option = widget.lesson.options![index];
                 final isSelected = _selectedIndex == index;
                 final isCorrect = option == widget.lesson.correctOption;
+                final hasSelected = _selectedIndex != null;
+                final showAsCorrect = hasSelected && isCorrect;
+                final showAsWrong = isSelected && !isCorrect;
 
                 Color getBgColor() {
-                  if (!isSelected) {
+                  if (!hasSelected) {
                     return isDarkMode
                         ? AppColors.dark.withValues(alpha: 0.5)
                         : AppColors.white;
                   }
-                  return isCorrect ? Colors.green : Colors.red;
+                  if (showAsCorrect) {
+                    return Colors.green.withValues(alpha: 0.15);
+                  }
+                  if (showAsWrong) {
+                    return Colors.red.withValues(alpha: 0.15);
+                  }
+                  return isDarkMode
+                      ? AppColors.dark.withValues(alpha: 0.2)
+                      : AppColors.white.withValues(alpha: 0.4);
                 }
 
-                return Column(
-                  children: [
-                    InkWell(
-                      onTap: () {
-                        setState(() {
-                          _selectedIndex = index;
-                        });
-                        widget.onAnswered?.call(true);
-                      },
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
-                        width: 84,
-                        height: 84,
-                        decoration: ShapeDecoration(
-                          color: getBgColor(),
-                          shape: RoundedSuperellipseBorder(
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                        ),
-                        child: Center(
+                BorderSide getBorderSide() {
+                  if (!hasSelected) {
+                    return const BorderSide(
+                      color: Colors.transparent,
+                      width: 0,
+                    );
+                  }
+                  if (showAsCorrect) {
+                    return BorderSide(
+                      color: Colors.green.withValues(alpha: 0.8),
+                      width: 2.0,
+                    );
+                  }
+                  if (showAsWrong) {
+                    return BorderSide(
+                      color: Colors.red.withValues(alpha: 0.8),
+                      width: 2.0,
+                    );
+                  }
+                  return const BorderSide(color: Colors.transparent, width: 0);
+                }
+
+                Color getTextColor() {
+                  if (!hasSelected) {
+                    return isDarkMode ? AppColors.white : AppColors.dark;
+                  }
+                  if (showAsCorrect) {
+                    return isDarkMode
+                        ? Colors.green.shade300
+                        : Colors.green.shade800;
+                  }
+                  if (showAsWrong) {
+                    return isDarkMode
+                        ? Colors.red.shade300
+                        : Colors.red.shade800;
+                  }
+                  return isDarkMode
+                      ? AppColors.white.withValues(alpha: 0.3)
+                      : AppColors.dark.withValues(alpha: 0.3);
+                }
+
+                return InkWell(
+                  onTap: hasSelected
+                      ? null
+                      : () {
+                          setState(() {
+                            _selectedIndex = index;
+                          });
+                          widget.onAnswered?.call(true, selectedOption: option);
+                        },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    decoration: ShapeDecoration(
+                      color: getBgColor(),
+                      shape: RoundedSuperellipseBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: getBorderSide(),
+                      ),
+                    ),
+                    child: Stack(
+                      children: [
+                        Center(
                           child: Text(
                             option,
-                            style: (widget.lesson.optionFontFamily != null &&
-                                    widget.lesson.optionFontFamily != 'Baybayin')
-                                ? GoogleFonts.getFont(
-                                    widget.lesson.optionFontFamily!,
-                                    fontSize: widget.lesson.optionFontSize ?? 32,
+                            style: widget.lesson.optionFontFamily == 'Baybayin'
+                                ? TextStyle(
+                                    fontFamily: 'Baybayin',
+                                    fontSize:
+                                        widget.lesson.optionFontSize ?? 24,
                                     fontWeight: FontWeight.bold,
-                                    color: isSelected
-                                        ? Colors.white
-                                        : (isDarkMode
-                                              ? AppColors.white
-                                              : AppColors.dark),
+                                    color: getTextColor(),
                                   )
-                                : TextStyle(
-                                    fontFamily: widget.lesson.optionFontFamily ?? 'Baybayin',
-                                    fontSize: widget.lesson.optionFontSize ?? 32,
+                                : GoogleFonts.getFont(
+                                    widget.lesson.optionFontFamily ?? 'Poppins',
+                                    fontSize:
+                                        widget.lesson.optionFontSize ?? 24,
                                     fontWeight: FontWeight.bold,
-                                    color: isSelected
-                                        ? Colors.white
-                                        : (isDarkMode
-                                              ? AppColors.white
-                                              : AppColors.dark),
+                                    color: getTextColor(),
                                   ),
                           ),
                         ),
-                      ),
+                        if (showAsCorrect || showAsWrong)
+                          Positioned(
+                            top: 12,
+                            right: 12,
+                            child: Icon(
+                              showAsCorrect
+                                  ? Icons.check_circle_rounded
+                                  : Icons.cancel_rounded,
+                              color: showAsCorrect ? Colors.green : Colors.red,
+                              size: 20,
+                            ),
+                          ),
+                      ],
                     ),
-                    if (isSelected) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        (widget.lesson.optionLabels != null &&
-                                widget.lesson.optionLabels!.length ==
-                                    widget.lesson.options!.length)
-                            ? widget.lesson.optionLabels![index]
-                            : _getOptionLabel(option),
-                        style: (widget.lesson.labelFontFamily != null &&
-                                widget.lesson.labelFontFamily != 'Baybayin')
-                            ? GoogleFonts.getFont(
-                                widget.lesson.labelFontFamily!,
-                                fontSize: widget.lesson.labelFontSize ?? 14,
-                                color: isCorrect ? Colors.green : Colors.red,
-                                fontWeight: FontWeight.bold,
-                              )
-                            : AppTextStyles.body.copyWith(
-                                color: isCorrect ? Colors.green : Colors.red,
-                                fontWeight: FontWeight.bold,
-                                fontSize: widget.lesson.labelFontSize,
-                                fontFamily: widget.lesson.labelFontFamily ?? 'Poppins',
-                              ),
-                      ),
-                    ],
-                  ],
+                  ),
                 );
               }),
             ),
@@ -293,7 +405,6 @@ class _LessonSlideState extends State<LessonSlide> {
       }
 
       if (match.group(1) != null) {
-        // Bold text: **text**
         spans.add(
           TextSpan(
             text: match.group(1),
@@ -304,7 +415,6 @@ class _LessonSlideState extends State<LessonSlide> {
           ),
         );
       } else if (match.group(2) != null) {
-        // Link text: [text]
         final linkText = match.group(2)!;
         final recognizer = TapGestureRecognizer()
           ..onTap = () {
@@ -344,5 +454,26 @@ class _LessonSlideState extends State<LessonSlide> {
     }
 
     return spans;
+  }
+
+  String get _soundComparisonSymbolLabel {
+    return switch (widget.lesson.title) {
+      "The Three Vowels" => "vowel",
+      "Baybayin Consonant" => "consonant",
+      "More examples" => "consonant",
+      _ => "symbol",
+    };
+  }
+
+  String? get _soundComparisonResultLabel {
+    return switch (widget.lesson.title) {
+      "Baybayin Consonant" => 'vowel "a"',
+      "More examples" => 'vowel "a"',
+      _ => null,
+    };
+  }
+
+  double get _descriptionTopPadding {
+    return widget.lesson.title == "Baybayin Consonant" ? 8 : 24;
   }
 }

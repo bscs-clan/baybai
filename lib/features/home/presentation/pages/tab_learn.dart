@@ -1,9 +1,12 @@
 import "package:flutter/material.dart";
 import "package:shared_preferences/shared_preferences.dart";
+import "package:baybai/core/theme/colors.dart";
+import "package:baybai/core/theme/text.dart";
 import "package:baybai/features/home/presentation/widgets/explore_section.dart";
 import "package:baybai/features/home/presentation/widgets/learn_card.dart";
 import "package:baybai/features/home/presentation/widgets/learn_header.dart";
 import "package:baybai/features/lessons/data/datasources/lesson_data_source.dart";
+import "package:baybai/features/lessons/domain/entities/lesson_content.dart";
 
 class TabLearn extends StatefulWidget {
   const TabLearn({super.key});
@@ -14,9 +17,35 @@ class TabLearn extends StatefulWidget {
 
 class _TabLearnState extends State<TabLearn> {
   int _unlockedLessons = 1;
-  Map<int, int> _progress = {};
   Map<int, bool> _completed = {};
   bool _isLoading = true;
+
+  List<int> get _availableLessonIds => LessonData.lessonList
+      .where((lesson) => LessonData.lessons.containsKey(lesson.id))
+      .map((lesson) => lesson.id)
+      .toList();
+
+  int get _currentLessonId {
+    final availableLessonIds = _availableLessonIds;
+
+    for (final lessonId in availableLessonIds) {
+      if (lessonId <= _unlockedLessons && !(_completed[lessonId] ?? false)) {
+        return lessonId;
+      }
+    }
+
+    final lastUnlockedLessonId = availableLessonIds.lastWhere(
+      (lessonId) => lessonId <= _unlockedLessons,
+      orElse: () => availableLessonIds.first,
+    );
+
+    return lastUnlockedLessonId;
+  }
+
+  LessonMetadata get _currentLesson => LessonData.lessonList.firstWhere(
+        (lesson) => lesson.id == _currentLessonId,
+        orElse: () => LessonData.lessonList.first,
+      );
 
   @override
   void initState() {
@@ -26,43 +55,42 @@ class _TabLearnState extends State<TabLearn> {
 
   Future<void> _loadProgress() async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     // Load unlocked lessons count, default to 1
     final unlocked = prefs.getInt('unlocked_lessons') ?? 1;
-    
-    // Load progress and completion for all lessons
-    final progress = <int, int>{};
+
+    // Load completion for all lessons
     final completed = <int, bool>{};
-    
-    for (int i = 1; i <= LessonData.lessons.length; i++) {
-      progress[i] = prefs.getInt('lesson_${i}_progress') ?? 0;
-      completed[i] = prefs.getBool('lesson_${i}_completed') ?? false;
+
+    for (final lesson in LessonData.lessonList) {
+      completed[lesson.id] =
+          prefs.getBool('lesson_${lesson.id}_completed') ?? false;
     }
-    
+
+    if (!mounted) return;
+
     setState(() {
       _unlockedLessons = unlocked;
-      _progress = progress;
       _completed = completed;
       _isLoading = false;
     });
   }
 
   void _navigateToLesson(int lessonId) async {
-    await Navigator.pushNamed(
-      context,
-      "/lesson",
-      arguments: lessonId,
-    );
+    await Navigator.pushNamed(context, "/lesson", arguments: lessonId);
     _loadProgress();
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
+
+    final currentLesson = _currentLesson;
+    final currentLessonId = currentLesson.id;
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -73,37 +101,20 @@ class _TabLearnState extends State<TabLearn> {
           children: [
             const LearnHeader(userName: "Deobert"),
             const SizedBox(height: 24),
-            LearnCard(
-              lessonNumber: "Lesson 1",
-              title: "Baybayin Basics",
-              lessonId: 1,
-              isLocked: _unlockedLessons < 1,
-              currentPage: _progress[1] ?? 0,
-              totalPages: LessonData.lessons[1]?.length ?? 1,
-              isCompleted: _completed[1] ?? false,
-              onTap: () => _navigateToLesson(1),
+            Text(
+              "Basic Learning",
+              style: AppTextStyles.bigbody.copyWith(
+                color: isDarkMode ? AppColors.darkText : AppColors.text,
+              ),
             ),
             const SizedBox(height: 16),
             LearnCard(
-              lessonNumber: "Lesson 2",
-              title: "Understanding Sounds",
-              lessonId: 2,
-              isLocked: _unlockedLessons < 2,
-              currentPage: _progress[2] ?? 0,
-              totalPages: LessonData.lessons[2]?.length ?? 1,
-              isCompleted: _completed[2] ?? false,
-              onTap: () => _navigateToLesson(2),
-            ),
-            const SizedBox(height: 16),
-            LearnCard(
-              lessonNumber: "Lesson 3",
-              title: "The Kudlit Mark",
-              lessonId: 3,
-              isLocked: _unlockedLessons < 3,
-              currentPage: _progress[3] ?? 0,
-              totalPages: LessonData.lessons[3]?.length ?? 1,
-              isCompleted: _completed[3] ?? false,
-              onTap: () => _navigateToLesson(3),
+              lessonNumber: currentLesson.number,
+              title: currentLesson.title,
+              lessonId: currentLessonId,
+              isLocked: _unlockedLessons < currentLessonId,
+              isCompleted: _completed[currentLessonId] ?? false,
+              onTap: () => _navigateToLesson(currentLessonId),
             ),
             const SizedBox(height: 32),
             const ExploreSection(),

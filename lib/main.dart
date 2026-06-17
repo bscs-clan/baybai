@@ -16,7 +16,9 @@ import "package:baybai/features/dataset/presentation/bloc/dataset_bloc.dart";
 import "package:baybai/features/dataset/presentation/bloc/dataset_capture_cubit.dart";
 import "package:baybai/features/dataset/presentation/bloc/dataset_event.dart";
 import "package:baybai/features/flashcard/presentation/pages/flashcard_page.dart";
+import "package:baybai/features/game/presentation/pages/game_page.dart";
 import "package:baybai/features/home/presentation/pages/home.dart";
+import "package:baybai/features/lessons/presentation/pages/lesson_library_page.dart";
 import "package:baybai/features/lessons/presentation/pages/lesson_page.dart";
 import "package:baybai/features/ocr/presentation/pages/ocr_page.dart";
 import "package:baybai/features/ocr/presentation/pages/scan_page.dart";
@@ -27,6 +29,7 @@ import "package:baybai/features/settings/presentation/pages/settings.dart";
 import "package:baybai/features/settings/presentation/view_models/scan_settings_cubit.dart";
 import "package:baybai/features/settings/presentation/view_models/theme_cubit.dart";
 import "package:baybai/features/splash/presentation/pages/splash.dart";
+import "package:baybai/features/user_profile/presentation/pages/user_profile.dart";
 import "package:baybai/injection_container.dart";
 
 void main() async {
@@ -82,7 +85,10 @@ class MyApp extends StatelessWidget {
             "/signup": (context) => const SignUpScreen(),
             "/home": (context) => const HomeScreen(),
             "/settings": (context) => const SettingsScreen(),
+            "/user-profile": (context) => const UserProfileScreen(),
+            "/game": (context) => const GamePage(),
             "/quiz-setup": (context) => const QuizSetupScreen(),
+            "/lessons": (context) => const LessonLibraryPage(),
             "/lesson": (context) => const LessonPage(),
             "/flashcard": (context) => const FlashcardPage(),
             "/characters": (context) => const CharactersPage(),

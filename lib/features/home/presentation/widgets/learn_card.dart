@@ -12,8 +12,6 @@ class LearnCard extends StatelessWidget {
   final VoidCallback? onTap;
 
   final bool isLocked;
-  final int currentPage;
-  final int totalPages;
   final bool isCompleted;
 
   const LearnCard({
@@ -23,8 +21,6 @@ class LearnCard extends StatelessWidget {
     this.lessonId,
     this.onTap,
     this.isLocked = false,
-    this.currentPage = 0,
-    this.totalPages = 1,
     this.isCompleted = false,
   });
 
@@ -40,29 +36,13 @@ class LearnCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                lessonNumber,
-                style: AppTextStyles.body.copyWith(
-                  color: isDarkMode
-                      ? AppColors.darkTextGrey
-                      : AppColors.textGrey,
-                ),
-              ),
-              if (!isLocked)
-                Text(
-                  isCompleted
-                      ? "$totalPages/$totalPages"
-                      : "${currentPage + 1}/$totalPages",
-                  style: AppTextStyles.body.copyWith(
-                    color: isDarkMode
-                        ? AppColors.darkTextGrey
-                        : AppColors.textGrey,
-                  ),
-                ),
-            ],
+          Text(
+            lessonNumber,
+            style: AppTextStyles.body.copyWith(
+              color: isDarkMode
+                  ? AppColors.darkTextGrey
+                  : AppColors.textGrey,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
@@ -75,9 +55,7 @@ class LearnCard extends StatelessWidget {
           Button(
             label: isLocked
                 ? "Locked"
-                : (isCompleted
-                      ? "Complete"
-                      : (currentPage > 0 ? "Continue" : "Start Lesson")),
+                : (isCompleted ? "Complete" : "Start Lesson"),
             onTap: isLocked
                 ? null
                 : (onTap ??
