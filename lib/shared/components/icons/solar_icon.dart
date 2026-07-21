@@ -21,6 +21,7 @@ class AppSolarIcons {
   static const altArrowLeft = SolarIconsOutline.altArrowLeft;
   static const altArrowRight = SolarIconsOutline.altArrowRight;
   static const arrowLeft = SolarIconsOutline.arrowLeft;
+  static const arrowRight = SolarIconsOutline.arrowRight;
   static const arrowRightUp = SolarIconsOutline.arrowRightUp;
   static const bolt = SolarIconsOutline.bolt;
   static const character = SolarIconsOutline.userId;
@@ -33,9 +34,11 @@ class AppSolarIcons {
   static const delete = SolarIconsOutline.trashBinTrash;
   static const fire = SolarIconsOutline.fire;
   static const flashcard = SolarIconsOutline.card;
-  static const game = SolarIconsOutline.gamepad;
+  static const game = SolarIconsOutline.gameboy;
+  static const gameWhite = SolarIconsBold.gameboy;
   static const lightbulb = SolarIconsOutline.lightbulb;
   static const lesson = SolarIconsOutline.book;
+  static const lessonWhite = SolarIconsBold.book;
   static const magnifier = SolarIconsOutline.magnifier;
   static const medalStar = SolarIconsOutline.medalStar;
   static const practice = SolarIconsOutline.penNewSquare;
@@ -45,6 +48,13 @@ class AppSolarIcons {
   static const switchHorizontal = SolarIconsOutline.transferHorizontal;
   static const undo = SolarIconsOutline.undoLeft;
   static const userCircle = SolarIconsOutline.userCircle;
+  static const text = SolarIconsOutline.textSquare;
+  static const textWhite = SolarIconsBold.textSquare;
+  static const pen = SolarIconsOutline.pen;
+  static const penWhite = SolarIconsBold.pen;
+  static const lock = SolarIconsOutline.lock;
+  static const flag = SolarIconsOutline.flag;
+  static const volume = SolarIconsOutline.volumeLoud;
 
   const AppSolarIcons._();
 }

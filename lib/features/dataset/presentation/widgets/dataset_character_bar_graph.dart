@@ -92,7 +92,7 @@ class DatasetCharacterBarGraph extends StatelessWidget {
                 Center(
                   child: Text(
                     "${display(totalCharacters)} total samples",
-                    style: AppTextStyles.mbody.copyWith(
+                    style: AppTextStyles.body.copyWith(
                       color: isDarkMode
                           ? AppColors.darkTextGrey
                           : AppColors.textGrey,

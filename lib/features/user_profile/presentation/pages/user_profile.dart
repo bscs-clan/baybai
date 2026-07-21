@@ -155,19 +155,12 @@ class _ProfileHeader extends StatelessWidget {
       decoration: BoxDecoration(
         color: baseColor.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(100),
-        border: Border.all(
-          color: baseColor.withValues(alpha: 0.25),
-          width: 1,
-        ),
+        border: Border.all(color: baseColor.withValues(alpha: 0.25), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            tierInfo.icon,
-            size: 14,
-            color: baseColor,
-          ),
+          Icon(tierInfo.icon, size: 14, color: baseColor),
           const SizedBox(width: 6),
           Text(
             tierInfo.name,
@@ -261,7 +254,7 @@ class _StatCard extends StatelessWidget {
             stat.label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: AppTextStyles.mbody.copyWith(
+            style: AppTextStyles.body.copyWith(
               color: isDarkMode ? AppColors.darkCompGrey : AppColors.textGrey,
               fontSize: 12,
             ),
@@ -383,7 +376,9 @@ class _AchievementsGridScreen extends StatelessWidget {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final crossAxisCount = constraints.maxWidth >= 720 ? 5 : (constraints.maxWidth >= 480 ? 4 : 3);
+            final crossAxisCount = constraints.maxWidth >= 720
+                ? 5
+                : (constraints.maxWidth >= 480 ? 4 : 3);
             final aspectRatio = constraints.maxWidth >= 560 ? 1.05 : 0.72;
 
             return GridView.builder(
@@ -438,11 +433,7 @@ class _AchievementGridCard extends StatelessWidget {
             ),
           ),
           child: Center(
-            child: Icon(
-              badgeInfo.icon,
-              color: baseColor,
-              size: 24,
-            ),
+            child: Icon(badgeInfo.icon, color: baseColor, size: 24),
           ),
         ),
         const SizedBox(height: 10),
@@ -462,7 +453,7 @@ class _AchievementGridCard extends StatelessWidget {
           textAlign: TextAlign.center,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: AppTextStyles.mbody.copyWith(
+          style: AppTextStyles.body.copyWith(
             color: isDarkMode ? AppColors.darkCompGrey : AppColors.textGrey,
             fontSize: 11,
           ),
@@ -489,11 +480,7 @@ class TierInfo {
   final Color color;
   final IconData icon;
 
-  const TierInfo({
-    required this.name,
-    required this.color,
-    required this.icon,
-  });
+  const TierInfo({required this.name, required this.color, required this.icon});
 }
 
 TierInfo _getTierInfo(int level) {

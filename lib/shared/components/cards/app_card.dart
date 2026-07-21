@@ -32,13 +32,10 @@ class AppCard extends StatelessWidget {
     final card = Container(
       width: width,
       height: height,
-      decoration: ShapeDecoration(
+      decoration: BoxDecoration(
         color: backgroundColor ?? ComponentColors.surface(context),
-        shape: RoundedSuperellipseBorder(
-          borderRadius: resolvedRadius,
-          side: const BorderSide(color: Colors.transparent, width: 0),
-        ),
-        shadows: boxShadow,
+        borderRadius: resolvedRadius,
+        boxShadow: boxShadow,
       ),
       child: Padding(padding: padding, child: child),
     );

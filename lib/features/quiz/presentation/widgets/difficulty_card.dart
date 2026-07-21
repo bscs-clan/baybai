@@ -119,7 +119,7 @@ class ModeCard extends StatelessWidget {
 
           Text(
             info.description,
-            style: AppTextStyles.mbody.copyWith(
+            style: AppTextStyles.body.copyWith(
               color: isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey,
               height: 1.4,
             ),
@@ -183,7 +183,7 @@ class _InfoChip extends StatelessWidget {
           const SizedBox(width: 3),
           Text(
             label,
-            style: AppTextStyles.mbody.copyWith(
+            style: AppTextStyles.body.copyWith(
               fontSize: 12,
               color: isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey,
               fontWeight: FontWeight.bold,

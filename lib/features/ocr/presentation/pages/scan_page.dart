@@ -4,7 +4,6 @@ import "package:flutter_bloc/flutter_bloc.dart";
 import "package:baybai/core/models/detection.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/features/ocr/presentation/widgets/camera.dart";
-import "package:baybai/features/ocr/presentation/widgets/detection_overlay.dart";
 import "package:baybai/features/settings/presentation/view_models/scan_settings_cubit.dart";
 import "package:baybai/shared/components/buttons/icon_button.dart";
 import "package:solar_icons/solar_icons.dart";

@@ -7,51 +7,68 @@ import "package:baybai/shared/components/icons/solar_icon.dart";
 class ExploreCard extends StatelessWidget {
   final IconData icon;
   final String label;
-  final VoidCallback onTap;
+  final String? description;
+  final VoidCallback? onTap;
+  final bool isLocked;
 
   const ExploreCard({
     super.key,
     required this.icon,
     required this.label,
-    required this.onTap,
+    this.description,
+    this.onTap,
+    this.isLocked = false,
   });
 
   @override
   Widget build(BuildContext context) {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
+    final contentColor = isLocked
+        ? (isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey)
+        : (isDarkMode ? AppColors.darkText : AppColors.dark);
+    final labelColor = isLocked
+        ? (isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey)
+        : (isDarkMode ? AppColors.darkText : AppColors.text);
+
     return AppCard(
-      onTap: onTap,
+      onTap: isLocked ? null : onTap,
       padding: const EdgeInsets.all(24),
-      borderRadius: BorderRadius.circular(24),
-      backgroundColor: isDarkMode ? AppColors.darkBox : AppColors.box,
+      borderRadius: BorderRadius.circular(16),
+      backgroundColor: isDarkMode ? AppColors.darkBox : AppColors.white,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: ShapeDecoration(
-              color: isDarkMode ? AppColors.darkCompBg : AppColors.compLight,
-              shape: RoundedSuperellipseBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-            child: Center(
-              child: SolarIcon(
-                icon,
-                size: 24,
-                color: isDarkMode ? AppColors.darkPrimary : AppColors.primary,
-              ),
-            ),
+          SolarIcon(
+            isLocked ? AppSolarIcons.lock : icon,
+            size: 24,
+            color: contentColor,
           ),
-          const SizedBox(height: 12),
-          Text(
-            label,
-            style: AppTextStyles.body.copyWith(
-              fontWeight: FontWeight.w500,
-              color: isDarkMode ? AppColors.darkText : AppColors.text,
-            ),
+          const SizedBox(height: 18),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: AppTextStyles.body.copyWith(
+                  color: labelColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (description != null) ...[
+                Text(
+                  description!,
+                  style: AppTextStyles.body.copyWith(
+                    fontSize: 12,
+                    color: isDarkMode
+                        ? AppColors.darkTextGrey
+                        : AppColors.textGrey,
+                  ),
+                ),
+              ],
+            ],
           ),
         ],
       ),

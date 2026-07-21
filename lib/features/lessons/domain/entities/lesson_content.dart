@@ -6,11 +6,14 @@ class LessonMetadata {
   final int id;
   final String number;
   final String title;
+  final String description;
 
   const LessonMetadata({
     required this.id,
     required this.number,
     required this.title,
+    this.description =
+        "Learn the basics of Baybayin and how words are written by sound.",
   });
 }
 
@@ -26,49 +29,30 @@ class WrongAnswerInfo {
   });
 }
 
-class BaybyainSymbolData {
-  final String unicode;
-  final String romanization;
-
-  const BaybyainSymbolData({
-    required this.unicode,
-    required this.romanization,
-  });
-}
-
-class SoundComparisonData {
-  final String englishFirst;
-  final String englishSecond;
-  final String englishResult;
+/// A single syllable-symbol pair shown inside an AppCard on content slides.
+class LessonCardItem {
+  final String text;
   final String baybayinSymbol;
-  final String baybayinResult;
 
-  const SoundComparisonData({
-    required this.englishFirst,
-    required this.englishSecond,
-    required this.englishResult,
-    required this.baybayinSymbol,
-    required this.baybayinResult,
-  });
+  const LessonCardItem({required this.text, required this.baybayinSymbol});
 }
 
-class WordBreakdownData {
-  final String word;
-  final List<String> syllables;
-  final String? meaning;
-  final List<String>? baybayinSyllables;
+class KudlitTableItem {
+  final String baseSymbol;
+  final String? kudlit;
+  final String mark;
+  final String sound;
 
-  const WordBreakdownData({
-    required this.word,
-    required this.syllables,
-    this.meaning,
-    this.baybayinSyllables,
+  const KudlitTableItem({
+    required this.baseSymbol,
+    this.kudlit,
+    required this.mark,
+    required this.sound,
   });
 }
 
 class LessonContent {
   final String title;
-  final String description;
   final String baybayinText;
   final String? image;
   final double? imageHeight;
@@ -78,26 +62,42 @@ class LessonContent {
   final List<String>? optionLabels;
   final String? correctOption;
   final LessonIcon? icon;
-  final List<BaybyainSymbolData>? symbols;
-  final String? symbolsTitle;
-  final SoundComparisonData? soundComparison;
-  final List<SoundComparisonData>? soundComparisons;
-  final WordBreakdownData? wordBreakdown;
 
   final double? baybayinFontSize;
   final double? optionFontSize;
+  final double? optionButtonHeight;
   final double? titleFontSize;
-  final double? descriptionFontSize;
   final double? labelFontSize;
   final String? baybayinFontFamily;
   final String? optionFontFamily;
   final String? titleFontFamily;
-  final String? descriptionFontFamily;
   final String? labelFontFamily;
+
+  final List<LessonCardItem>? cardItems;
+  final bool showComparisonCard;
+  final bool showQuizTable;
+  final bool showSyllableTableCard;
+  final bool showWordSoundTableCard;
+  final bool showCharacterSoundTableCard;
+  final bool showVowelSoundTableCard;
+  final bool showKudlitTableCard;
+  final bool showSharedKudlitVowelCard;
+  final bool showWordCard;
+  final bool showAnswerBox;
+  final String? wordCardText;
+  final String? description;
+  final String? wordToBreak;
+  final String? kudlitPracticeBaseSymbol;
+  final String? kudlitPracticeBaseSound;
+  final String? kudlitPracticeTargetSound;
+  final List<String>? matchCharacters;
+  final List<LessonCardItem>? characterSoundItems;
+  final List<LessonCardItem>? vowelSoundItems;
+  final List<KudlitTableItem>? kudlitTableItems;
+  final int? numSlots;
 
   const LessonContent({
     required this.title,
-    required this.description,
     this.baybayinText = "",
     this.image,
     this.icon,
@@ -107,20 +107,36 @@ class LessonContent {
     this.options,
     this.optionLabels,
     this.correctOption,
-    this.symbols,
-    this.symbolsTitle,
-    this.soundComparison,
-    this.soundComparisons,
-    this.wordBreakdown,
     this.baybayinFontSize,
     this.optionFontSize,
+    this.optionButtonHeight,
     this.titleFontSize,
-    this.descriptionFontSize,
     this.labelFontSize,
     this.baybayinFontFamily,
     this.optionFontFamily,
     this.titleFontFamily,
-    this.descriptionFontFamily,
     this.labelFontFamily,
+    this.cardItems,
+    this.showComparisonCard = false,
+    this.showQuizTable = false,
+    this.showSyllableTableCard = false,
+    this.showWordSoundTableCard = false,
+    this.showCharacterSoundTableCard = false,
+    this.showVowelSoundTableCard = false,
+    this.showKudlitTableCard = false,
+    this.showSharedKudlitVowelCard = false,
+    this.showWordCard = false,
+    this.showAnswerBox = false,
+    this.wordCardText,
+    this.description,
+    this.wordToBreak,
+    this.kudlitPracticeBaseSymbol,
+    this.kudlitPracticeBaseSound,
+    this.kudlitPracticeTargetSound,
+    this.matchCharacters,
+    this.characterSoundItems,
+    this.vowelSoundItems,
+    this.kudlitTableItems,
+    this.numSlots,
   });
 }

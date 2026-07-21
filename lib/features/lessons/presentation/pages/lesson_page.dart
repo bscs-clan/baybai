@@ -1,12 +1,15 @@
+import "package:baybai/core/theme/colors.dart";
 import "package:flutter/material.dart";
 import "package:shared_preferences/shared_preferences.dart";
-import "package:baybai/core/theme/colors.dart";
+
 import "package:baybai/features/lessons/data/datasources/lesson_data_source.dart";
 import "package:baybai/features/lessons/domain/entities/lesson_content.dart";
 import "package:baybai/features/lessons/presentation/widgets/lesson_back_button.dart";
 import "package:baybai/features/lessons/presentation/widgets/lesson_navigation_bar.dart";
 import "package:baybai/features/lessons/presentation/widgets/lesson_slide.dart";
 import "package:baybai/features/lessons/presentation/widgets/lesson_complete_widget.dart";
+import "package:baybai/features/lessons/presentation/widgets/lesson_progress_bar.dart";
+import "package:baybai/shared/components/toast/toast.dart";
 
 class LessonPage extends StatefulWidget {
   const LessonPage({super.key});
@@ -18,42 +21,64 @@ class LessonPage extends StatefulWidget {
 class _LessonPageState extends State<LessonPage> {
   late PageController _pageController;
   int _currentIndex = 0;
-  bool _isQuestionAnswered = false;
   late List<LessonContent> _lessons;
   bool _isLoading = true;
   late int _lessonId;
 
   late DateTime _startTime;
   final Map<int, String> _userAnswers = {};
+  final Map<int, String?> _selectedOptions = {};
   Duration? _lessonDuration;
   bool _isNextLessonUnlocked = false;
-  List<LessonContent>? _retrySlides;
+  int _retryAttempt = 0;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_isLoading) {
       _lessonId = ModalRoute.of(context)!.settings.arguments as int? ?? 1;
-      _lessons = LessonData.lessons[_lessonId] ?? LessonData.lessons[1]!;
       _initLesson();
     }
   }
 
+  int _deriveUnlockedLessons(SharedPreferences prefs) {
+    var unlockedLessonId = 1;
+
+    for (final lesson in LessonData.lessonList) {
+      if (!LessonData.lessons.containsKey(lesson.id)) {
+        continue;
+      }
+
+      if (lesson.id != unlockedLessonId) {
+        break;
+      }
+
+      final isCompleted =
+          prefs.getBool('lesson_${lesson.id}_completed') ?? false;
+      if (isCompleted) {
+        unlockedLessonId = lesson.id + 1;
+      } else {
+        break;
+      }
+    }
+
+    return unlockedLessonId;
+  }
+
   Future<void> _initLesson() async {
     final prefs = await SharedPreferences.getInstance();
+    final unlockedLessonId = _deriveUnlockedLessons(prefs);
+    await prefs.setInt('unlocked_lessons', unlockedLessonId);
 
-    bool isCompleted = prefs.getBool('lesson_${_lessonId}_completed') ?? false;
-
-    if (isCompleted) {
-      _currentIndex = 0;
-    } else {
-      _currentIndex = prefs.getInt('lesson_${_lessonId}_progress') ?? 0;
+    if (_lessonId > unlockedLessonId ||
+        !LessonData.lessons.containsKey(_lessonId)) {
+      _lessonId = LessonData.lessons.containsKey(unlockedLessonId)
+          ? unlockedLessonId
+          : 1;
     }
 
-    if (_currentIndex >= _lessons.length) {
-      _currentIndex = 0;
-    }
-
+    _lessons = LessonData.lessons[_lessonId] ?? LessonData.lessons[1]!;
+    _currentIndex = 0;
     _pageController = PageController(initialPage: _currentIndex);
     _startTime = DateTime.now();
 
@@ -70,15 +95,10 @@ class _LessonPageState extends State<LessonPage> {
     _lessonDuration ??= DateTime.now().difference(_startTime);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('lesson_${_lessonId}_completed', true);
-    await prefs.setInt('lesson_${_lessonId}_progress', _lessons.length);
 
-    int currentUnlocked = prefs.getInt('unlocked_lessons') ?? 1;
-    if (currentUnlocked <= _lessonId) {
-      await prefs.setInt('unlocked_lessons', _lessonId + 1);
-      _isNextLessonUnlocked = true;
-    } else {
-      _isNextLessonUnlocked = true;
-    }
+    final nextUnlockedLessonId = _deriveUnlockedLessons(prefs);
+    await prefs.setInt('unlocked_lessons', nextUnlockedLessonId);
+    _isNextLessonUnlocked = nextUnlockedLessonId > _lessonId;
     setState(() {});
   }
 
@@ -97,21 +117,29 @@ class _LessonPageState extends State<LessonPage> {
 
   void _retryWrongAnswers(List<WrongAnswerInfo> wrongAnswers) {
     if (wrongAnswers.isEmpty) return;
-    // Build a fresh lesson list from only the wrong-answer slides
-    final retrySlides = wrongAnswers.map((w) => w.question).toList();
-    // Append a completion slide (last slide of the original lesson)
+
+    final retrySlides = wrongAnswers
+        .map((wrongAnswer) => wrongAnswer.question)
+        .where(
+          (question) =>
+              question.options != null && question.options!.isNotEmpty,
+        )
+        .toList();
+
+    if (retrySlides.isEmpty) return;
+
     final completionSlide = _lessons.last;
     retrySlides.add(completionSlide);
 
     setState(() {
-      _retrySlides = retrySlides;
       _lessons = retrySlides;
       _userAnswers.clear();
+      _selectedOptions.clear();
       _lessonDuration = null;
       _startTime = DateTime.now();
       _currentIndex = 0;
-      _isQuestionAnswered = false;
       _isNextLessonUnlocked = false;
+      _retryAttempt++;
     });
 
     _pageController.jumpToPage(0);
@@ -132,12 +160,6 @@ class _LessonPageState extends State<LessonPage> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    final currentLesson = _lessons[_currentIndex];
-    final bool isQuiz =
-        currentLesson.options != null && currentLesson.options!.isNotEmpty;
-    final bool canNavigate = !isQuiz || _isQuestionAnswered;
-
-    // Calculate statistics
     int correctCount = 0;
     int incorrectCount = 0;
     int totalQuestions = 0;
@@ -153,11 +175,13 @@ class _LessonPageState extends State<LessonPage> {
             correctCount++;
           } else {
             incorrectCount++;
-            wrongAnswers.add(WrongAnswerInfo(
-              question: lesson,
-              selectedOption: userAnswer,
-              correctOption: lesson.correctOption ?? '',
-            ));
+            wrongAnswers.add(
+              WrongAnswerInfo(
+                question: lesson,
+                selectedOption: userAnswer,
+                correctOption: lesson.correctOption ?? '',
+              ),
+            );
           }
         }
       }
@@ -166,58 +190,92 @@ class _LessonPageState extends State<LessonPage> {
     final duration = _lessonDuration ?? DateTime.now().difference(_startTime);
     final minutes = duration.inMinutes;
     final seconds = duration.inSeconds % 60;
-    final formattedTime = minutes > 0 ? '${minutes}m ${seconds}s' : '${seconds}s';
+    final formattedTime = minutes > 0
+        ? '${minutes}m ${seconds}s'
+        : '${seconds}s';
+
+    final currentLesson = _lessons[_currentIndex];
+    final hasOptions =
+        currentLesson.options != null && currentLesson.options!.isNotEmpty;
+
+    String? customNextLabel;
+    bool showNextIcon = true;
+    VoidCallback? onNextAction;
+    Color? customNextBackgroundColor;
+    Color? customNextForegroundColor;
+
+    if (hasOptions) {
+      final hasChecked = _userAnswers.containsKey(_currentIndex);
+      final selectedOption = _selectedOptions[_currentIndex];
+      showNextIcon = false;
+
+      if (!hasChecked) {
+        customNextLabel = "Check";
+        if (selectedOption != null) {
+          onNextAction = () {
+            setState(() {
+              _userAnswers[_currentIndex] = selectedOption;
+            });
+
+            if (mounted) {
+              if (selectedOption == currentLesson.correctOption) {
+                AppToast.show(
+                  context,
+                  message: "Correct!",
+                  variant: AppToastVariant.success,
+                );
+              } else {
+                AppToast.show(
+                  context,
+                  message: "Wrong",
+                  variant: AppToastVariant.error,
+                );
+              }
+            }
+          };
+        } else {
+          onNextAction = null;
+        }
+      } else {
+        customNextLabel = _currentIndex == _lessons.length - 1
+            ? "Finish"
+            : "Continue";
+        onNextAction = _nextPage;
+        final isCorrect = selectedOption == currentLesson.correctOption;
+        customNextBackgroundColor = isCorrect
+            ? Colors.green.shade600
+            : Colors.red.shade600;
+        customNextForegroundColor = AppColors.white;
+      }
+    } else {
+      onNextAction = _nextPage;
+    }
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        toolbarHeight: 64,
-        automaticallyImplyLeading: false,
-        flexibleSpace: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const CustomBackButton(),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: TweenAnimationBuilder<double>(
-                    tween: Tween<double>(
-                      begin: 0,
-                      end: (_currentIndex + 1) / _lessons.length,
-                    ),
-                    duration: const Duration(milliseconds: 400),
-                    curve: Curves.easeInOut,
-                    builder: (context, value, _) {
-                      return ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: LinearProgressIndicator(
-                          value: value,
-                          minHeight: 10,
-                          backgroundColor: AppColors.primary.withValues(
-                            alpha: 0.15,
-                          ),
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            AppColors.primary,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-
       body: SafeArea(
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 8.0,
+              ),
+              child: SizedBox(
+                height: 48,
+                child: Row(
+                  children: [
+                    const CustomBackButton(),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: LessonProgressBar(
+                        currentIndex: _currentIndex,
+                        totalLessons: _lessons.length,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
@@ -225,17 +283,9 @@ class _LessonPageState extends State<LessonPage> {
                 onPageChanged: (index) async {
                   setState(() {
                     _currentIndex = index;
-                    _isQuestionAnswered = false; // Reset for the next slide
                   });
                   if (index == _lessons.length - 1) {
                     await _handleLessonCompletion();
-                  } else {
-                    final prefs = await SharedPreferences.getInstance();
-                    bool isCompleted =
-                        prefs.getBool('lesson_${_lessonId}_completed') ?? false;
-                    if (!isCompleted) {
-                      await prefs.setInt('lesson_${_lessonId}_progress', index);
-                    }
                   }
                 },
                 itemCount: _lessons.length,
@@ -253,13 +303,13 @@ class _LessonPageState extends State<LessonPage> {
                     );
                   }
                   return LessonSlide(
+                    key: ValueKey('lesson-slide-$_retryAttempt-$index'),
                     lesson: _lessons[index],
-                    onAnswered: (answered, {selectedOption}) {
+                    selectedOption: _selectedOptions[index],
+                    hasChecked: _userAnswers.containsKey(index),
+                    onOptionSelected: (option) {
                       setState(() {
-                        _isQuestionAnswered = answered;
-                        if (selectedOption != null) {
-                          _userAnswers[index] = selectedOption;
-                        }
+                        _selectedOptions[index] = option;
                       });
                     },
                   );
@@ -269,11 +319,19 @@ class _LessonPageState extends State<LessonPage> {
             LessonNavigationBar(
               currentIndex: _currentIndex,
               totalLessons: _lessons.length,
-              onPrevious: (canNavigate && _currentIndex < _lessons.length - 1) ? _previousPage : null,
-              onNext: canNavigate ? _nextPage : null,
-              onRetry: (_currentIndex == _lessons.length - 1 && wrongAnswers.isNotEmpty)
+              onPrevious: (_currentIndex < _lessons.length - 1)
+                  ? _previousPage
+                  : null,
+              onNext: onNextAction,
+              onRetry:
+                  (_currentIndex == _lessons.length - 1 &&
+                      wrongAnswers.isNotEmpty)
                   ? () => _retryWrongAnswers(wrongAnswers)
                   : null,
+              customNextLabel: customNextLabel,
+              showNextIcon: showNextIcon,
+              customNextBackgroundColor: customNextBackgroundColor,
+              customNextForegroundColor: customNextForegroundColor,
             ),
           ],
         ),

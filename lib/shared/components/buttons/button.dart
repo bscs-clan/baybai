@@ -16,6 +16,15 @@ class Button extends StatelessWidget {
   final ButtonType type;
   final ButtonSize size;
   final double? width;
+  final double? height;
+  final double? iconSize;
+  final TextStyle? textStyle;
+  final BorderRadius? borderRadius;
+  final bool showShadow;
+
+  final Color? customBackgroundColor;
+  final Color? customForegroundColor;
+  final double? opacity;
 
   const Button({
     super.key,
@@ -26,6 +35,14 @@ class Button extends StatelessWidget {
     this.type = ButtonType.primary,
     this.size = ButtonSize.md,
     this.width,
+    this.height,
+    this.iconSize,
+    this.textStyle,
+    this.borderRadius,
+    this.showShadow = false,
+    this.customBackgroundColor,
+    this.customForegroundColor,
+    this.opacity,
   });
 
   bool get _isEnabled => onTap != null;
@@ -34,47 +51,58 @@ class Button extends StatelessWidget {
   Widget build(BuildContext context) {
     final metrics = _ButtonMetrics.fromSize(size);
 
-    final radius = BorderRadius.circular(metrics.borderRadius);
+    final radius = borderRadius ?? BorderRadius.circular(metrics.borderRadius);
 
     final content = SizedBox(
-      height: metrics.height,
+      height: height ?? metrics.height,
       width: width,
       child: shadcn.Button(
         style: _buttonStyle(context, metrics, radius),
         onPressed: onTap,
         enabled: _isEnabled,
-        leading: leftIcon == null
-            ? null
-            : Icon(
-                leftIcon,
-                size: metrics.iconSize,
-                color: _foregroundColor(context),
-              ),
-        trailing: rightIcon == null
-            ? null
-            : Icon(
-                rightIcon,
-                size: metrics.iconSize,
-                color: _foregroundColor(context),
-              ),
         child: Center(
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: metrics.textStyle.copyWith(
-              height: 1,
-              color: _foregroundColor(context),
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (leftIcon != null) ...[
+                Icon(
+                  leftIcon,
+                  size: iconSize ?? metrics.iconSize,
+                  color: _foregroundColor(context),
+                ),
+                const SizedBox(width: 6),
+              ],
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: (textStyle ?? metrics.textStyle).copyWith(
+                  height: 1,
+                  color: _foregroundColor(context),
+                ),
+              ),
+              if (rightIcon != null) ...[
+                const SizedBox(width: 6),
+                Icon(
+                  rightIcon,
+                  size: iconSize ?? metrics.iconSize,
+                  color: _foregroundColor(context),
+                ),
+              ],
+            ],
           ),
         ),
       ),
     );
 
-    final button = Opacity(opacity: _isEnabled ? 1 : 0.6, child: content);
+    final button = Opacity(
+      opacity: opacity ?? (_isEnabled ? 1 : 0.6),
+      child: content,
+    );
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        boxShadow: type == ButtonType.primary && _isEnabled
+        boxShadow: showShadow && type == ButtonType.primary && _isEnabled
             ? ComponentShadow.primary
             : null,
         borderRadius: radius,
@@ -109,15 +137,18 @@ class Button extends StatelessWidget {
       ),
     };
 
-    final background = switch (type) {
-      ButtonType.primary =>
-        _isEnabled
-            ? AppColors.primary
-            : AppColors.primary.withValues(alpha: 0.6),
-      ButtonType.secondary => isDark ? AppColors.darkCompBg : AppColors.white,
-      ButtonType.outline => Colors.transparent,
-      ButtonType.ghost => Colors.transparent,
-    };
+    final background =
+        customBackgroundColor ??
+        switch (type) {
+          ButtonType.primary =>
+            _isEnabled
+                ? AppColors.primary
+                : AppColors.primary.withValues(alpha: 0.6),
+          ButtonType.secondary =>
+            isDark ? AppColors.darkCompBg : AppColors.white,
+          ButtonType.outline => Colors.transparent,
+          ButtonType.ghost => Colors.transparent,
+        };
 
     final border = switch (type) {
       ButtonType.outline => Border.all(
@@ -146,6 +177,9 @@ class Button extends StatelessWidget {
   }
 
   Color _foregroundColor(BuildContext context) {
+    if (customForegroundColor != null) {
+      return customForegroundColor!;
+    }
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (!_isEnabled) {
@@ -155,7 +189,7 @@ class Button extends StatelessWidget {
     }
 
     return switch (type) {
-      ButtonType.primary => isDark ? AppColors.text : AppColors.background,
+      ButtonType.primary => AppColors.white,
       ButtonType.secondary => isDark ? AppColors.darkText : AppColors.text,
       ButtonType.outline => isDark ? AppColors.darkText : AppColors.text,
       ButtonType.ghost => isDark ? AppColors.darkText : AppColors.text,
@@ -184,37 +218,37 @@ class _ButtonMetrics {
 
   factory _ButtonMetrics.fromSize(ButtonSize size) {
     final base = _ButtonMetrics(
-      horizontalPadding: 18,
-      verticalPadding: 12,
+      horizontalPadding: 32,
+      verticalPadding: 16,
       iconSize: 20,
-      borderRadius: ComponentRadius.md,
-      height: 44,
-      textStyle: AppTextStyles.wbody.copyWith(fontWeight: FontWeight.bold),
+      borderRadius: 64,
+      height: 48,
+      textStyle: AppTextStyles.wbody.copyWith(fontWeight: FontWeight.w500),
       shadcnSize: shadcn.ButtonSize.normal,
     );
 
     return switch (size) {
       ButtonSize.md => base,
       ButtonSize.sm => _ButtonMetrics(
-        horizontalPadding: base.horizontalPadding - 4,
-        verticalPadding: base.verticalPadding - 2,
+        horizontalPadding: 16,
+        verticalPadding: 8,
         iconSize: 16,
         borderRadius: ComponentRadius.sm,
         height: 36,
         textStyle: AppTextStyles.wbody.copyWith(
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w500,
           fontSize: 13,
         ),
         shadcnSize: shadcn.ButtonSize.small,
       ),
       ButtonSize.lg => _ButtonMetrics(
-        horizontalPadding: base.horizontalPadding + 6,
-        verticalPadding: base.verticalPadding + 4,
+        horizontalPadding: 40,
+        verticalPadding: 20,
         iconSize: 24,
         borderRadius: ComponentRadius.lg,
-        height: 52,
+        height: 64,
         textStyle: AppTextStyles.wbody.copyWith(
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w500,
           fontSize: 18,
         ),
         shadcnSize: shadcn.ButtonSize.large,

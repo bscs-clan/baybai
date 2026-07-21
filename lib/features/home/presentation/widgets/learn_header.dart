@@ -3,9 +3,7 @@ import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
 
 class LearnHeader extends StatelessWidget {
-  final String userName;
-
-  const LearnHeader({super.key, required this.userName});
+  const LearnHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -14,14 +12,15 @@ class LearnHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "Mabuhay, $userName",
-          style: AppTextStyles.body.copyWith(
-            color: isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey,
-          ),
-        
-        ),
         SizedBox(height: 12),
+        Text(
+          "Let's Begin!",
+          style: AppTextStyles.bigbody.copyWith(
+            color: isDarkMode ? AppColors.darkText : AppColors.text,
+            fontSize: 24,
+          ),
+        ),
+        SizedBox(height: 24),
       ],
     );
   }

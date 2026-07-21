@@ -72,15 +72,6 @@ class LessonCompleteWidget extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            completionSlide.description,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.body.copyWith(
-              color: isDarkMode ? AppColors.darkText : AppColors.textGrey,
-              fontSize: 14,
-            ),
-          ),
           const SizedBox(height: 16),
 
           // Combined Stats Card
@@ -383,18 +374,7 @@ class LessonCompleteWidget extends StatelessWidget {
                     color: isDarkMode ? AppColors.white : AppColors.dark,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  question.description,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.body.copyWith(
-                    fontSize: 12,
-                    color: isDarkMode
-                        ? AppColors.darkTextGrey
-                        : AppColors.textGrey,
-                  ),
-                ),
+
               ],
             ),
           ),

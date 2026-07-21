@@ -15,12 +15,14 @@ class GamePage extends StatelessWidget {
     Widget buildGameCard({
       required IconData icon,
       required String label,
+      required String description,
       required String route,
     }) {
       return Expanded(
         child: ExploreCard(
           icon: icon,
           label: label,
+          description: description,
           onTap: () => Navigator.pushNamed(context, route),
         ),
       );
@@ -52,20 +54,25 @@ class GamePage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  buildGameCard(
-                    icon: AppSolarIcons.questionSquare,
-                    label: "Quiz",
-                    route: "/quiz-setup",
-                  ),
-                  const SizedBox(width: 12),
-                  buildGameCard(
-                    icon: AppSolarIcons.flashcard,
-                    label: "Flashcard",
-                    route: "/flashcard",
-                  ),
-                ],
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    buildGameCard(
+                      icon: AppSolarIcons.questionSquare,
+                      label: "Quiz",
+                      description: "Test knowledge",
+                      route: "/quiz-setup",
+                    ),
+                    const SizedBox(width: 12),
+                    buildGameCard(
+                      icon: AppSolarIcons.flashcard,
+                      label: "Flashcard",
+                      description: "Review vocab",
+                      route: "/flashcard",
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

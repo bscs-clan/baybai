@@ -1,7 +1,6 @@
 import "package:baybai/core/theme/colors.dart";
-import "package:baybai/shared/components/base/component_tokens.dart";
 import "package:flutter/material.dart";
-import "package:shadcn_flutter/shadcn_flutter.dart" as shadcn;
+import "package:fluttertoast/fluttertoast.dart";
 
 enum AppToastVariant { info, success, error }
 
@@ -11,30 +10,23 @@ class AppToast {
     required String message,
     AppToastVariant variant = AppToastVariant.info,
   }) {
-    final messenger = ScaffoldMessenger.of(context);
-    messenger
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          behavior: SnackBarBehavior.floating,
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          content: shadcn.SurfaceCard(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            borderRadius: BorderRadius.circular(ComponentRadius.sm),
-            filled: true,
-            fillColor: _backgroundColor(variant),
-            child: Text(message, style: const TextStyle(color: Colors.white)),
-          ),
-        ),
-      );
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: _backgroundColor(variant),
+      textColor: Colors.white,
+      fontSize: 14.0,
+      timeInSecForIosWeb: 2,
+      webPosition: "center",
+    );
   }
 
   static Color _backgroundColor(AppToastVariant variant) {
     return switch (variant) {
       AppToastVariant.info => AppColors.primary,
-      AppToastVariant.success => const Color(0xFF16A34A),
-      AppToastVariant.error => const Color(0xFFDC2626),
+      AppToastVariant.success => Colors.green.shade600,
+      AppToastVariant.error => Colors.red.shade600,
     };
   }
 

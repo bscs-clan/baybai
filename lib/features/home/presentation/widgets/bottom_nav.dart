@@ -114,7 +114,10 @@ class Navbar extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.center,
-                          style: AppTextStyles.mbody.copyWith(color: iconColor),
+                          style: AppTextStyles.body.copyWith(
+                            color: iconColor,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),

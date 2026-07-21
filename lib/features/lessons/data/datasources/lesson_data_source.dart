@@ -1,346 +1,289 @@
 import "package:baybai/features/lessons/domain/entities/lesson_content.dart";
 
 class LessonData {
-  static const List<BaybyainSymbolData> basicSymbols = [
-    BaybyainSymbolData(unicode: "\u1703", romanization: "KA"),
-    BaybyainSymbolData(unicode: "\u170A", romanization: "BA"),
-    BaybyainSymbolData(unicode: "\u170B", romanization: "MA"),
-    BaybyainSymbolData(unicode: "\u1708", romanization: "NA"),
-  ];
+  static final Map<int, List<LessonContent>> lessons = {
+    1: [
+      const LessonContent(
+        title: "One Baybayin symbol already represents a complete sound. ",
+        showComparisonCard: true,
+        description:
+            "Unlike English, Baybayin isn't built from individual letters. Instead, it starts with **sounds**.",
+      ),
+      const LessonContent(
+        title: "Baybayin reads words one syllable at a time. ",
+        showSyllableTableCard: true,
+        description:
+            "Instead of writing individual letters, Baybayin groups words into **syllables**.",
+      ),
+      const LessonContent(
+        title:
+            "Now its your turn! Break the word into syllables by choosing the correct parts below.",
+        wordToBreak: "GABI",
+        options: ["GAB", "BI", "GA", "I"],
+        correctOption: "GA,BI",
+      ),
+      const LessonContent(
+        title:
+            "Break the word into syllables by choosing the correct parts below.",
+        wordToBreak: "BAKA",
+        options: ["BA", "BAK", "A", "KA"],
+        correctOption: "BA,KA",
+      ),
+      const LessonContent(
+        title:
+            "Choose the correct parts below to split the word into syllables.",
+        wordToBreak: "BAHAY",
+        options: ["BA", "HA", "HAY", "AY", "Y", "H"],
+        correctOption: "BA,HA,Y",
+        numSlots: 3,
+      ),
+      const LessonContent(
+        title:
+            "Choose the correct parts below to split the word into syllables.",
+        wordToBreak: "UMAGA",
+        options: ["U", "MA", "G", "M", "GA", "A"],
+        correctOption: "U,MA,GA",
+        numSlots: 3,
+      ),
+      const LessonContent(
+        title: "Build the word by choosing the correct syllables below.",
+        wordToBreak: "KAMUSTA",
+        numSlots: 0,
+        showAnswerBox: true,
+        options: ["MU", "KA", "MUS", "STA", "TA", "KAM"],
+        correctOption: "KA,MUS,TA",
+      ),
+      const LessonContent(
+        title: "Build the word by choosing the correct syllables below.",
+        wordToBreak: "UMAGA",
+        numSlots: 0,
+        showAnswerBox: true,
+        options: ["U", "MA", "GA", "UM", "AGA", "MAGA"],
+        correctOption: "U,MA,GA",
+      ),
+      const LessonContent(
+        title: "Baybayin writes words the way they sound. ",
+        showWordSoundTableCard: true,
+        description:
+            "Some words are spelled differently from how they sound. Baybayin follows the **sound** you hear, not how it **spelled**.",
+      ),
+      const LessonContent(
+        title: "Now which one sound is right.",
+        showWordCard: true,
+        wordCardText: "CAKE",
+        options: ["KAYK", "KAKE", "KEK", "KEYK"],
+        correctOption: "KEYK",
+      ),
+      const LessonContent(
+        title: "which one sound is right.",
+        showWordCard: true,
+        wordCardText: "PHOTO",
+        options: ["POTO", "PHOTO", "FOTO", "PATO"],
+        correctOption: "POTO",
+      ),
+      const LessonContent(
+        title: "which one sound is right.",
+        showWordCard: true,
+        wordCardText: "COFFEE",
+        options: ["KOFE", "KAPE", "COPI", "CUFI"],
+        correctOption: "COPI",
+      ),
 
-  static const List<String> countOptions = ["1", "2", "3", "4"];
+      const LessonContent(title: "Lesson Complete!"),
+    ],
+    2: [
+      const LessonContent(
+        title: "Let's meet your first Baybayin characters.",
+        showCharacterSoundTableCard: true,
+        description:
+            "Every base character already includes the vowel **'a'**. That means you don't read them as b, k, or m. You read them as ba, ka, and ma.",
+      ),
+      const LessonContent(
+        title: "Drag the sounds to their matching characters.",
+        matchCharacters: ["\u170A", "\u1703"],
+        options: ["ba", "ka"],
+        correctOption: "ba,ka",
+      ),
+      const LessonContent(
+        title: "What sound does this character make?",
+        baybayinText: "\u170A",
+        showQuizTable: true,
+        options: ["ba", "ka", "ma", "sa"],
+        correctOption: "ba",
+      ),
+      const LessonContent(
+        title: "The same pattern works for every base character",
+        showCharacterSoundTableCard: true,
+        characterSoundItems: [
+          LessonCardItem(text: "Da", baybayinSymbol: "\u1707"),
+          LessonCardItem(text: "Ga", baybayinSymbol: "\u1704"),
+          LessonCardItem(text: "Ha", baybayinSymbol: "\u1711"),
+          LessonCardItem(text: "La", baybayinSymbol: "\u170E"),
+        ],
+        description: "You don't need to add the 'a'. It's already there.",
+      ),
+      const LessonContent(
+        title: "Drag the sounds to their matching characters.",
+        matchCharacters: ["\u170B", "\u1703", "\u170A"],
+        options: ["ka", "ma", "ba"],
+        correctOption: "ma,ka,ba",
+      ),
+      const LessonContent(
+        title: "What sound does this character make?",
+        baybayinText: "\u1703",
+        showQuizTable: true,
+        options: ["ma", "ba", "ka", "sa"],
+        correctOption: "ka",
+      ),
+      const LessonContent(
+        title: "Baybayin has its own vowel symbols too.",
+        showVowelSoundTableCard: true,
+        description: "Some vowels share the same symbol.",
+      ),
+      const LessonContent(
+        title: "Drag the sounds to their matching characters.",
+        matchCharacters: ["\u1702", "\u1701"],
+        options: ["o / u", "e / i"],
+        correctOption: "o / u,e / i",
+      ),
+      const LessonContent(
+        title: "What sound does this character make?",
+        baybayinText: "\u1700",
+        showQuizTable: true,
+        options: ["a", "ma", "ka", "ha"],
+        correctOption: "a",
+      ),
+      const LessonContent(
+        title: "What sound does this character make?",
+        baybayinText: "\u170B",
+        showQuizTable: true,
+        options: ["ma", "ba", "ka", "sa"],
+        correctOption: "ma",
+      ),
+      const LessonContent(
+        title: "Build the word by choosing the correct symbols below.",
+        wordToBreak: "BAKA",
+        options: ["\u1703", "\u170A", "\u1710", "\u170B"],
+        correctOption: "\u170A,\u1703",
+        optionFontFamily: "Baybayin",
+        optionFontSize: 15,
+        numSlots: 2,
+      ),
+
+      const LessonContent(title: "Lesson Complete!"),
+    ],
+    3: [
+      const LessonContent(
+        title: "The kudlit mark changes a character's vowel sound.",
+        showKudlitTableCard: true,
+        description:
+            "A kudlit is a small mark that you add to a base character to change its vowel sound.",
+      ),
+      const LessonContent(
+        title: "Add the correct kudlit to change the sound.",
+        kudlitPracticeBaseSymbol: "\u170A",
+        kudlitPracticeBaseSound: "ba",
+        kudlitPracticeTargetSound: "bi",
+        options: ["Top kudlit", "Bottom kudlit"],
+        correctOption: "Top kudlit",
+      ),
+      const LessonContent(
+        title: "Add the correct kudlit to change the sound.",
+        kudlitPracticeBaseSymbol: "\u170A",
+        kudlitPracticeBaseSound: "ba",
+        kudlitPracticeTargetSound: "bu",
+        options: ["Top kudlit", "Bottom kudlit"],
+        correctOption: "Bottom kudlit",
+      ),
+      const LessonContent(
+        title: "The same rule works for every base character.",
+        showKudlitTableCard: true,
+        kudlitTableItems: [
+          KudlitTableItem(baseSymbol: "\u1703", mark: "No kudlit", sound: "ka"),
+          KudlitTableItem(
+            baseSymbol: "\u1703",
+            kudlit: "\u1712",
+            mark: "Top kudlit",
+            sound: "ki / ke",
+          ),
+          KudlitTableItem(
+            baseSymbol: "\u1703",
+            kudlit: "\u1713",
+            mark: "Bottom kudlit",
+            sound: "ku / ko",
+          ),
+        ],
+      ),
+      const LessonContent(
+        title: "Add the correct kudlit to change the sound.",
+        kudlitPracticeBaseSymbol: "\u1703",
+        kudlitPracticeBaseSound: "ka",
+        kudlitPracticeTargetSound: "ki",
+        options: ["Top kudlit", "Bottom kudlit"],
+        correctOption: "Top kudlit",
+      ),
+      const LessonContent(
+        title: "Add the correct kudlit to change the sound.",
+        kudlitPracticeBaseSymbol: "\u1703",
+        kudlitPracticeBaseSound: "ka",
+        kudlitPracticeTargetSound: "ko",
+        options: ["Top kudlit", "Bottom kudlit"],
+        correctOption: "Bottom kudlit",
+      ),
+      const LessonContent(
+        title: "Some vowels share the same kudlit symbol.",
+        showSharedKudlitVowelCard: true,
+        description: "Context tells you which sound is correct.",
+      ),
+      const LessonContent(
+        title: "Choose the character that says this sound.",
+        showWordCard: true,
+        wordCardText: "be",
+        options: [
+          "\u170A\u1712",
+          "\u170A\u1713",
+          "\u1703\u1712",
+          "\u1703\u1713",
+        ],
+        correctOption: "\u170A\u1712",
+        optionFontFamily: "Baybayin",
+        optionFontSize: 32,
+        optionButtonHeight: 72,
+      ),
+      const LessonContent(
+        title: "Choose the character that says this sound.",
+        showWordCard: true,
+        wordCardText: "ko",
+        options: [
+          "\u170A\u1712",
+          "\u170A\u1713",
+          "\u1703\u1712",
+          "\u1703\u1713",
+        ],
+        correctOption: "\u1703\u1713",
+        optionFontFamily: "Baybayin",
+        optionFontSize: 32,
+        optionButtonHeight: 72,
+      ),
+
+      const LessonContent(title: "Lesson Complete!"),
+    ],
+  };
 
   static const List<LessonMetadata> lessonList = [
-    LessonMetadata(
-      id: 1,
-      number: "Lesson 1",
-      title: "Understanding Baybayin",
-    ),
+    LessonMetadata(id: 1, number: "Lesson 1", title: "Baybayin Basics"),
     LessonMetadata(
       id: 2,
       number: "Lesson 2",
       title: "Baybayin Characters",
+      description:
+          "Learn Baybayin characters, vowel symbols, and how each symbol maps to a sound.",
     ),
     LessonMetadata(
       id: 3,
       number: "Lesson 3",
       title: "The Kudlit Mark",
+      description: "Learn how kudlit marks change a character's vowel sound.",
     ),
   ];
-
-  static final Map<int, List<LessonContent>> lessons = {
-    1: [
-      LessonContent(
-        title: "Welcome to Baybayin",
-        description:
-            "Baybayin is an ancient Filipino writing system. Instead of writing individual letters like English, Baybayin writes sounds.",
-        symbols: basicSymbols,
-        symbolsTitle: "Baybayin Symbols",
-      ),
-      soundComparison(
-        title: "Baybayin Uses Sounds",
-        description: "One symbol already contains a sound.",
-        englishFirst: "b",
-        englishSecond: "a",
-        englishResult: "ba",
-        baybayinSymbol: "\u170A",
-        baybayinResult: "ba",
-      ),
-      soundComparisonList(
-        title: "Look at these examples",
-        description: "Each symbol already has the vowel **a**.",
-        comparisons: [
-          baybayinSound("\u170A", "ba"),
-          baybayinSound("\u1703", "ka"),
-          baybayinSound("\u170B", "ma"),
-        ],
-      ),
-      soundCheck(
-        baybayinText: "\u170A",
-        options: ["b", "a", "ba", "ab"],
-        correctOption: "ba",
-      ),
-      soundCheck(
-        baybayinText: "\u170B",
-        options: ["a", "ma", "am", "m"],
-        correctOption: "ma",
-      ),
-      soundCheck(
-        baybayinText: "\u1703",
-        options: ["ka", "a", "k", "ak"],
-        correctOption: "ka",
-      ),
-      wordBreakdown(
-        title: "Let's Read Together",
-        description: "Baybayin reads words through sounds, not letters.",
-        word: "bata",
-        syllables: ["ba", "ta"],
-        baybayinSyllables: ["\u170A", "\u1706"],
-        meaning: "child",
-      ),
-      syllableCountCheck(baybayinText: "mata", correctOption: "2"),
-      wordBreakdown(
-        title: "Another Example",
-        description: "Baybayin reads words through sounds, not letters.",
-        word: "baka",
-        syllables: ["ba", "ka"],
-        baybayinSyllables: ["\u170A", "\u1703"],
-        meaning: "cow",
-      ),
-      syllableCountCheck(baybayinText: "Kama", correctOption: "2"),
-      complete("You learned how to read simple words!"),
-    ],
-    2: [
-      LessonContent(
-        title: "Meet the Baybayin characters",
-        description:
-            "Now that you know Baybayin writes sounds, it's time to learn the symbols. Each symbol represents a sound, not a single letter.",
-        symbols: basicSymbols,
-        symbolsTitle: "Baybayin Symbols",
-      ),
-      soundComparisonList(
-        title: "The Three Vowels",
-        description:
-            "Baybayin has three vowel symbols. These are the building blocks of many words.",
-        comparisons: [
-          baybayinSound("\u1700", "a"),
-          baybayinSound("\u1701", "e / i"),
-          baybayinSound("\u1702", "o / u"),
-        ],
-      ),
-      vowelSymbolCheck(
-        vowel: "a",
-        options: ["\u1703", "\u1702", "\u1700", "\u1701"],
-        correctOption: "\u1700",
-      ),
-      vowelSymbolCheck(
-        vowel: "e / i",
-        options: ["\u1702", "\u1701", "\u170A", "\u1700"],
-        correctOption: "\u1701",
-      ),
-      vowelSymbolCheck(
-        vowel: "o / u",
-        options: ["\u1700", "\u170B", "\u1702", "\u1701"],
-        correctOption: "\u1702",
-      ),
-      soundComparisonList(
-        title: "Baybayin Consonant",
-        description:
-            "This is one of the most important Baybayin rules. When you see a consonant symbol, it already contains the vowel **a**.",
-        comparisons: [
-          baybayinSound("\u170A", "ba"),
-          baybayinSound("\u1703", "ka"),
-          baybayinSound("\u170B", "ma"),
-        ],
-      ),
-      consonantSymbolCheck(
-        consonant: "ba",
-        options: ["\u1703", "\u170A", "\u170B", "\u1708"],
-        correctOption: "\u170A",
-      ),
-      soundComparisonList(
-        title: "More examples",
-        description: "Notice that every symbol ends with **a**",
-        comparisons: [
-          baybayinSound("\u170C", "ya"),
-          baybayinSound("\u170D", "la"),
-          baybayinSound("\u170F", "wa"),
-        ],
-      ),
-      consonantSymbolCheck(
-        consonant: "ya",
-        options: ["\u170F", "\u170C", "\u170D", "\u170A"],
-        correctOption: "\u170C",
-      ),
-      consonantSymbolCheck(
-        consonant: "la",
-        options: ["\u170B", "\u170F", "\u170D", "\u170C"],
-        correctOption: "\u170D",
-      ),
-      consonantSymbolCheck(
-        consonant: "wa",
-        options: ["\u170D", "\u1703", "\u170F", "\u170C"],
-        correctOption: "\u170F",
-      ),
-       wordBreakdown(
-        title: "Let's Read Together",
-        description: "Baybayin reads words through sounds, not letters.",
-        word: "tama",
-        syllables: ["ta", "ma"],
-        baybayinSyllables: ["\u1706", "\u170B"],
-        meaning: "correct",
-      ),
-      syllableCountCheck(baybayinText: "mata", correctOption: "2"),
-      wordBreakdown(
-        title: "Another Example",
-        description: "Baybayin reads words through sounds, not letters.",
-        word: "kama",
-        syllables: ["ka", "ma"],
-        baybayinSyllables: ["\u1703", "\u170B"],
-        meaning: "bed",
-      ),
-      syllableCountCheck(baybayinText: "gata", correctOption: "2"),
-      complete("You Learn Baybayin basics!"),
-    ],
-    3: [
-      LessonContent(
-        title: "The Kudlit Mark",
-        description:
-            "Learn how to change the vowel sound using the Kudlit mark.",
-        image: "assets/images/lesson1_image1.png",
-      ),
-      LessonContent(
-        title: "Top Kudlit",
-        description: "A kudlit on top changes the sound to 'E' or 'I'.",
-        image: "assets/images/lesson1_image3.png",
-      ),
-      LessonContent(
-        title: "Bottom Kudlit",
-        description: "A kudlit at the bottom changes the sound to 'O' or 'U'.",
-        image: "assets/images/lesson1_image4.png",
-      ),
-      LessonContent(
-        title: "Congratulations",
-        description: "You've finished Lesson 3!",
-        image: "assets/images/lesson1_image8.png",
-        icon: LessonIcon.confetti,
-      ),
-    ],
-  };
-
-  static LessonContent soundComparison({
-    required String title,
-    required String description,
-    required String englishFirst,
-    required String englishSecond,
-    required String englishResult,
-    required String baybayinSymbol,
-    required String baybayinResult,
-  }) {
-    return LessonContent(
-      title: title,
-      description: description,
-      soundComparison: SoundComparisonData(
-        englishFirst: englishFirst,
-        englishSecond: englishSecond,
-        englishResult: englishResult,
-        baybayinSymbol: baybayinSymbol,
-        baybayinResult: baybayinResult,
-      ),
-    );
-  }
-
-  static LessonContent soundComparisonList({
-    required String title,
-    required String description,
-    required List<SoundComparisonData> comparisons,
-  }) {
-    return LessonContent(
-      title: title,
-      description: description,
-      soundComparisons: comparisons,
-    );
-  }
-
-  static SoundComparisonData baybayinSound(
-    String baybayinSymbol,
-    String baybayinResult,
-  ) {
-    return SoundComparisonData(
-      englishFirst: "",
-      englishSecond: "",
-      englishResult: "",
-      baybayinSymbol: baybayinSymbol,
-      baybayinResult: baybayinResult,
-    );
-  }
-
-  static LessonContent soundCheck({
-    required String baybayinText,
-    required List<String> options,
-    required String correctOption,
-  }) {
-    return LessonContent(
-      title: "Quick Check",
-      description: "What sound does the symbol make?",
-      baybayinText: baybayinText,
-      options: options,
-      correctOption: correctOption,
-    );
-  }
-
-  static LessonContent vowelSymbolCheck({
-    required String vowel,
-    required List<String> options,
-    required String correctOption,
-  }) {
-    return LessonContent(
-      title: "Quick Check",
-      description: "Which symbol represents this vowel?",
-      baybayinText: vowel,
-      baybayinFontFamily: "Poppins",
-      baybayinFontSize: 56,
-      options: options,
-      optionFontFamily: "Baybayin",
-      optionFontSize: 36,
-      correctOption: correctOption,
-    );
-  }
-
-  static LessonContent consonantSymbolCheck({
-    required String consonant,
-    required List<String> options,
-    required String correctOption,
-  }) {
-    return LessonContent(
-      title: "Quick Check",
-      description: "Which symbol represents this consonant?",
-      baybayinText: consonant,
-      baybayinFontFamily: "Poppins",
-      baybayinFontSize: 56,
-      options: options,
-      optionFontFamily: "Baybayin",
-      optionFontSize: 36,
-      correctOption: correctOption,
-    );
-  }
-
-  static LessonContent syllableCountCheck({
-    required String baybayinText,
-    required String correctOption,
-  }) {
-    return LessonContent(
-      title: "Quick Check",
-      description: "How many sound are in the word?",
-      baybayinText: baybayinText,
-      baybayinFontFamily: "Poppins",
-      baybayinFontSize: 32,
-      options: countOptions,
-      correctOption: correctOption,
-    );
-  }
-
-  static LessonContent wordBreakdown({
-    required String title,
-    required String description,
-    required String word,
-    required List<String> syllables,
-    required List<String> baybayinSyllables,
-    required String meaning,
-  }) {
-    return LessonContent(
-      title: title,
-      description: description,
-      wordBreakdown: WordBreakdownData(
-        word: word,
-        syllables: syllables,
-        baybayinSyllables: baybayinSyllables,
-        meaning: meaning,
-      ),
-    );
-  }
-
-  static LessonContent complete(String description) {
-    return LessonContent(title: "Lesson Complete!", description: description);
-  }
 }

@@ -57,8 +57,6 @@ class _PracticePageState extends State<PracticePage>
   bool _showResultButton = false;
   bool _isChecking = false;
   bool? _isPracticeCorrect;
-  String? _recognizedSymbol;
-  double? _recognitionConfidence;
   late final AnimationController _demoController;
   late final InitializeOcr _initializeOcr;
   late final RecognizeOcrImage _recognizeOcrImage;
@@ -131,12 +129,9 @@ class _PracticePageState extends State<PracticePage>
       }, (value) => value);
       final recognized = detection?.label;
       final expected = _characters[_currentIndex]["symbol"]!;
-      final confidence = detection?.confidence ?? 0.0;
 
       if (!mounted) return;
       setState(() {
-        _recognizedSymbol = recognized;
-        _recognitionConfidence = confidence;
         // Compare symbols while ignoring kudlit marks
         _isPracticeCorrect =
             _stripKudlits(recognized ?? '') == _stripKudlits(expected);
@@ -154,8 +149,6 @@ class _PracticePageState extends State<PracticePage>
       if (!mounted) return;
       setState(() {
         _isPracticeCorrect = false;
-        _recognizedSymbol = null;
-        _recognitionConfidence = null;
         _showResultButton = false;
       });
       _showToast("Error recognizing drawing. Please try again.", isError: true);
@@ -215,8 +208,6 @@ class _PracticePageState extends State<PracticePage>
 
   void _clearPracticeResult() {
     _isPracticeCorrect = null;
-    _recognizedSymbol = null;
-    _recognitionConfidence = null;
   }
 
   Future<Uint8List> _renderDrawingForRecognition() async {

@@ -11,27 +11,16 @@ class CustomBackButton extends StatelessWidget {
 
     return GestureDetector(
       onTap: () => Navigator.pop(context),
-      child: Container(
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
         width: 48,
         height: 48,
-        decoration: ShapeDecoration(
-          color: isDarkMode ? AppColors.darkBox : AppColors.box,
-          shape: RoundedSuperellipseBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          shadows: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Center(
+        child: Align(
+          alignment: Alignment.centerLeft,
           child: SolarIcon(
             AppSolarIcons.arrowLeft,
             size: 24,
-            color: isDarkMode ? AppColors.darkIcon : AppColors.icon,
+            color: isDarkMode ? AppColors.compLight : AppColors.icon,
           ),
         ),
       ),

@@ -3,40 +3,34 @@ import "package:google_fonts/google_fonts.dart";
 import "package:baybai/core/theme/colors.dart";
 
 class AppTextStyles {
-  static TextStyle heading = GoogleFonts.poppins(
+  static TextStyle heading = GoogleFonts.inter(
     fontSize: 24,
     fontWeight: FontWeight.w600,
     color: AppColors.dark,
   );
 
-  static TextStyle body = GoogleFonts.poppins(
+  static TextStyle body = GoogleFonts.inter(
     fontSize: 14,
-    fontWeight: FontWeight.w400,
     color: AppColors.dark,
   );
-  static TextStyle wbody = GoogleFonts.poppins(
+  static TextStyle wbody = GoogleFonts.inter(
     fontSize: 14,
     fontWeight: FontWeight.w400,
     color: AppColors.white,
   );
-  static TextStyle bigbody = GoogleFonts.poppins(
+  static TextStyle bigbody = GoogleFonts.inter(
     fontSize: 18,
     fontWeight: FontWeight.w600,
     color: AppColors.dark,
   );
-  static TextStyle title = GoogleFonts.poppins(
+  static TextStyle title = GoogleFonts.inter(
     fontSize: 14,
     fontWeight: FontWeight.w600,
     color: AppColors.dark,
   );
-  static TextStyle bodywhite = GoogleFonts.poppins(
+  static TextStyle bodywhite = GoogleFonts.inter(
     fontSize: 14,
     fontWeight: FontWeight.w400,
     color: AppColors.white,
-  );
-
-  static TextStyle mbody = GoogleFonts.poppins(
-    fontSize: 12,
-    fontWeight: FontWeight.w400,
   );
 }

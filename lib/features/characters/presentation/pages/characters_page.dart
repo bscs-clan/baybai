@@ -3,7 +3,6 @@ import "package:baybai/shared/components/inputs/input.dart";
 import "package:flutter/material.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
-import "package:baybai/shared/components/icons/solar_icon.dart";
 import "package:solar_icons/solar_icons.dart";
 
 class CharactersPage extends StatefulWidget {
@@ -123,7 +122,7 @@ class _CharactersPageState extends State<CharactersPage> {
                         ),
                         Text(
                           char["label"]!,
-                          style: AppTextStyles.mbody.copyWith(
+                          style: AppTextStyles.body.copyWith(
                             color: isDarkMode
                                 ? AppColors.darkTextGrey
                                 : AppColors.textGrey,
@@ -136,41 +135,6 @@ class _CharactersPageState extends State<CharactersPage> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeaderButton(
-    BuildContext context, {
-    required IconData icon,
-    required VoidCallback onTap,
-    required bool isDarkMode,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 48,
-        height: 48,
-        decoration: ShapeDecoration(
-          color: isDarkMode ? AppColors.darkBox : AppColors.box,
-          shape: RoundedSuperellipseBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          shadows: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Center(
-          child: SolarIcon(
-            icon,
-            size: 24,
-            color: isDarkMode ? AppColors.darkIcon : AppColors.icon,
-          ),
         ),
       ),
     );

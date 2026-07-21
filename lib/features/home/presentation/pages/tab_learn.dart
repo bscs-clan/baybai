@@ -1,7 +1,5 @@
 import "package:flutter/material.dart";
 import "package:shared_preferences/shared_preferences.dart";
-import "package:baybai/core/theme/colors.dart";
-import "package:baybai/core/theme/text.dart";
 import "package:baybai/features/home/presentation/widgets/explore_section.dart";
 import "package:baybai/features/home/presentation/widgets/learn_card.dart";
 import "package:baybai/features/home/presentation/widgets/learn_header.dart";
@@ -43,9 +41,31 @@ class _TabLearnState extends State<TabLearn> {
   }
 
   LessonMetadata get _currentLesson => LessonData.lessonList.firstWhere(
-        (lesson) => lesson.id == _currentLessonId,
-        orElse: () => LessonData.lessonList.first,
-      );
+    (lesson) => lesson.id == _currentLessonId,
+    orElse: () => LessonData.lessonList.first,
+  );
+
+  int _deriveUnlockedLessons(Map<int, bool> completed) {
+    var unlockedLessonId = 1;
+
+    for (final lesson in LessonData.lessonList) {
+      if (!LessonData.lessons.containsKey(lesson.id)) {
+        continue;
+      }
+
+      if (lesson.id != unlockedLessonId) {
+        break;
+      }
+
+      if (completed[lesson.id] ?? false) {
+        unlockedLessonId = lesson.id + 1;
+      } else {
+        break;
+      }
+    }
+
+    return unlockedLessonId;
+  }
 
   @override
   void initState() {
@@ -55,17 +75,14 @@ class _TabLearnState extends State<TabLearn> {
 
   Future<void> _loadProgress() async {
     final prefs = await SharedPreferences.getInstance();
-
-    // Load unlocked lessons count, default to 1
-    final unlocked = prefs.getInt('unlocked_lessons') ?? 1;
-
-    // Load completion for all lessons
     final completed = <int, bool>{};
 
     for (final lesson in LessonData.lessonList) {
       completed[lesson.id] =
           prefs.getBool('lesson_${lesson.id}_completed') ?? false;
     }
+    final unlocked = _deriveUnlockedLessons(completed);
+    await prefs.setInt('unlocked_lessons', unlocked);
 
     if (!mounted) return;
 
@@ -83,8 +100,6 @@ class _TabLearnState extends State<TabLearn> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
     if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -94,30 +109,24 @@ class _TabLearnState extends State<TabLearn> {
 
     return Scaffold(
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24, top: 8),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const LearnHeader(userName: "Deobert"),
-            const SizedBox(height: 24),
-            Text(
-              "Basic Learning",
-              style: AppTextStyles.bigbody.copyWith(
-                color: isDarkMode ? AppColors.darkText : AppColors.text,
-              ),
-            ),
-            const SizedBox(height: 16),
+            const LearnHeader(),
             LearnCard(
               lessonNumber: currentLesson.number,
               title: currentLesson.title,
+              description: currentLesson.description,
               lessonId: currentLessonId,
-              isLocked: _unlockedLessons < currentLessonId,
+              isLocked: false,
               isCompleted: _completed[currentLessonId] ?? false,
               onTap: () => _navigateToLesson(currentLessonId),
             ),
-            const SizedBox(height: 32),
-            const ExploreSection(),
+            const SizedBox(height: 24),
+            ExploreSection(completedLessons: _completed),
+            const SizedBox(height: 124),
           ],
         ),
       ),
