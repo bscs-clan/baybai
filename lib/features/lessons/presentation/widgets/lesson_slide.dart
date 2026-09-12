@@ -12,6 +12,7 @@ import "package:baybai/features/lessons/presentation/widgets/quiz_table_card.dar
 import "package:baybai/features/lessons/presentation/widgets/shared_kudlit_vowel_card.dart";
 import "package:baybai/features/lessons/presentation/widgets/syllable_table_card.dart";
 import "package:baybai/features/lessons/presentation/widgets/vowel_sound_table_card.dart";
+import "package:baybai/features/lessons/presentation/widgets/vowel_stroke_demo_card.dart";
 import "package:baybai/features/lessons/presentation/widgets/word_sound_table_card.dart";
 import "package:baybai/features/lessons/presentation/widgets/word_to_break_card.dart";
 import "package:baybai/features/lessons/presentation/widgets/empty_slot.dart";
@@ -256,6 +257,10 @@ class _LessonSlideState extends State<LessonSlide> {
                   KudlitTableCard(examples: widget.lesson.kudlitTableItems),
                 if (widget.lesson.showSharedKudlitVowelCard)
                   const SharedKudlitVowelCard(),
+                if (widget.lesson.showStrokeDemoCard &&
+                    widget.lesson.strokeDemoItems != null &&
+                    widget.lesson.strokeDemoItems!.isNotEmpty)
+                  VowelStrokeDemoCard(items: widget.lesson.strokeDemoItems!),
                 if (widget.lesson.kudlitPracticeBaseSymbol != null) ...[
                   KudlitPracticeCard(
                     baseSymbol: widget.lesson.kudlitPracticeBaseSymbol!,

@@ -5,6 +5,7 @@ import "package:baybai/core/theme/text.dart";
 import "package:baybai/core/usecases/usecase.dart";
 import "package:baybai/features/ocr/domain/usecases/initialize_ocr.dart";
 import "package:baybai/features/ocr/domain/usecases/recognize_ocr_image.dart";
+import "package:baybai/features/practice/presentation/widgets/baybayin_stroke_demo.dart";
 import "package:baybai/injection_container.dart";
 import "package:baybai/shared/components/buttons/button.dart";
 import "package:baybai/shared/components/icons/solar_icon.dart";
@@ -42,10 +43,10 @@ class _PracticePageState extends State<PracticePage>
     {"symbol": "\u170A", "label": "Ba"},
     {"symbol": "\u170B", "label": "Ma"},
     {"symbol": "\u170C", "label": "Ya"},
-    {"symbol": "\u170D", "label": "La"},
-    {"symbol": "\u170E", "label": "Wa"},
-    {"symbol": "\u170F", "label": "Sa"},
-    {"symbol": "\u1710", "label": "Ha"},
+    {"symbol": "\u170E", "label": "La"},
+    {"symbol": "\u170F", "label": "Wa"},
+    {"symbol": "\u1710", "label": "Sa"},
+    {"symbol": "\u1711", "label": "Ha"},
   ];
 
   int _currentIndex = 0;
@@ -68,7 +69,7 @@ class _PracticePageState extends State<PracticePage>
     _recognizeOcrImage = serviceLoc<RecognizeOcrImage>();
     _demoController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1800),
+      duration: const Duration(milliseconds: 4400),
     );
   }
 
@@ -80,12 +81,16 @@ class _PracticePageState extends State<PracticePage>
 
   void _nextCharacter() {
     setState(() {
-      _currentIndex = (_currentIndex + 1) % _characters.length;
-      _strokes.clear();
-      _hasDrawn = false;
-      _showResultButton = false;
-      _clearPracticeResult();
+      _selectCharacterIndex((_currentIndex + 1) % _characters.length);
     });
+  }
+
+  void _selectCharacterIndex(int index) {
+    _currentIndex = index;
+    _strokes.clear();
+    _hasDrawn = false;
+    _showResultButton = false;
+    _clearPracticeResult();
   }
 
   void _tryAgain() {
@@ -314,6 +319,7 @@ class _PracticePageState extends State<PracticePage>
   void _showDemonstrationGif() {
     final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final character = _characters[_currentIndex];
+    final demoStrokes = baybayinPracticeStrokesForLabel(character["label"]!);
 
     _demoController
       ..reset()
@@ -362,11 +368,18 @@ class _PracticePageState extends State<PracticePage>
                   child: AnimatedBuilder(
                     animation: _demoController,
                     builder: (context, _) {
-                      return CustomPaint(
-                        painter: _DemoPainter(
-                          symbol: character["symbol"]!,
-                          progress: _demoController.value,
-                          isDarkMode: isDarkMode,
+                      final strokeProgress = Curves.easeInOut.transform(
+                        (_demoController.value / 0.82).clamp(0.0, 1.0),
+                      );
+
+                      return Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: CustomPaint(
+                          painter: BaybayinStrokeDemoPainter(
+                            strokes: demoStrokes,
+                            progress: strokeProgress,
+                            inkColor: AppColors.primary,
+                          ),
                         ),
                       );
                     },
@@ -378,6 +391,124 @@ class _PracticePageState extends State<PracticePage>
         );
       },
     ).whenComplete(_demoController.stop);
+  }
+
+  void _showSymbolPicker() {
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(sheetContext).size.height * 0.72,
+            ),
+            decoration: ShapeDecoration(
+              color: isDarkMode ? AppColors.darkBox : AppColors.box,
+              shape: RoundedSuperellipseBorder(
+                borderRadius: BorderRadius.circular(28),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        "Choose Symbol",
+                        style: AppTextStyles.bigbody.copyWith(
+                          color: isDarkMode
+                              ? AppColors.darkWhite
+                              : AppColors.text,
+                        ),
+                      ),
+                    ),
+                    _buildActionButton(
+                      child: Icon(
+                        Icons.close,
+                        size: 20,
+                        color: isDarkMode ? AppColors.darkIcon : AppColors.icon,
+                      ),
+                      onTap: () => Navigator.pop(sheetContext),
+                      isDarkMode: isDarkMode,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                Flexible(
+                  child: GridView.builder(
+                    padding: EdgeInsets.zero,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          mainAxisSpacing: 10,
+                          crossAxisSpacing: 10,
+                          childAspectRatio: 0.95,
+                        ),
+                    itemCount: _characters.length,
+                    itemBuilder: (context, index) {
+                      final character = _characters[index];
+                      final isSelected = index == _currentIndex;
+                      final foregroundColor = isSelected
+                          ? AppColors.primary
+                          : (isDarkMode
+                                ? AppColors.darkWhite
+                                : AppColors.dark);
+
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectCharacterIndex(index);
+                          });
+                          Navigator.pop(sheetContext);
+                        },
+                        child: Container(
+                          decoration: ShapeDecoration(
+                            color: isSelected
+                                ? AppColors.primary.withValues(alpha: 0.14)
+                                : (isDarkMode
+                                      ? AppColors.darkCompBg
+                                      : AppColors.compBg),
+                            shape: RoundedSuperellipseBorder(
+                              borderRadius: BorderRadius.circular(18),
+                              side: BorderSide(
+                                color: isSelected
+                                    ? AppColors.primary
+                                    : Colors.transparent,
+                                width: 1.5,
+                              ),
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                character["symbol"]!,
+                                style: AppTextStyles.heading.copyWith(
+                                  color: foregroundColor,
+                                  fontSize: 30,
+                                ),
+                              ),
+                            
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -425,6 +556,20 @@ class _PracticePageState extends State<PracticePage>
           ),
         ),
         centerTitle: true,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 24.0),
+            child: _buildActionButton(
+              child: Icon(
+                Icons.grid_view_rounded,
+                size: 22,
+                color: isDarkMode ? AppColors.darkIcon : AppColors.icon,
+              ),
+              onTap: _showSymbolPicker,
+              isDarkMode: isDarkMode,
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: Padding(
@@ -693,76 +838,4 @@ class _DrawPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}
-
-class _DemoPainter extends CustomPainter {
-  final String symbol;
-  final double progress;
-  final bool isDarkMode;
-
-  _DemoPainter({
-    required this.symbol,
-    required this.progress,
-    required this.isDarkMode,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final guidePainter = TextPainter(
-      text: TextSpan(
-        text: symbol,
-        style: TextStyle(
-          color: (isDarkMode ? AppColors.white : AppColors.dark).withValues(
-            alpha: 0.12,
-          ),
-          fontFamily: "Baybayin",
-          fontSize: 128,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout(maxWidth: size.width);
-
-    guidePainter.paint(
-      canvas,
-      Offset(
-        (size.width - guidePainter.width) / 2,
-        (size.height - guidePainter.height) / 2,
-      ),
-    );
-
-    final start = Offset(size.width * 0.24, size.height * 0.76);
-    final control = Offset(size.width * 0.48, size.height * 0.18);
-    final end = Offset(size.width * 0.76, size.height * 0.68);
-    final path = Path()
-      ..moveTo(start.dx, start.dy)
-      ..quadraticBezierTo(control.dx, control.dy, end.dx, end.dy);
-
-    final metric = path.computeMetrics().first;
-    final drawnPath = metric.extractPath(0, metric.length * progress);
-    final paint = Paint()
-      ..color = AppColors.primary
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 9;
-
-    canvas.drawPath(drawnPath, paint);
-
-    final tangent = metric.getTangentForOffset(metric.length * progress);
-    if (tangent == null) return;
-
-    canvas.drawCircle(
-      tangent.position,
-      9,
-      Paint()..color = isDarkMode ? AppColors.darkWhite : AppColors.white,
-    );
-    canvas.drawCircle(tangent.position, 6, Paint()..color = AppColors.primary);
-  }
-
-  @override
-  bool shouldRepaint(covariant _DemoPainter oldDelegate) {
-    return oldDelegate.symbol != symbol ||
-        oldDelegate.progress != progress ||
-        oldDelegate.isDarkMode != isDarkMode;
-  }
 }

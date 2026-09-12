@@ -268,6 +268,31 @@ class LessonData {
 
       const LessonContent(title: "Lesson Complete!"),
     ],
+    4: [
+      const LessonContent(
+        title: "Write your first Baybayin symbols.",
+        showVowelSoundTableCard: true,
+        description:
+            "Start with the vowel symbols first. These are the simplest marks to practice before writing longer words.",
+      ),
+      const LessonContent(
+        title: "Watch how the A vowel symbol is written.",
+        showStrokeDemoCard: true,
+        strokeDemoItems: [StrokeDemoItem(label: "A")],
+      ),
+      const LessonContent(
+        title: "Watch how the E/I vowel symbol is written.",
+        showStrokeDemoCard: true,
+        strokeDemoItems: [StrokeDemoItem(label: "E/I")],
+      ),
+      const LessonContent(
+        title: "Watch how the O/U vowel symbol is written.",
+        showStrokeDemoCard: true,
+        strokeDemoItems: [StrokeDemoItem(label: "O/U")],
+      ),
+
+      const LessonContent(title: "Lesson Complete!"),
+    ],
   };
 
   static const List<LessonMetadata> lessonList = [
@@ -284,6 +309,13 @@ class LessonData {
       number: "Lesson 3",
       title: "The Kudlit Mark",
       description: "Learn how kudlit marks change a character's vowel sound.",
+    ),
+    LessonMetadata(
+      id: 4,
+      number: "Lesson 4",
+      title: "Writing Vowels",
+      description:
+          "Learn how to write your first Baybayin symbols using vowel stroke demos.",
     ),
   ];
 }

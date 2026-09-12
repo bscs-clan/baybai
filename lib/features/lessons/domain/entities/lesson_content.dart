@@ -51,6 +51,12 @@ class KudlitTableItem {
   });
 }
 
+class StrokeDemoItem {
+  final String label;
+
+  const StrokeDemoItem({required this.label});
+}
+
 class LessonContent {
   final String title;
   final String baybayinText;
@@ -82,6 +88,7 @@ class LessonContent {
   final bool showVowelSoundTableCard;
   final bool showKudlitTableCard;
   final bool showSharedKudlitVowelCard;
+  final bool showStrokeDemoCard;
   final bool showWordCard;
   final bool showAnswerBox;
   final String? wordCardText;
@@ -94,6 +101,7 @@ class LessonContent {
   final List<LessonCardItem>? characterSoundItems;
   final List<LessonCardItem>? vowelSoundItems;
   final List<KudlitTableItem>? kudlitTableItems;
+  final List<StrokeDemoItem>? strokeDemoItems;
   final int? numSlots;
 
   const LessonContent({
@@ -125,6 +133,7 @@ class LessonContent {
     this.showVowelSoundTableCard = false,
     this.showKudlitTableCard = false,
     this.showSharedKudlitVowelCard = false,
+    this.showStrokeDemoCard = false,
     this.showWordCard = false,
     this.showAnswerBox = false,
     this.wordCardText,
@@ -137,6 +146,7 @@ class LessonContent {
     this.characterSoundItems,
     this.vowelSoundItems,
     this.kudlitTableItems,
+    this.strokeDemoItems,
     this.numSlots,
   });
 }
