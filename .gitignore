@@ -47,3 +47,12 @@ app.*.map.json
 
 # Added files and folders.
 .env
+
+# AI-generated / agent workflow artifacts
+.github/modernize/
+UI_REFACTOR_PLAN.md
+**/plan.md
+**/tasks.json
+**/progress.md
+*.copilot.md
+*.agent.md
