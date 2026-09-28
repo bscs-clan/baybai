@@ -65,6 +65,38 @@ class AppColors {
   static const Color grey2 = Color(0xFFF9F9FB);
   static const Color grey1 = Color(0xFFFCFCFD);
 
+
+  //Dark theme v2
+
+//blue color
+  static const Color darkblue1 = Color(0xFF0D101C);
+static const Color darkblue2 = Color(0xFF121725);
+static const Color darkblue3 = Color(0xFF1B2348);
+static const Color darkblue4 = Color(0xFF222D61);
+static const Color darkblue5 = Color(0xFF2A3773);
+static const Color darkblue6 = Color(0xFF344282);
+static const Color darkblue7 = Color(0xFF3E4F96);
+static const Color darkblue8 = Color(0xFF495CB0);
+static const Color darkblue9 = Color(0xFF5E77E8);
+static const Color darkblue10 = Color(0xFF536AD9);
+static const Color darkblue11 = Color(0xFF9AB2FF);
+static const Color darkblue12 = Color(0xFFD7E1FF);
+
+//grey color
+static const Color darkgrey1 = Color(0xFF111113);
+static const Color darkgrey2 = Color(0xFF19191B);
+static const Color darkgrey3 = Color(0xFF222325);
+static const Color darkgrey4 = Color(0xFF292A2E);
+static const Color darkgrey5 = Color(0xFF303136);
+static const Color darkgrey6 = Color(0xFF393A40);
+static const Color darkgrey7 = Color(0xFF46484F);
+static const Color darkgrey8 = Color(0xFF5F606A);
+static const Color darkgrey9 = Color(0xFF6C6E79);
+static const Color darkgrey10 = Color(0xFF797B86);
+static const Color darkgrey11 = Color(0xFFB2B3BD);
+static const Color darkgrey12 = Color(0xFFEEEEF0);
+
+
 }
 
 

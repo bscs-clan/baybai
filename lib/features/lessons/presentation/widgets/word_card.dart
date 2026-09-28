@@ -70,7 +70,7 @@ class _WordCardState extends State<WordCard> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 32, 40, 65),
+                  color: AppColors.blue3,
                   shape: BoxShape.circle,
                 ),
                 child: Center(
