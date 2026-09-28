@@ -1,60 +1,46 @@
 import "package:flutter/material.dart";
-import "package:solar_icons/solar_icons.dart";
-
-class SolarIcon extends StatelessWidget {
-  final IconData icon;
-  final double size;
-  final Color? color;
-
-  const SolarIcon(this.icon, {super.key, this.size = 24, this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Icon(icon, size: size, color: color);
-  }
-}
 
 class AppSolarIcons {
-  static const academicCap = SolarIconsOutline.squareAcademicCap;
-  static const alarm = SolarIconsOutline.alarm;
-  static const alarmOff = SolarIconsOutline.alarmTurnOff;
-  static const altArrowLeft = SolarIconsOutline.altArrowLeft;
-  static const altArrowRight = SolarIconsOutline.altArrowRight;
-  static const arrowLeft = SolarIconsOutline.arrowLeft;
-  static const arrowRight = SolarIconsOutline.arrowRight;
-  static const arrowRightUp = SolarIconsOutline.arrowRightUp;
-  static const bolt = SolarIconsOutline.bolt;
-  static const character = SolarIconsOutline.userId;
-  static const check = SolarIconsOutline.checklist;
-  static const close = SolarIconsOutline.closeCircle;
-  static const confetti = SolarIconsOutline.stars;
-  static const copy = SolarIconsOutline.copy;
-  static const cup = SolarIconsOutline.cup;
-  static const cupStar = SolarIconsOutline.cupStar;
-  static const delete = SolarIconsOutline.trashBinTrash;
-  static const fire = SolarIconsOutline.fire;
-  static const flashcard = SolarIconsOutline.card;
-  static const game = SolarIconsOutline.gameboy;
-  static const gameWhite = SolarIconsBold.gameboy;
-  static const lightbulb = SolarIconsOutline.lightbulb;
-  static const lesson = SolarIconsOutline.book;
-  static const lessonWhite = SolarIconsBold.book;
-  static const magnifier = SolarIconsOutline.magnifier;
-  static const medalStar = SolarIconsOutline.medalStar;
-  static const practice = SolarIconsOutline.penNewSquare;
-  static const questionSquare = SolarIconsOutline.questionSquare;
-  static const settings = SolarIconsOutline.settings;
-  static const share = SolarIconsOutline.share;
-  static const switchHorizontal = SolarIconsOutline.transferHorizontal;
-  static const undo = SolarIconsOutline.undoLeft;
-  static const userCircle = SolarIconsOutline.userCircle;
-  static const text = SolarIconsOutline.textSquare;
-  static const textWhite = SolarIconsBold.textSquare;
-  static const pen = SolarIconsOutline.pen;
-  static const penWhite = SolarIconsBold.pen;
-  static const lock = SolarIconsOutline.lock;
-  static const flag = SolarIconsOutline.flag;
-  static const volume = SolarIconsOutline.volumeLoud;
+  static const academicCap = Icons.school;
+  static const alarm = Icons.alarm;
+  static const alarmOff = Icons.alarm_off;
+  static const altArrowLeft = Icons.keyboard_arrow_left;
+  static const altArrowRight = Icons.keyboard_arrow_right;
+  static const arrowLeft = Icons.arrow_back;
+  static const arrowRight = Icons.arrow_forward;
+  static const arrowRightUp = Icons.north_east;
+  static const bolt = Icons.bolt;
+  static const character = Icons.person;
+  static const check = Icons.checklist;
+  static const close = Icons.close;
+  static const confetti = Icons.celebration;
+  static const copy = Icons.copy;
+  static const cup = Icons.emoji_events;
+  static const cupStar = Icons.emoji_events;
+  static const delete = Icons.delete;
+  static const fire = Icons.local_fire_department;
+  static const flashcard = Icons.style;
+  static const game = Icons.videogame_asset;
+  static const gameWhite = Icons.videogame_asset;
+  static const lightbulb = Icons.lightbulb;
+  static const lesson = Icons.book;
+  static const lessonWhite = Icons.book;
+  static const magnifier = Icons.search;
+  static const medalStar = Icons.military_tech;
+  static const practice = Icons.edit_note;
+  static const questionSquare = Icons.help_outline;
+  static const settings = Icons.settings;
+  static const share = Icons.share;
+  static const switchHorizontal = Icons.swap_horiz;
+  static const undo = Icons.undo;
+  static const userCircle = Icons.account_circle;
+  static const text = Icons.text_fields;
+  static const textWhite = Icons.text_fields;
+  static const pen = Icons.edit;
+  static const penWhite = Icons.edit;
+  static const lock = Icons.lock;
+  static const flag = Icons.flag;
+  static const volume = Icons.volume_up;
 
   const AppSolarIcons._();
 }

@@ -1,7 +1,6 @@
 import "package:flutter/material.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
-import "package:baybai/shared/components/icons/solar_icon.dart";
 import "package:baybai/shared/components/buttons/button.dart";
 
 class LessonNavigationBar extends StatelessWidget {
@@ -32,7 +31,7 @@ class LessonNavigationBar extends StatelessWidget {
     final label = customNextLabel ?? (isLast ? "Finish" : "Continue");
     final icon = showNextIcon
         ? (customNextIcon ??
-              (isLast ? AppSolarIcons.check : null))
+              (isLast ? Icons.check : null))
         : null;
     final isEnabled = onNext != null;
 

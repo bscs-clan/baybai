@@ -3,7 +3,6 @@ import "package:baybai/core/theme/text.dart";
 import "package:baybai/shared/components/buttons/button.dart";
 import "package:baybai/shared/components/inputs/input.dart";
 import "package:flutter/material.dart";
-import "package:solar_icons/solar_icons.dart";
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -44,12 +43,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 56),
                         Input(
-                          leftIcon: SolarIconsBold.letter,
+                          leftIcon: Icons.email,
                           hintText: "Email",
                         ),
                         const SizedBox(height: 8),
                         Input(
-                          leftIcon: SolarIconsBold.lockKeyhole,
+                          leftIcon: Icons.lock,
                           hintText: "Password",
                           obscureText: true,
                         ),

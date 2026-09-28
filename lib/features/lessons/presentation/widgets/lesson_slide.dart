@@ -17,7 +17,6 @@ import "package:baybai/features/lessons/presentation/widgets/word_card.dart";
 import "package:baybai/features/lessons/presentation/widgets/word_to_break_card.dart";
 import "package:baybai/features/lessons/presentation/widgets/empty_slot.dart";
 import "package:baybai/features/lessons/presentation/widgets/break_word_drag_slot.dart";
-import "package:baybai/shared/components/icons/solar_icon.dart";
 import "package:baybai/shared/components/buttons/button.dart";
 
 class LessonSlide extends StatefulWidget {
@@ -84,7 +83,7 @@ class _LessonSlideState extends State<LessonSlide> {
 
   IconData _mapLessonIcon(LessonIcon icon) {
     return switch (icon) {
-      LessonIcon.confetti => AppSolarIcons.confetti,
+      LessonIcon.confetti => Icons.celebration,
     };
   }
 
@@ -221,7 +220,7 @@ class _LessonSlideState extends State<LessonSlide> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     if (widget.lesson.icon != null) ...[
-                      SolarIcon(
+                      Icon(
                         _mapLessonIcon(widget.lesson.icon!),
                         color: isDarkMode ? AppColors.darkText : AppColors.text,
                         size: 28,

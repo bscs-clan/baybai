@@ -4,7 +4,6 @@ import "package:share_plus/share_plus.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
 import "package:baybai/core/utils/transliterator.dart";
-import "package:baybai/shared/components/icons/solar_icon.dart";
 import "dart:async";
 import "dart:math" as math;
 
@@ -819,8 +818,8 @@ class LanguageSwitch extends StatelessWidget {
               ],
             ),
             child: Center(
-              child: SolarIcon(
-                AppSolarIcons.switchHorizontal,
+              child: Icon(
+                Icons.swap_horiz,
                 size: 24,
                 color: isDarkMode ? AppColors.icon : AppColors.white,
               ),
@@ -975,7 +974,7 @@ class _TranslationCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 _CardActionIcon(
-                  icon: AppSolarIcons.copy,
+                  icon: Icons.copy,
                   onTap: () {
                     final textToCopy = isInput ? controller?.text : resultText;
                     if (textToCopy != null && textToCopy.isNotEmpty) {
@@ -985,7 +984,7 @@ class _TranslationCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 _CardActionIcon(
-                  icon: isInput ? AppSolarIcons.delete : AppSolarIcons.share,
+                  icon: isInput ? Icons.delete : Icons.share,
                   onTap: isInput ? (onClear ?? () {}) : (onShare ?? () {}),
                 ),
               ],
@@ -1140,7 +1139,7 @@ class _CardActionIcon extends StatelessWidget {
       ),
       child: IconButton(
         padding: EdgeInsets.zero,
-        icon: SolarIcon(
+        icon: Icon(
           icon,
           size: 24,
           color: isDarkMode ? AppColors.darkIcon : AppColors.icon,

@@ -1,6 +1,5 @@
 import "package:flutter/material.dart";
 import "package:flutter_bloc/flutter_bloc.dart";
-import "package:solar_icons/solar_icons.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/features/settings/presentation/view_models/theme_cubit.dart";
 
@@ -21,7 +20,7 @@ class AccountSettingsScreen extends StatelessWidget {
             centerTitle: true,
             leading: IconButton(
               icon: Icon(
-                SolarIconsOutline.arrowLeft,
+                Icons.arrow_back,
                 color: _iconColor(context, isDarkMode),
               ),
               onPressed: () => Navigator.pop(context),
@@ -63,7 +62,7 @@ class AccountSettingsScreen extends StatelessWidget {
 
   Widget _buildDeleteAccountTile(BuildContext context, bool isDarkMode) {
     return ListTile(
-      leading: Icon(SolarIconsOutline.trashBinMinimalistic, color: Colors.red),
+      leading: Icon(Icons.delete_outline, color: Colors.red),
       title: Text(
         "Delete Account",
         style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
@@ -79,7 +78,7 @@ class AccountSettingsScreen extends StatelessWidget {
   Widget _buildNameTile(BuildContext context, bool isDarkMode) {
     return ListTile(
       leading: Icon(
-        SolarIconsOutline.user,
+        Icons.person_outline,
         color: _iconColor(context, isDarkMode),
       ),
       title: Text(
@@ -100,7 +99,7 @@ class AccountSettingsScreen extends StatelessWidget {
   Widget _buildEmailTile(BuildContext context, bool isDarkMode) {
     return ListTile(
       leading: Icon(
-        SolarIconsOutline.letter,
+        Icons.mail_outline,
         color: _iconColor(context, isDarkMode),
       ),
       title: Text(
@@ -121,7 +120,7 @@ class AccountSettingsScreen extends StatelessWidget {
   Widget _buildPasswordTile(BuildContext context, bool isDarkMode) {
     return ListTile(
       leading: Icon(
-        SolarIconsOutline.lockKeyhole,
+        Icons.lock_outline,
         color: _iconColor(context, isDarkMode),
       ),
       title: Text(
@@ -142,7 +141,7 @@ class AccountSettingsScreen extends StatelessWidget {
   Widget _buildInfoTile(BuildContext context, bool isDarkMode) {
     return ListTile(
       leading: Icon(
-        SolarIconsOutline.card2,
+        Icons.badge_outlined,
         color: _iconColor(context, isDarkMode),
       ),
       title: Text(

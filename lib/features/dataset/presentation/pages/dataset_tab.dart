@@ -17,7 +17,6 @@ import "package:baybai/features/dataset/presentation/widgets/dataset_entry_tile.
 import "package:baybai/features/dataset/presentation/widgets/dataset_preview_pane.dart";
 import "package:baybai/features/dataset/presentation/widgets/dataset_character_bar_graph.dart";
 import "package:baybai/shared/components/toast/toast.dart";
-import "package:solar_icons/solar_icons.dart";
 
 class DatasetScreen extends StatelessWidget {
   const DatasetScreen({super.key});
@@ -36,10 +35,7 @@ class DatasetScreen extends StatelessWidget {
       appBar: AppBar(
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(
-            SolarIconsOutline.arrowLeft,
-            color: _iconColor(context, isDarkMode),
-          ),
+          icon: Icon(Icons.arrow_back, color: _iconColor(context, isDarkMode)),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(

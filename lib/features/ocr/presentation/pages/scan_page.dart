@@ -6,7 +6,6 @@ import "package:baybai/core/theme/colors.dart";
 import "package:baybai/features/ocr/presentation/widgets/camera.dart";
 import "package:baybai/features/settings/presentation/view_models/scan_settings_cubit.dart";
 import "package:baybai/shared/components/buttons/icon_button.dart";
-import "package:solar_icons/solar_icons.dart";
 
 enum _ScanMode { live, photo }
 
@@ -205,7 +204,7 @@ class _BackButton extends StatelessWidget {
       ),
       child: IconButton(
         onPressed: onPressed,
-        icon: const Icon(SolarIconsOutline.arrowLeft),
+        icon: const Icon(Icons.arrow_back),
         color: Colors.white,
         iconSize: 24,
         tooltip: "Back",
@@ -246,10 +245,9 @@ class _LanguageFlowText extends StatelessWidget {
             ),
             const SizedBox(width: 6),
             const Icon(
-              SolarIconsOutline.arrowRight,
+              Icons.arrow_forward,
               color: Colors.white,
               size: 14,
-              fontWeight: FontWeight.bold,
             ),
             const SizedBox(width: 6),
             Text(
@@ -291,7 +289,7 @@ class _LanguageDirectionButton extends StatelessWidget {
       ),
       child: IconButton(
         onPressed: onPressed,
-        icon: const Icon(SolarIconsOutline.transferHorizontal),
+        icon: const Icon(Icons.swap_horiz),
         color: Colors.white,
         iconSize: 24,
         tooltip: label,

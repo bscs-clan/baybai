@@ -17,6 +17,19 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
+    if (project.name != "app") {
+        afterEvaluate {
+            extensions.findByType(com.android.build.gradle.BaseExtension::class.java)?.apply {
+                compileOptions.setSourceCompatibility(JavaVersion.VERSION_17)
+                compileOptions.setTargetCompatibility(JavaVersion.VERSION_17)
+            }
+            tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+                compilerOptions {
+                    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+                }
+            }
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {

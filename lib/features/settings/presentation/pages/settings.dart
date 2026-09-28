@@ -3,7 +3,6 @@ import "package:flutter/foundation.dart";
 import "package:flutter_bloc/flutter_bloc.dart";
 import "package:flutter_custom_tabs/flutter_custom_tabs.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
-import "package:solar_icons/solar_icons.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/features/settings/presentation/view_models/scan_settings_cubit.dart";
 import "package:baybai/features/settings/presentation/view_models/theme_cubit.dart";
@@ -25,7 +24,7 @@ class SettingsScreen extends StatelessWidget {
             centerTitle: true,
             leading: IconButton(
               icon: Icon(
-                SolarIconsOutline.arrowLeft,
+                Icons.arrow_back,
                 color: _iconColor(context, isDarkMode),
               ),
               onPressed: () => Navigator.pop(context),
@@ -49,7 +48,7 @@ class SettingsScreen extends StatelessWidget {
                 isDarkMode,
                 title: "Terms & Conditions",
                 subtitle: "April 23, 2025",
-                icon: SolarIconsOutline.checklistMinimalistic,
+                icon: Icons.checklist,
                 url: "https://baybai.org",
               ),
               _buildLinkTile(
@@ -57,7 +56,7 @@ class SettingsScreen extends StatelessWidget {
                 isDarkMode,
                 title: "Privacy Policy",
                 subtitle: "April 23, 2025",
-                icon: SolarIconsOutline.shieldKeyhole,
+                icon: Icons.security,
                 url: "https://baybai.org",
               ),
               _buildLinkTile(
@@ -65,7 +64,7 @@ class SettingsScreen extends StatelessWidget {
                 isDarkMode,
                 title: "About Us",
                 subtitle: "App version ${dotenv.env["APP_VERSION"] ?? '1.0.0'}",
-                icon: SolarIconsOutline.infoCircle,
+                icon: Icons.info_outline,
                 url: dotenv.env["WEB_HOST"] ?? "https://baybai.org",
               ),
             ],
@@ -91,7 +90,7 @@ class SettingsScreen extends StatelessWidget {
   Widget _buildThemeTile(BuildContext context, bool isDarkMode) {
     return ListTile(
       leading: Icon(
-        SolarIconsOutline.moon,
+        Icons.dark_mode,
         color: _iconColor(context, isDarkMode),
       ),
       title: Text(
@@ -119,7 +118,7 @@ class SettingsScreen extends StatelessWidget {
   Widget _buildAccountTile(BuildContext context, bool isDarkMode) {
     return ListTile(
       leading: Icon(
-        SolarIconsOutline.userCircle,
+        Icons.account_circle,
         color: _iconColor(context, isDarkMode),
       ),
       title: Text(
@@ -134,7 +133,7 @@ class SettingsScreen extends StatelessWidget {
         style: TextStyle(color: _subtitleColor(context, isDarkMode)),
       ),
       trailing: Icon(
-        SolarIconsOutline.altArrowRight,
+        Icons.chevron_right,
         color: _iconColor(context, isDarkMode),
         size: 20,
       ),
@@ -152,7 +151,7 @@ class SettingsScreen extends StatelessWidget {
 
     return ListTile(
       leading: Icon(
-        SolarIconsOutline.code,
+        Icons.code,
         color: _iconColor(context, isDarkMode),
       ),
       title: Text(
@@ -179,7 +178,7 @@ class SettingsScreen extends StatelessWidget {
   Widget _buildCrashlyticsTile(BuildContext context, bool isDarkMode) {
     return ListTile(
       leading: Icon(
-        SolarIconsOutline.bug,
+        Icons.bug_report,
         color: _iconColor(context, isDarkMode),
       ),
       title: Text(
@@ -223,7 +222,7 @@ class SettingsScreen extends StatelessWidget {
         style: TextStyle(color: _subtitleColor(context, isDarkMode)),
       ),
       trailing: Icon(
-        SolarIconsOutline.altArrowRight,
+        Icons.chevron_right,
         color: _iconColor(context, isDarkMode),
         size: 20,
       ),

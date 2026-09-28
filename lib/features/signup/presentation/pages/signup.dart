@@ -3,7 +3,6 @@ import "package:baybai/core/theme/text.dart";
 import "package:baybai/shared/components/buttons/button.dart";
 import "package:baybai/shared/components/inputs/input.dart";
 import "package:flutter/material.dart";
-import "package:solar_icons/solar_icons.dart";
 
 class SignUpScreen extends StatelessWidget {
   const SignUpScreen({super.key});
@@ -41,20 +40,20 @@ class SignUpScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 56),
                         Input(
-                          leftIcon: SolarIconsBold.user,
+                          leftIcon: Icons.person,
                           hintText: "Name",
                           textInputAction: TextInputAction.next,
                         ),
                         const SizedBox(height: 8),
                         Input(
-                          leftIcon: SolarIconsBold.letter,
+                          leftIcon: Icons.email,
                           hintText: "Email",
                           keyboardType: TextInputType.emailAddress,
                           textInputAction: TextInputAction.next,
                         ),
                         const SizedBox(height: 8),
                         Input(
-                          leftIcon: SolarIconsBold.lockKeyhole,
+                          leftIcon: Icons.lock,
                           hintText: "Password",
                           obscureText: true,
                           textInputAction: TextInputAction.done,
