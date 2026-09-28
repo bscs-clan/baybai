@@ -4,16 +4,14 @@ import "package:baybai/core/theme/text.dart";
 import "package:baybai/shared/components/cards/app_card.dart";
 import "package:baybai/shared/components/buttons/button.dart";
 
-class LearnCard extends StatelessWidget {
+class LearnCard extends StatefulWidget {
   final String lessonNumber;
   final String title;
   final String description;
   final int? lessonId;
   final VoidCallback? onTap;
-
-  final bool isLocked;
-  final bool isCompleted;
   final IconData? icon;
+  final bool isExpandable;
 
   const LearnCard({
     super.key,
@@ -23,51 +21,34 @@ class LearnCard extends StatelessWidget {
         "Learn the basics of Baybayin and how words are written by sound.",
     this.lessonId,
     this.onTap,
-    this.isLocked = false,
-    this.isCompleted = false,
     this.icon,
+    this.isExpandable = false,
   });
 
   @override
+  State<LearnCard> createState() => _LearnCardState();
+}
+
+class _LearnCardState extends State<LearnCard> {
+  bool _isExpanded = false;
+
+  @override
   Widget build(BuildContext context) {
-    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    final VoidCallback? effectiveTap = isLocked
-        ? null
-        : (onTap ??
-              () {
-                Navigator.pushNamed(
-                  context,
-                  "/lesson",
-                  arguments: lessonId ?? 1,
-                );
-              });
-    final String buttonLabel;
-    if (isLocked) {
-      buttonLabel = "Locked";
-    } else if (isCompleted) {
-      buttonLabel = "Review Lesson";
-    } else {
-      buttonLabel = "Start Lesson";
-    }
-
-    final buttonBackgroundColor = isLocked
-        ? AppColors.textGrey
-        : AppColors.primary;
+    final effectiveTap =
+        widget.onTap ??
+        () {
+          Navigator.pushNamed(
+            context,
+            "/lesson",
+            arguments: widget.lessonId ?? 1,
+          );
+        };
 
     return AppCard(
       width: double.infinity,
       padding: EdgeInsets.zero,
-      backgroundColor: isDarkMode ? AppColors.darkCompBg : AppColors.box,
+      backgroundColor: AppColors.grey3,
       borderRadius: BorderRadius.circular(16),
-      boxShadow: [
-        BoxShadow(
-          color: AppColors.background.withValues(alpha: 0.8),
-          blurRadius: 16,
-          offset: const Offset(0, 8),
-          spreadRadius: -2,
-        ),
-      ],
       child: ClipRRect(
         child: Stack(
           clipBehavior: Clip.antiAlias,
@@ -77,42 +58,64 @@ class LearnCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    lessonNumber,
-                    style: AppTextStyles.body.copyWith(
-                      color: isDarkMode
-                          ? AppColors.darkText
-                          : AppColors.textGrey,
+                  InkWell(
+                    onTap: widget.isExpandable
+                        ? () => setState(() => _isExpanded = !_isExpanded)
+                        : null,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.lessonNumber,
+                                style: AppTextStyles.body.copyWith(
+                                  color: AppColors.grey12,
+                                ),
+                              ),
+                              Text(
+                                widget.title,
+                                style: AppTextStyles.bigbody.copyWith(
+                                  color: AppColors.grey12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (widget.isExpandable)
+                          Icon(
+                            _isExpanded
+                                ? Icons.keyboard_arrow_up
+                                : Icons.keyboard_arrow_down,
+                            color: AppColors.grey10,
+                            size: 24,
+                          ),
+                      ],
                     ),
                   ),
-                  Text(
-                    title,
-                    style: AppTextStyles.bigbody.copyWith(
-                      color: isDarkMode ? AppColors.darkText : AppColors.text,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    description,
-                    style: AppTextStyles.body.copyWith(
-                      color: isDarkMode
-                          ? AppColors.darkText
-                          : AppColors.textGrey,
-                    ),
-                  ),
-                  const SizedBox(height: 22),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: IntrinsicWidth(
-                      child: Button(
-                        borderRadius: BorderRadius.circular(64),
-                        label: buttonLabel,
-                        onTap: effectiveTap,
-                        customBackgroundColor: buttonBackgroundColor,
-                        customForegroundColor: AppColors.white,
+                  if (!widget.isExpandable || _isExpanded) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      widget.description,
+                      style: AppTextStyles.body.copyWith(
+                        color: AppColors.grey11,
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 24),
+                    Align(
+                      alignment: Alignment.bottomRight,
+                      child: IntrinsicWidth(
+                        child: Button(
+                          borderRadius: BorderRadius.circular(64),
+                          label: "Start Lesson",
+                          onTap: effectiveTap,
+                          customBackgroundColor: AppColors.blue9,
+                          customForegroundColor: AppColors.grey1,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

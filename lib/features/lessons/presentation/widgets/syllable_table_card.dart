@@ -40,20 +40,14 @@ class SyllableTableCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final borderColor = isDarkMode
-        ? AppColors.darkListSeparator
-        : AppColors.listSeparator;
-    final textColor = isDarkMode ? AppColors.darkText : AppColors.text;
-    final pillColor = isDarkMode
-        ? AppColors.darkCompLight
-        : AppColors.compLight;
+    final borderColor = AppColors.grey6;
+    final textColor = AppColors.grey12;
+    final pillColor = AppColors.blue3;
 
     return Container(
       decoration: BoxDecoration(
-        color: isDarkMode ? AppColors.darkCompBg : AppColors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: borderColor, width: 1.5),
+        border: Border.all(color: borderColor, width: 1),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -66,24 +60,18 @@ class SyllableTableCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Text(
                       "Latin",
-                      style: AppTextStyles.body.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                      ),
+                      style: AppTextStyles.body.copyWith(color: textColor),
                       textAlign: TextAlign.center,
                     ),
                   ),
                 ),
-                Container(width: 1.5, color: borderColor),
+                Container(width: 1, color: borderColor),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     child: Text(
                       "Baybayin Logic",
-                      style: AppTextStyles.body.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                      ),
+                      style: AppTextStyles.body.copyWith(color: textColor),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -91,7 +79,7 @@ class SyllableTableCard extends StatelessWidget {
               ],
             ),
           ),
-          Divider(height: 1, thickness: 1.5, color: borderColor),
+          Divider(height: 1, thickness: 1, color: borderColor),
           ...List.generate(_examples.length, (index) {
             final example = _examples[index];
             final isLast = index == _examples.length - 1;
@@ -125,12 +113,8 @@ class SyllableTableCard extends StatelessWidget {
                                   height: 22,
                                   alignment: Alignment.center,
                                   decoration: BoxDecoration(
-                                    color: Colors.transparent,
+                                    color: AppColors.grey3,
                                     borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(
-                                      color: borderColor.withValues(alpha: 0.4),
-                                      width: 1.5,
-                                    ),
                                   ),
                                   child: Text(
                                     e.value,
@@ -146,7 +130,7 @@ class SyllableTableCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      Container(width: 1.5, color: borderColor),
+                      Container(width: 1, color: borderColor),
                       Expanded(
                         child: Padding(
                           padding: EdgeInsets.only(

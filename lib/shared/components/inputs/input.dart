@@ -61,21 +61,18 @@ class _InputState extends State<Input> {
   @override
   Widget build(BuildContext context) {
     final metrics = _InputMetrics.fromSize(widget.size);
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     final borderColor = _isFocused
-        ? AppColors.primary
-        : (isDarkMode ? Colors.white24 : Colors.black12);
+        ? AppColors.grey6
+        : AppColors.grey5;
 
-    final iconColor = _isFocused
-        ? AppColors.primary
-        : (isDarkMode ? AppColors.darkIcon : AppColors.icon);
+    final iconColor = AppColors.grey10;
 
     return AnimatedContainer(
       duration: ComponentMotion.fast,
       height: metrics.height,
       decoration: BoxDecoration(
-        color: ComponentColors.inputSurface(context),
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(metrics.borderRadius),
         border: Border.all(color: borderColor, width: _isFocused ? 1.5 : 1),
       ),
@@ -103,14 +100,26 @@ class _InputState extends State<Input> {
               keyboardType: widget.keyboardType,
               textInputAction: widget.textInputAction,
               onChanged: widget.onChanged,
+              cursorColor: AppColors.grey10,
 
               style: Theme.of(
                 context,
-              ).textTheme.bodyMedium?.copyWith(fontSize: metrics.fontSize),
+              ).textTheme.bodyMedium?.copyWith(
+                fontSize: metrics.fontSize,
+                color: AppColors.grey12,
+              ),
 
               decoration: InputDecoration(
                 hintText: widget.hintText,
+                hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontSize: metrics.fontSize,
+                  color: AppColors.grey10,
+                ),
                 border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                errorBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
                 isCollapsed: true,
                 contentPadding: EdgeInsets.zero,
               ),

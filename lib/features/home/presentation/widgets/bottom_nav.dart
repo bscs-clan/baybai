@@ -1,32 +1,31 @@
 import "package:flutter/material.dart";
 import "package:flutter_bloc/flutter_bloc.dart";
-import "package:solar_icons/solar_icons.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
 import "package:baybai/features/settings/presentation/view_models/scan_settings_cubit.dart";
 
 final List<_NavItem> items = [
   _NavItem(
-    activeIcon: SolarIconsBold.home,
-    inactiveIcon: SolarIconsOutline.home,
+    activeIcon: Icons.home_outlined,
+    inactiveIcon: Icons.home_outlined,
     label: "Learn",
     index: 0,
   ),
   _NavItem(
-    activeIcon: SolarIconsBold.objectScan,
-    inactiveIcon: SolarIconsOutline.objectScan,
+    activeIcon: Icons.document_scanner_outlined,
+    inactiveIcon: Icons.document_scanner_outlined,
     label: "Scan",
     index: 1,
   ),
   _NavItem(
-    activeIcon: SolarIconsBold.transferHorizontal,
-    inactiveIcon: SolarIconsOutline.transferHorizontal,
+    activeIcon: Icons.swap_horiz_outlined,
+    inactiveIcon: Icons.swap_horiz_outlined,
     label: "Convert",
     index: 2,
   ),
   _NavItem(
-    activeIcon: SolarIconsBold.database,
-    inactiveIcon: SolarIconsOutline.database,
+    activeIcon: Icons.storage_outlined,
+    inactiveIcon: Icons.storage_outlined,
     label: "Datasets",
     index: 3,
     requiresDeveloperMode: true,
@@ -76,7 +75,7 @@ class Navbar extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
           decoration: BoxDecoration(
-            color: isDarkMode ? AppColors.darkBox : AppColors.box,
+            color: AppColors.grey1,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.08),
@@ -92,7 +91,7 @@ class Navbar extends StatelessWidget {
 
               final Color iconColor = isSelected
                   ? AppColors.primary
-                  : (isDarkMode ? AppColors.darkIcon : AppColors.icon);
+                  : (isDarkMode ? AppColors.white : AppColors.grey12);
 
               return Expanded(
                 child: GestureDetector(
@@ -104,7 +103,7 @@ class Navbar extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          isSelected ? item.activeIcon : item.inactiveIcon,
+                          item.inactiveIcon,
                           size: 24,
                           color: iconColor,
                         ),

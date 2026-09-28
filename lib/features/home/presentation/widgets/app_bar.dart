@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
+import "package:baybai/core/theme/colors.dart";
 import "package:baybai/shared/components/buttons/icon_button.dart";
-import "package:baybai/shared/components/icons/solar_icon.dart";
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({super.key});
@@ -32,7 +32,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           onTap: () {
             Navigator.pushNamed(context, "/settings");
           },
-          icon: AppSolarIcons.settings,
+          icon: Icons.settings,
+          color: Colors.transparent,
+          borderColor: AppColors.grey3,
         ),
       ],
     );

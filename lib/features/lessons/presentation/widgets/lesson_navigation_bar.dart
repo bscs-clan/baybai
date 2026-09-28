@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
 import "package:baybai/shared/components/icons/solar_icon.dart";
 import "package:baybai/shared/components/buttons/button.dart";
@@ -6,9 +7,7 @@ import "package:baybai/shared/components/buttons/button.dart";
 class LessonNavigationBar extends StatelessWidget {
   final int currentIndex;
   final int totalLessons;
-  final VoidCallback? onPrevious;
   final VoidCallback? onNext;
-  final VoidCallback? onRetry;
   final String? customNextLabel;
   final IconData? customNextIcon;
   final bool showNextIcon;
@@ -19,9 +18,7 @@ class LessonNavigationBar extends StatelessWidget {
     super.key,
     required this.currentIndex,
     required this.totalLessons,
-    this.onPrevious,
     this.onNext,
-    this.onRetry,
     this.customNextLabel,
     this.customNextIcon,
     this.showNextIcon = true,
@@ -44,16 +41,6 @@ class LessonNavigationBar extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (onRetry != null) ...[
-            Button(
-              label: "Retry Mistakes",
-              leftIcon: AppSolarIcons.undo,
-              type: ButtonType.outline,
-              width: double.infinity,
-              onTap: onRetry,
-            ),
-            const SizedBox(height: 8),
-          ],
           Button(
             label: label,
             rightIcon: icon,
@@ -61,7 +48,8 @@ class LessonNavigationBar extends StatelessWidget {
             width: double.infinity,
             textStyle: AppTextStyles.body,
             onTap: isEnabled ? onNext : null,
-            customBackgroundColor: customNextBackgroundColor,
+            customBackgroundColor:
+                customNextBackgroundColor ?? AppColors.blue9,
             customForegroundColor: customNextForegroundColor,
           ),
         ],

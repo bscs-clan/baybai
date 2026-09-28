@@ -13,31 +13,28 @@ class LessonProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final progress = totalLessons > 0 ? (currentIndex + 1) / totalLessons : 0.0;
 
     return Row(
       children: [
         Expanded(
-          child: Row(
-            children: List.generate(totalLessons, (index) {
-              final isCompleted = index <= currentIndex;
-              return Expanded(
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeInOut,
-                  height: 4,
-                  margin: const EdgeInsets.symmetric(horizontal: 3.0),
-                  decoration: BoxDecoration(
-                    color: isCompleted
-                        ? AppColors.primary
-                        : (isDarkMode
-                              ? AppColors.darkBox
-                              : AppColors.compGrey.withValues(alpha: 0.15)),
-                    borderRadius: BorderRadius.circular(4),
+          child: TweenAnimationBuilder<double>(
+            tween: Tween<double>(begin: 0.0, end: progress.clamp(0.0, 1.0)),
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            builder: (context, value, _) {
+              return ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: value,
+                  minHeight: 6,
+                  backgroundColor: AppColors.grey3,
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    AppColors.blue9,
                   ),
                 ),
               );
-            }),
+            },
           ),
         ),
         const SizedBox(width: 16),

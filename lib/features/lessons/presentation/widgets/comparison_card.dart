@@ -2,7 +2,6 @@ import "package:flutter/material.dart";
 import "package:audioplayers/audioplayers.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
-import "package:baybai/shared/components/icons/solar_icon.dart";
 
 class ComparisonCard extends StatefulWidget {
   const ComparisonCard({super.key});
@@ -13,19 +12,11 @@ class ComparisonCard extends StatefulWidget {
 
 class _ComparisonCardState extends State<ComparisonCard> {
   late final AudioPlayer _audioPlayer;
-  bool _isPlaying = false;
 
   @override
   void initState() {
     super.initState();
     _audioPlayer = AudioPlayer();
-    _audioPlayer.onPlayerStateChanged.listen((state) {
-      if (mounted) {
-        setState(() {
-          _isPlaying = state == PlayerState.playing;
-        });
-      }
-    });
   }
 
   @override
@@ -45,19 +36,12 @@ class _ComparisonCardState extends State<ComparisonCard> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final borderColor = isDarkMode
-        ? AppColors.darkListSeparator
-        : AppColors.listSeparator;
-    final dividerColor = isDarkMode
-        ? AppColors.darkListSeparator
-        : AppColors.listSeparator;
+    final borderColor = AppColors.grey6;
 
     return Container(
       decoration: BoxDecoration(
-        color: isDarkMode ? AppColors.darkCompBg : AppColors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: borderColor, width: 1.5),
+        border: Border.all(color: borderColor, width: 1),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -71,22 +55,20 @@ class _ComparisonCardState extends State<ComparisonCard> {
                     child: Text(
                       "English",
                       style: AppTextStyles.body.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: isDarkMode ? AppColors.darkText : AppColors.text,
+                        color: AppColors.grey12,
                       ),
                       textAlign: TextAlign.center,
                     ),
                   ),
                 ),
-                Container(width: 1.5, color: dividerColor),
+                Container(width: 1, color: borderColor),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     child: Text(
                       "Baybayin",
                       style: AppTextStyles.body.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: isDarkMode ? AppColors.darkText : AppColors.text,
+                        color: AppColors.grey12,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -95,11 +77,11 @@ class _ComparisonCardState extends State<ComparisonCard> {
               ],
             ),
           ),
-          Divider(height: 1, thickness: 1.5, color: borderColor),
+          Divider(height: 1, thickness: 1, color: borderColor),
           Table(
             columnWidths: const {0: FlexColumnWidth(1), 1: FlexColumnWidth(1)},
             border: TableBorder(
-              verticalInside: BorderSide(color: borderColor, width: 1.5),
+              verticalInside: BorderSide(color: borderColor, width: 1),
             ),
             defaultVerticalAlignment: TableCellVerticalAlignment.middle,
             children: [
@@ -115,7 +97,7 @@ class _ComparisonCardState extends State<ComparisonCard> {
                           fontSize: 42,
                           height: 1.0,
                           fontWeight: FontWeight.bold,
-                          color: isDarkMode ? AppColors.white : AppColors.dark,
+                          color: AppColors.grey12,
                         ),
                       ),
                     ),
@@ -130,7 +112,7 @@ class _ComparisonCardState extends State<ComparisonCard> {
                           fontFamily: "Baybayin",
                           fontSize: 48,
                           fontWeight: FontWeight.bold,
-                          color: isDarkMode ? AppColors.white : AppColors.dark,
+                          color: AppColors.grey12,
                           height: 1.0,
                         ),
                       ),
@@ -142,24 +124,20 @@ class _ComparisonCardState extends State<ComparisonCard> {
                 children: [
                   TableCell(
                     child: Padding(
-                      padding: const EdgeInsets.only(top: 10, bottom: 16),
+                      padding: const EdgeInsets.only(top: 16, bottom: 16),
                       child: Icon(
                         Icons.arrow_downward_rounded,
-                        color: isDarkMode
-                            ? AppColors.white.withValues(alpha: 0.4)
-                            : AppColors.dark.withValues(alpha: 0.4),
+                        color: AppColors.grey6,
                         size: 24,
                       ),
                     ),
                   ),
                   TableCell(
                     child: Padding(
-                      padding: const EdgeInsets.only(top: 10, bottom: 16),
+                      padding: const EdgeInsets.only(top: 16, bottom: 16),
                       child: Icon(
                         Icons.arrow_downward_rounded,
-                        color: isDarkMode
-                            ? AppColors.white.withValues(alpha: 0.4)
-                            : AppColors.dark.withValues(alpha: 0.4),
+                        color: AppColors.grey6,
                         size: 24,
                       ),
                     ),
@@ -177,18 +155,14 @@ class _ComparisonCardState extends State<ComparisonCard> {
                           height: 38,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            color: isDarkMode
-                                ? AppColors.darkCompLight
-                                : AppColors.compLight,
+                            color: AppColors.grey3,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             "B (letter)",
                             textAlign: TextAlign.center,
                             style: AppTextStyles.body.copyWith(
-                              color: isDarkMode
-                                  ? AppColors.darkText
-                                  : AppColors.text,
+                              color: AppColors.text,
                             ),
                           ),
                         ),
@@ -205,13 +179,13 @@ class _ComparisonCardState extends State<ComparisonCard> {
                             margin: const EdgeInsets.symmetric(horizontal: 16),
                             height: 38,
                             decoration: BoxDecoration(
-                              color: isDarkMode
-                                  ? AppColors.darkCompLight
-                                  : AppColors.compLight,
+                              color: AppColors.blue3,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
                               child: Row(
                                 children: [
                                   const SizedBox(width: 28),
@@ -220,27 +194,20 @@ class _ComparisonCardState extends State<ComparisonCard> {
                                       "Ba",
                                       textAlign: TextAlign.center,
                                       style: AppTextStyles.body.copyWith(
-                                        fontWeight: FontWeight.w500,
-                                        color: isDarkMode
-                                            ? AppColors.darkText
-                                            : AppColors.text,
+                                        color: AppColors.text,
                                       ),
                                     ),
                                   ),
                                   Container(
                                     padding: const EdgeInsets.all(6),
                                     decoration: BoxDecoration(
-                                      color: isDarkMode
-                                          ? AppColors.primary
-                                          : AppColors.cardBlue,
+                                      color: AppColors.blue6,
                                       shape: BoxShape.circle,
                                     ),
-                                    child: SolarIcon(
-                                      AppSolarIcons.volume,
+                                    child: Icon(
+                                      Icons.volume_up_rounded,
                                       size: 16,
-                                      color: isDarkMode
-                                          ? AppColors.white
-                                          : AppColors.dark,
+                                      color: AppColors.grey12,
                                     ),
                                   ),
                                 ],

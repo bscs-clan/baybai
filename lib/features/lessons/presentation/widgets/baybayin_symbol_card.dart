@@ -6,23 +6,19 @@ class BaybyainSymbol {
   final String unicode;
   final String romanization;
 
-  BaybyainSymbol({required this.unicode, required this.romanization});
+  const BaybyainSymbol({required this.unicode, required this.romanization});
 }
 
 class BaybyainSymbolCard extends StatelessWidget {
   final List<BaybyainSymbol> symbols;
-  final String title;
 
   const BaybyainSymbolCard({
     super.key,
     required this.symbols,
-    this.title = "Baybayin Symbols",
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -38,7 +34,6 @@ class BaybyainSymbolCard extends StatelessWidget {
         return _SymbolTile(
           unicode: symbol.unicode,
           romanization: symbol.romanization,
-          isDarkMode: isDarkMode,
         );
       },
     );
@@ -48,12 +43,10 @@ class BaybyainSymbolCard extends StatelessWidget {
 class _SymbolTile extends StatefulWidget {
   final String unicode;
   final String romanization;
-  final bool isDarkMode;
 
   const _SymbolTile({
     required this.unicode,
     required this.romanization,
-    required this.isDarkMode,
   });
 
   @override
@@ -62,8 +55,8 @@ class _SymbolTile extends StatefulWidget {
 
 class _SymbolTileState extends State<_SymbolTile>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
+  late final AnimationController _controller;
+  late final Animation<double> _scaleAnimation;
 
   @override
   void initState() {
@@ -86,6 +79,8 @@ class _SymbolTileState extends State<_SymbolTile>
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return MouseRegion(
       onEnter: (_) => _controller.forward(),
       onExit: (_) => _controller.reverse(),
@@ -94,7 +89,7 @@ class _SymbolTileState extends State<_SymbolTile>
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(ComponentRadius.md),
-            color: widget.isDarkMode ? AppColors.darkCompBg : AppColors.white,
+            color: isDarkMode ? AppColors.darkCompBg : AppColors.white,
           ),
           child: Center(
             child: Text(
@@ -102,7 +97,7 @@ class _SymbolTileState extends State<_SymbolTile>
               style: TextStyle(
                 fontFamily: 'Baybayin',
                 fontSize: 64,
-                color: widget.isDarkMode ? Colors.white : Colors.black,
+                color: isDarkMode ? Colors.white : Colors.black,
                 height: 1.0,
               ),
             ),

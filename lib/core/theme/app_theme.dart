@@ -5,13 +5,13 @@ import "package:baybai/core/theme/colors.dart";
 class AppTheme {
   static final lightTheme = ThemeData(
     primaryColor: AppColors.primary,
-    scaffoldBackgroundColor: AppColors.background,
+    scaffoldBackgroundColor: AppColors.grey1,
     appBarTheme: const AppBarTheme(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.grey1,
       systemOverlayStyle: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarColor: AppColors.box,
+        systemNavigationBarColor: AppColors.grey1,
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
     ),

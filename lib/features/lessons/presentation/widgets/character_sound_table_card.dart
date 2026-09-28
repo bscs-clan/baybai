@@ -55,7 +55,6 @@ class CharacterSoundTableCard extends StatelessWidget {
                       height: 48,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: Colors.transparent,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: borderColor.withValues(alpha: 0.4),

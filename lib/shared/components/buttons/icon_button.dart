@@ -10,6 +10,7 @@ class CustomIconButton extends StatelessWidget {
   final double? iconSize;
   final Color? color;
   final Color? iconColor;
+  final Color? borderColor;
 
   const CustomIconButton({
     super.key,
@@ -20,6 +21,7 @@ class CustomIconButton extends StatelessWidget {
     this.iconSize,
     this.color,
     this.iconColor,
+    this.borderColor,
   });
 
   @override
@@ -37,6 +39,9 @@ class CustomIconButton extends StatelessWidget {
         height: size,
         decoration: BoxDecoration(
           color: color ?? (isDarkMode ? AppColors.darkBox : AppColors.box),
+          border: borderColor == null
+              ? null
+              : Border.all(color: borderColor!, width: 1.2),
           borderRadius: radius,
         ),
         child: shadcn.Button(

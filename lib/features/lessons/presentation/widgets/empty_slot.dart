@@ -1,39 +1,29 @@
-import "dart:ui";
+import "dart:ui" show PathMetric;
+
 import "package:flutter/material.dart";
 import "package:baybai/core/theme/colors.dart";
 
 class EmptySlot extends StatelessWidget {
-  const EmptySlot({super.key});
+  final double borderRadius;
+
+  const EmptySlot({super.key, this.borderRadius = 16.0});
 
   @override
   Widget build(BuildContext context) {
-    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final borderColor = isDarkMode
-        ? AppColors.darkCompGrey
-        : AppColors.compGrey;
+    final borderColor = AppColors.grey8;
 
     return CustomPaint(
       painter: DashedBorderPainter(
         color: borderColor.withValues(alpha: 0.5),
-        strokeWidth: 2.0,
+        strokeWidth: 1.0,
         dashWidth: 4.0,
         gap: 6.0,
-        borderRadius: 64.0,
+        borderRadius: borderRadius,
       ),
       child: Container(
         height: 48,
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(64)),
-        child: Align(
-          alignment: Alignment.bottomCenter,
-          child: Container(
-            height: 2,
-            width: 38,
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: borderColor.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(borderRadius),
         ),
       ),
     );
@@ -47,7 +37,7 @@ class DashedBorderPainter extends CustomPainter {
   final double gap;
   final double borderRadius;
 
-  DashedBorderPainter({
+  const DashedBorderPainter({
     required this.color,
     this.strokeWidth = 1.5,
     this.dashWidth = 4.0,

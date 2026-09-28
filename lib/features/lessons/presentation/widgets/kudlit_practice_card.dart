@@ -38,9 +38,7 @@ class KudlitPracticeCard extends StatelessWidget {
     final cardBg = isDarkMode ? AppColors.darkCompBg : AppColors.white;
     final textColor = isDarkMode ? AppColors.darkText : AppColors.text;
     final mutedColor = isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey;
-    final pillColor = isDarkMode
-        ? AppColors.darkCompLight
-        : AppColors.compLight;
+    final pillColor = isDarkMode ? AppColors.darkCompLight : AppColors.compLight;
 
     return Container(
       width: double.infinity,
@@ -60,25 +58,17 @@ class KudlitPracticeCard extends StatelessWidget {
                   label: "Start",
                   sound: baseSound,
                   color: pillColor,
-                  textColor: textColor,
-                  mutedColor: mutedColor,
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Icon(
-                  Icons.arrow_forward_rounded,
-                  color: mutedColor,
-                  size: 22,
-                ),
+                child: Icon(Icons.arrow_forward_rounded, color: mutedColor, size: 22),
               ),
               Expanded(
                 child: _SoundTile(
                   label: "Target",
                   sound: targetSound,
                   color: AppColors.primary.withValues(alpha: 0.12),
-                  textColor: textColor,
-                  mutedColor: mutedColor,
                 ),
               ),
             ],
@@ -130,19 +120,19 @@ class _SoundTile extends StatelessWidget {
   final String label;
   final String sound;
   final Color color;
-  final Color textColor;
-  final Color mutedColor;
 
   const _SoundTile({
     required this.label,
     required this.sound,
     required this.color,
-    required this.textColor,
-    required this.mutedColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDarkMode ? AppColors.darkText : AppColors.text;
+    final mutedColor = isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey;
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
       decoration: BoxDecoration(

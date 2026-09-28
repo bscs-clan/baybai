@@ -1,6 +1,5 @@
 import "package:flutter/material.dart";
 import "package:baybai/core/theme/colors.dart";
-import "package:baybai/shared/components/icons/solar_icon.dart";
 
 class CustomBackButton extends StatelessWidget {
   const CustomBackButton({super.key});
@@ -17,10 +16,10 @@ class CustomBackButton extends StatelessWidget {
         height: 48,
         child: Align(
           alignment: Alignment.centerLeft,
-          child: SolarIcon(
-            AppSolarIcons.arrowLeft,
+          child: Icon(
+            Icons.arrow_back,
             size: 24,
-            color: isDarkMode ? AppColors.compLight : AppColors.icon,
+            color: isDarkMode ? AppColors.compLight : AppColors.grey12,
           ),
         ),
       ),

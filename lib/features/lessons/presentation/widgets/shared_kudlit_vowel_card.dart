@@ -98,9 +98,10 @@ class SharedKudlitVowelCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (!isLast)
+              if (!isLast) ...[
                 Divider(height: 1, thickness: 1.0, color: borderColor),
-              if (!isLast) const SizedBox(height: 16),
+                const SizedBox(height: 16),
+              ],
             ],
           );
         }),

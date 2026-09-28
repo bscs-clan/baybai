@@ -2,13 +2,15 @@ import "package:flutter/material.dart";
 import "package:audioplayers/audioplayers.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
-import "package:baybai/shared/components/icons/solar_icon.dart";
 
 class _WordSoundExample {
   final String word;
   final String sound;
 
-  const _WordSoundExample({required this.word, required this.sound});
+  const _WordSoundExample({
+    required this.word,
+    required this.sound,
+  });
 }
 
 class WordSoundTableCard extends StatefulWidget {
@@ -20,7 +22,6 @@ class WordSoundTableCard extends StatefulWidget {
 
 class _WordSoundTableCardState extends State<WordSoundTableCard> {
   late final AudioPlayer _audioPlayer;
-  int? _playingIndex;
 
   static const List<_WordSoundExample> _examples = [
     _WordSoundExample(word: "City", sound: "Siti"),
@@ -33,10 +34,13 @@ class _WordSoundTableCardState extends State<WordSoundTableCard> {
   @override
   void initState() {
     super.initState();
+
     _audioPlayer = AudioPlayer();
+
     _audioPlayer.onPlayerStateChanged.listen((state) {
       if (mounted && state != PlayerState.playing) {
-        setState(() => _playingIndex = null);
+        setState(() {
+        });
       }
     });
   }
@@ -50,42 +54,51 @@ class _WordSoundTableCardState extends State<WordSoundTableCard> {
   Future<void> _playSound(int index) async {
     try {
       await _audioPlayer.stop();
-      setState(() => _playingIndex = index);
-      // Placeholder — swap in the real asset path per word when available
-      await _audioPlayer.play(AssetSource("audio/f_bata.mp3"));
+
+      if (mounted) {
+        setState(() {
+        });
+      }
+
+      await _audioPlayer.play(
+        AssetSource("audio/f_bata.mp3"),
+      );
     } catch (e) {
       debugPrint("Error playing audio: $e");
-      setState(() => _playingIndex = null);
+
+      if (mounted) {
+        setState(() {
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final borderColor = isDarkMode
-        ? AppColors.darkListSeparator
-        : AppColors.listSeparator;
-    final textColor = isDarkMode ? AppColors.darkText : AppColors.text;
-    final pillColor = isDarkMode
-        ? AppColors.darkCompLight
-        : AppColors.compLight;
+    final borderColor = AppColors.grey6;
+    final textColor = AppColors.grey12;
+    final pillColor = AppColors.blue3;
 
     return Container(
       decoration: BoxDecoration(
-        color: isDarkMode ? AppColors.darkCompBg : AppColors.white,
+        color: AppColors.grey1,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: borderColor, width: 1.5),
+        border: Border.all(
+          color: borderColor,
+          width: 1,
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header row
           IntrinsicHeight(
             child: Row(
               children: [
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                    ),
                     child: Text(
                       "Words",
                       style: AppTextStyles.body.copyWith(
@@ -96,10 +109,15 @@ class _WordSoundTableCardState extends State<WordSoundTableCard> {
                     ),
                   ),
                 ),
-                Container(width: 1.5, color: borderColor),
+                Container(
+                  width: 1,
+                  color: borderColor,
+                ),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                    ),
                     child: Text(
                       "Sounds Like",
                       style: AppTextStyles.body.copyWith(
@@ -113,81 +131,88 @@ class _WordSoundTableCardState extends State<WordSoundTableCard> {
               ],
             ),
           ),
-          Divider(height: 1, thickness: 1.5, color: borderColor),
-          // Data rows
-          ...List.generate(_examples.length, (index) {
-            final example = _examples[index];
-            final isLast = index == _examples.length - 1;
-            final isPlaying = _playingIndex == index;
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: borderColor,
+          ),
+          ...List.generate(
+            _examples.length,
+            (index) {
+              final example = _examples[index];
+              final isLast = index == _examples.length - 1;
 
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      // Word column
-                      Expanded(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                            vertical: isLast ? 14 : 10,
-                            horizontal: 8,
-                          ),
-                          child: Center(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.transparent,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: borderColor.withValues(alpha: 0.4),
-                                  width: 1.5,
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              vertical: isLast ? 14 : 10,
+                              horizontal: 8,
+                            ),
+                            child: Center(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 4,
                                 ),
-                              ),
-                              child: Text(
-                                example.word,
-                                style: AppTextStyles.body.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                  color: textColor,
+                                decoration: BoxDecoration(
+                                  color: Colors.transparent,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: borderColor.withValues(
+                                      alpha: 0.4,
+                                    ),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Text(
+                                  example.word,
+                                  style: AppTextStyles.body.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                    color: textColor,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      Container(width: 1.5, color: borderColor),
-                      // Sound column — with volume icon button
-                      Expanded(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                            vertical: isLast ? 14 : 10,
-                            horizontal: 8,
-                          ),
-                          child: Center(
-                            child: GestureDetector(
-                              onTap: () => _playSound(index),
-                              child: Container(
-                                height: 34,
-                                padding: const EdgeInsets.only(
-                                  left: 8,
-                                  right: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: pillColor,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    // Spacer to visually balance the icon on the right
-                                    const SizedBox(width: 24),
-                                    Expanded(
-                                      child: Text(
+                        Container(
+                          width: 1,
+                          color: borderColor,
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              vertical: isLast ? 14 : 10,
+                              horizontal: 8,
+                            ),
+                            child: Center(
+                              child: GestureDetector(
+                                onTap: () => _playSound(index),
+                                child: Container(
+                                  height: 34,
+                                  padding: const EdgeInsets.only(
+                                    left: 8,
+                                    right: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: pillColor,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const SizedBox(
+                                        width: 24,
+                                      ),
+                                      Text(
                                         example.sound,
                                         textAlign: TextAlign.center,
                                         style: AppTextStyles.body.copyWith(
@@ -196,43 +221,41 @@ class _WordSoundTableCardState extends State<WordSoundTableCard> {
                                           color: textColor,
                                         ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Container(
-                                      padding: const EdgeInsets.all(5),
-                                      decoration: BoxDecoration(
-                                        color: isPlaying
-                                            ? AppColors.primary
-                                            : (isDarkMode
-                                                ? AppColors.primary
-                                                : AppColors.cardBlue),
-                                        shape: BoxShape.circle,
+                                      const SizedBox(
+                                        width: 4,
                                       ),
-                                      child: SolarIcon(
-                                        isPlaying
-                                            ? AppSolarIcons.volume
-                                            : AppSolarIcons.volume,
-                                        size: 14,
-                                        color: isDarkMode
-                                            ? AppColors.white
-                                            : AppColors.dark,
+                                      Container(
+                                        padding: const EdgeInsets.all(5),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.blue5,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          Icons.volume_up_rounded,
+                                          size: 14,
+                                          color: AppColors.dark,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                if (!isLast)
-                  Divider(height: 1, thickness: 1.0, color: borderColor),
-              ],
-            );
-          }),
+                  if (!isLast)
+                    Divider(
+                      height: 1,
+                      thickness: 1.0,
+                      color: borderColor,
+                    ),
+                ],
+              );
+            },
+          ),
         ],
       ),
     );

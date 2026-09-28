@@ -1,5 +1,4 @@
 import "package:flutter/material.dart";
-import "package:audioplayers/audioplayers.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
 import "package:baybai/features/lessons/domain/entities/lesson_content.dart";
@@ -14,8 +13,10 @@ import "package:baybai/features/lessons/presentation/widgets/syllable_table_card
 import "package:baybai/features/lessons/presentation/widgets/vowel_sound_table_card.dart";
 import "package:baybai/features/lessons/presentation/widgets/vowel_stroke_demo_card.dart";
 import "package:baybai/features/lessons/presentation/widgets/word_sound_table_card.dart";
+import "package:baybai/features/lessons/presentation/widgets/word_card.dart";
 import "package:baybai/features/lessons/presentation/widgets/word_to_break_card.dart";
 import "package:baybai/features/lessons/presentation/widgets/empty_slot.dart";
+import "package:baybai/features/lessons/presentation/widgets/break_word_drag_slot.dart";
 import "package:baybai/shared/components/icons/solar_icon.dart";
 import "package:baybai/shared/components/buttons/button.dart";
 
@@ -129,6 +130,7 @@ class _LessonSlideState extends State<LessonSlide> {
 
   Widget _buildAnswerArea(bool isDarkMode) {
     final pieces = _parseAnswerPieces(widget.selectedOption);
+    final optionButtonHeight = widget.lesson.optionButtonHeight ?? 48;
 
     return Column(
       key: const ValueKey('answer-area'),
@@ -144,7 +146,7 @@ class _LessonSlideState extends State<LessonSlide> {
           ),
           child: Container(
             width: double.infinity,
-            height: 75,
+            height: optionButtonHeight + 28,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
               color: Colors.transparent,
@@ -157,39 +159,37 @@ class _LessonSlideState extends State<LessonSlide> {
                     runSpacing: 8,
                     children: pieces
                         .map(
-                          (piece) => GestureDetector(
-                            key: ValueKey('answer-piece-$piece'),
-                            onTap: () {
-                              final existingPieces = _parseAnswerPieces(
-                                widget.selectedOption,
-                              );
-                              final nextPieces = existingPieces
-                                  .where(
-                                    (existingPiece) => existingPiece != piece,
-                                  )
-                                  .toList();
-                              final nextValue = nextPieces.isEmpty
-                                  ? null
-                                  : nextPieces.join(',');
-                              widget.onOptionSelected?.call(nextValue);
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 18,
-                                vertical: 8,
+                          (piece) => IntrinsicWidth(
+                            child: Button(
+                              key: ValueKey('answer-piece-$piece'),
+                              label: piece,
+                              size: ButtonSize.sm,
+                              type: ButtonType.outline,
+                              height: optionButtonHeight,
+                              borderRadius: BorderRadius.circular(16),
+                              customBorderColor: AppColors.grey6,
+                              customBackgroundColor:
+                                  isDarkMode ? AppColors.darkBox : AppColors.grey1,
+                              customForegroundColor:
+                                  isDarkMode ? AppColors.darkText : AppColors.text,
+                              textStyle: AppTextStyles.body.copyWith(
+                                fontFamily: widget.lesson.optionFontFamily,
+                                fontSize: widget.lesson.optionFontSize,
                               ),
-                              decoration: BoxDecoration(
-                                color: AppColors.white,
-                                borderRadius: BorderRadius.circular(64),
-                              ),
-                              child: Text(
-                                piece,
-                                style: AppTextStyles.body.copyWith(
-                                  color: isDarkMode
-                                      ? AppColors.darkText
-                                      : AppColors.text,
-                                ),
-                              ),
+                              onTap: () {
+                                final existingPieces = _parseAnswerPieces(
+                                  widget.selectedOption,
+                                );
+                                final nextPieces = existingPieces
+                                    .where(
+                                      (existingPiece) => existingPiece != piece,
+                                    )
+                                    .toList();
+                                final nextValue = nextPieces.isEmpty
+                                    ? null
+                                    : nextPieces.join(',');
+                                widget.onOptionSelected?.call(nextValue);
+                              },
                             ),
                           ),
                         )
@@ -272,31 +272,29 @@ class _LessonSlideState extends State<LessonSlide> {
                 if (widget.lesson.showWordCard &&
                     widget.lesson.wordCardText != null) ...[
                   const SizedBox(height: 12),
-                  _WordCard(word: widget.lesson.wordCardText!),
+                  WordCard(word: widget.lesson.wordCardText!),
                 ],
                 if (widget.lesson.wordToBreak != null) ...[
                   WordToBreakCard(word: widget.lesson.wordToBreak!),
-                  const SizedBox(height: 16),
-                  Icon(
-                    Icons.arrow_downward_rounded,
-                    size: 24,
-                    color:
-                        (isDarkMode
-                                ? AppColors.darkCompGrey
-                                : AppColors.compGrey)
-                            .withValues(alpha: 0.5),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      for (int i = 0; i < _droppedItems.length; i++) ...[
-                        _buildDragTarget(i),
-                        if (i < _droppedItems.length - 1)
-                          const SizedBox(width: 6),
+                  if (!widget.lesson.showAnswerBox) ...[
+                    const SizedBox(height: 42),
+                    Text(
+                      "Drag buttons here",
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.body.copyWith(color: AppColors.grey8),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        for (int i = 0; i < _droppedItems.length; i++) ...[
+                          _buildDragTarget(i),
+                          if (i < _droppedItems.length - 1)
+                            const SizedBox(width: 6),
+                        ],
                       ],
-                    ],
-                  ),
+                    ),
+                  ],
                 ],
                 if (widget.lesson.matchCharacters != null) ...[
                   _buildCharacterMatchRows(isDarkMode),
@@ -307,10 +305,7 @@ class _LessonSlideState extends State<LessonSlide> {
                 ],
                 if (widget.lesson.cardItems != null &&
                     widget.lesson.cardItems!.isNotEmpty)
-                  LessonCardItems(
-                    cardItems: widget.lesson.cardItems!,
-                    isDarkMode: isDarkMode,
-                  ),
+                  LessonCardItems(cardItems: widget.lesson.cardItems!),
                 if (widget.lesson.description != null) ...[
                   const SizedBox(height: 24),
                   _buildDescription(widget.lesson.description!, isDarkMode),
@@ -400,30 +395,29 @@ class _LessonSlideState extends State<LessonSlide> {
           final isAlreadySelected = existingPieces.contains(option);
 
           if (isAlreadySelected) {
-            customBg = AppColors.compBg;
-            customFg = AppColors.dark;
+            return const SizedBox.expand();
           }
 
           return Button(
             label: option,
             size: ButtonSize.md,
-            type: ButtonType.secondary,
+            type: ButtonType.outline,
             height: optionButtonHeight,
             iconSize: 24.0,
+            borderRadius: BorderRadius.circular(16),
+            customBorderColor: AppColors.grey6,
             textStyle: AppTextStyles.body.copyWith(
               fontFamily: widget.lesson.optionFontFamily,
               fontSize: widget.lesson.optionFontSize,
             ),
-            customBackgroundColor: customBg,
-            customForegroundColor: customFg,
+            customBackgroundColor:
+                customBg ?? (isDarkMode ? AppColors.darkBox : AppColors.grey1),
+            customForegroundColor:
+                customFg ?? (isDarkMode ? AppColors.darkText : AppColors.text),
             onTap: widget.hasChecked
                 ? null
                 : () {
-                    final nextPieces = isAlreadySelected
-                        ? existingPieces
-                              .where((piece) => piece != option)
-                              .toList()
-                        : [...existingPieces, option];
+                    final nextPieces = [...existingPieces, option];
                     final nextValue = nextPieces.isEmpty
                         ? null
                         : nextPieces.join(',');
@@ -467,18 +461,32 @@ class _LessonSlideState extends State<LessonSlide> {
           );
         }
 
+        final isWordCardOption = widget.lesson.showWordCard;
+        final isWordCardSelected = isWordCardOption && isSelected;
         final buttonWidget = Button(
           label: option,
           size: ButtonSize.md,
-          type: ButtonType.secondary,
+          type: isWordCardSelected
+              ? ButtonType.secondary
+              : isWordCardOption
+              ? ButtonType.outline
+              : ButtonType.secondary,
           height: optionButtonHeight,
           iconSize: 24.0,
+          borderRadius: isWordCardOption ? BorderRadius.circular(16) : null,
+          customBorderColor: isWordCardOption ? AppColors.grey3 : null,
           textStyle: AppTextStyles.body.copyWith(
             fontFamily: widget.lesson.optionFontFamily,
             fontSize: widget.lesson.optionFontSize,
           ),
-          customBackgroundColor: customBg,
-          customForegroundColor: customFg,
+          customBackgroundColor: isWordCardSelected
+              ? AppColors.grey3
+              : isWordCardOption
+              ? (customBg ?? Colors.transparent)
+              : customBg,
+          customForegroundColor: isWordCardOption
+              ? (customFg ?? AppColors.text)
+              : customFg,
           onTap: (widget.hasChecked && !isSelected)
               ? null
               : () {
@@ -490,7 +498,7 @@ class _LessonSlideState extends State<LessonSlide> {
           final isDropped = _droppedItems.contains(option);
           final breakButton = DecoratedBox(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(64),
+              borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.02),
@@ -499,41 +507,79 @@ class _LessonSlideState extends State<LessonSlide> {
                 ),
               ],
             ),
-            child: Button(
-              label: option,
-              size: ButtonSize.md,
-              type: ButtonType.secondary,
-              height: optionButtonHeight,
-              iconSize: 24.0,
-              borderRadius: BorderRadius.circular(64),
-              textStyle: AppTextStyles.body.copyWith(
-                fontFamily: widget.lesson.optionFontFamily,
-                fontSize: widget.lesson.optionFontSize,
-              ),
-              customBackgroundColor: AppColors.white,
-              customForegroundColor: AppColors.text,
-              onTap: isDropped || widget.hasChecked
-                  ? null
-                  : () {
-                      final emptyIndex = _droppedItems.indexOf(null);
-                      if (emptyIndex != -1) {
-                        setState(() {
-                          _droppedItems[emptyIndex] = option;
-                        });
-                        if (!_droppedItems.contains(null)) {
-                          widget.onOptionSelected?.call(
-                            _droppedItems.join(','),
-                          );
-                        }
-                      }
-                    },
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                AbsorbPointer(
+                  child: Button(
+                    label: option,
+                    size: ButtonSize.md,
+                    type: ButtonType.outline,
+                    height: optionButtonHeight,
+                    iconSize: 24.0,
+                    borderRadius: BorderRadius.circular(16),
+                    customBorderColor: AppColors.grey6,
+                    customBackgroundColor:
+                        isDarkMode ? AppColors.darkBox : AppColors.grey1,
+                    textStyle: AppTextStyles.body.copyWith(
+                      fontFamily: widget.lesson.optionFontFamily,
+                      fontSize: widget.lesson.optionFontSize,
+                    ),
+                    customForegroundColor: AppColors.text,
+                    onTap: () {},
+                  ),
+                ),
+                Positioned(
+                  left: 12,
+                  child: IgnorePointer(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 4,
+                          height: 4,
+                          decoration: const BoxDecoration(
+                            color: AppColors.grey8,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Container(
+                          width: 4,
+                          height: 4,
+                          decoration: const BoxDecoration(
+                            color: AppColors.grey8,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           );
 
-          if (isDropped) {
-            return Opacity(opacity: 0.3, child: breakButton);
+          if (isDropped || widget.hasChecked) {
+            return Opacity(opacity: 0, child: breakButton);
           }
-          return breakButton;
+
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              return Draggable<String>(
+                data: option,
+                feedback: Material(
+                  color: Colors.transparent,
+                  child: SizedBox(
+                    width: constraints.maxWidth,
+                    child: breakButton,
+                  ),
+                ),
+                childWhenDragging: Opacity(opacity: 0, child: breakButton),
+                child: breakButton,
+              );
+            },
+          );
         }
 
         return buttonWidget;
@@ -565,9 +611,6 @@ class _LessonSlideState extends State<LessonSlide> {
 
   Widget _buildCharacterMatchRows(bool isDarkMode) {
     final characters = widget.lesson.matchCharacters!;
-    final borderColor = isDarkMode
-        ? AppColors.darkListSeparator
-        : AppColors.listSeparator;
     final textColor = isDarkMode ? AppColors.darkText : AppColors.text;
 
     return Column(
@@ -585,7 +628,7 @@ class _LessonSlideState extends State<LessonSlide> {
                 decoration: BoxDecoration(
                   color: isDarkMode ? AppColors.darkCompBg : AppColors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: borderColor, width: 1.5),
+                  border: Border.all(color: AppColors.grey6, width: 1.5),
                 ),
                 child: Text(
                   characters[index],
@@ -616,6 +659,36 @@ class _LessonSlideState extends State<LessonSlide> {
   Widget _buildDragTarget(int index, {bool expand = true}) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final optionButtonHeight = widget.lesson.optionButtonHeight ?? 48;
+    final isBreakMode = widget.lesson.wordToBreak != null;
+    final correctParts = widget.lesson.correctOption?.split(',');
+
+    if (isBreakMode) {
+      // Break-word slots use the dedicated BreakWordDragSlot widget
+      final slot = BreakWordDragSlot(
+        droppedItem: _droppedItems[index],
+        hasChecked: widget.hasChecked,
+        isDarkMode: isDarkMode,
+        optionButtonHeight: optionButtonHeight,
+        optionFontFamily: widget.lesson.optionFontFamily,
+        optionFontSize: widget.lesson.optionFontSize,
+        onItemDropped: (item) {
+          setState(() {
+            _droppedItems[index] = item;
+          });
+          if (!_droppedItems.contains(null)) {
+            widget.onOptionSelected?.call(_droppedItems.join(','));
+          }
+        },
+        onItemRemoved: () {
+          setState(() {
+            _droppedItems[index] = null;
+          });
+          widget.onOptionSelected?.call(null);
+        },
+      );
+      return expand ? Expanded(child: slot) : slot;
+    }
+
     final dragTarget = DragTarget<String>(
       onAcceptWithDetails: (details) {
         if (widget.hasChecked) return;
@@ -632,7 +705,6 @@ class _LessonSlideState extends State<LessonSlide> {
           Color? customFg;
 
           if (widget.hasChecked) {
-            final correctParts = widget.lesson.correctOption?.split(',');
             final isCorrect =
                 correctParts != null &&
                 index < correctParts.length &&
@@ -649,31 +721,32 @@ class _LessonSlideState extends State<LessonSlide> {
             customBg = isDarkMode ? AppColors.darkCompLight : AppColors.white;
           }
 
-          return SizedBox(
+          final droppedButton = Button(
+            label: _droppedItems[index]!,
+            size: ButtonSize.md,
+            type: ButtonType.secondary,
             height: optionButtonHeight,
-            child: Button(
-              label: _droppedItems[index]!,
-              size: ButtonSize.md,
-              type: ButtonType.secondary,
-              height: optionButtonHeight,
-              textStyle: AppTextStyles.body.copyWith(
-                fontFamily: widget.lesson.optionFontFamily,
-                fontSize: widget.lesson.optionFontSize,
-              ),
-              customBackgroundColor: customBg,
-              customForegroundColor: customFg,
-              onTap: widget.hasChecked
-                  ? null
-                  : () {
-                      setState(() {
-                        _droppedItems[index] = null;
-                      });
-                      widget.onOptionSelected?.call(null);
-                    },
+            iconSize: 24.0,
+            borderRadius: BorderRadius.circular(24),
+            textStyle: AppTextStyles.body.copyWith(
+              fontFamily: widget.lesson.optionFontFamily,
+              fontSize: widget.lesson.optionFontSize,
             ),
+            customBackgroundColor: customBg,
+            customForegroundColor: customFg,
+            onTap: widget.hasChecked
+                ? null
+                : () {
+                    setState(() {
+                      _droppedItems[index] = null;
+                    });
+                    widget.onOptionSelected?.call(null);
+                  },
           );
+
+          return SizedBox(height: optionButtonHeight, child: droppedButton);
         }
-        return const EmptySlot();
+        return SizedBox(height: optionButtonHeight, child: const EmptySlot());
       },
     );
 
@@ -682,101 +755,5 @@ class _LessonSlideState extends State<LessonSlide> {
     }
 
     return Expanded(child: dragTarget);
-  }
-}
-
-class _WordCard extends StatefulWidget {
-  final String word;
-  const _WordCard({required this.word});
-
-  @override
-  State<_WordCard> createState() => _WordCardState();
-}
-
-class _WordCardState extends State<_WordCard> {
-  late final AudioPlayer _audioPlayer;
-  bool _isPlaying = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _audioPlayer = AudioPlayer();
-    _audioPlayer.onPlayerStateChanged.listen((state) {
-      if (mounted) {
-        setState(() => _isPlaying = state == PlayerState.playing);
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _audioPlayer.dispose();
-    super.dispose();
-  }
-
-  Future<void> _playSound() async {
-    try {
-      await _audioPlayer.stop();
-      // Plays a standard audio asset like f_bata.mp3 or corresponding audio if named after the word
-      await _audioPlayer.play(AssetSource("audio/f_bata.mp3"));
-    } catch (e) {
-      debugPrint("Error playing audio: $e");
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final borderColor = isDarkMode
-        ? AppColors.darkListSeparator
-        : AppColors.listSeparator;
-    final textColor = isDarkMode ? AppColors.darkText : AppColors.text;
-
-    return Container(
-      height: 220,
-      decoration: BoxDecoration(
-        color: isDarkMode ? AppColors.darkCompBg : AppColors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: borderColor, width: 1.5),
-      ),
-      child: Stack(
-        children: [
-          Center(
-            child: Text(
-              widget.word,
-              style: AppTextStyles.heading.copyWith(
-                color: textColor,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 12,
-            right: 12,
-            child: GestureDetector(
-              onTap: _playSound,
-              child: Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: _isPlaying
-                      ? AppColors.primary
-                      : (isDarkMode ? AppColors.primary : AppColors.cardBlue),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: SolarIcon(
-                    AppSolarIcons.volume,
-                    size: 24,
-                    color: isDarkMode ? AppColors.white : AppColors.dark,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

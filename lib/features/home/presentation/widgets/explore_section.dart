@@ -1,39 +1,31 @@
 import "package:flutter/material.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
+import "package:baybai/features/flashcard/presentation/widgets/flashcard_options_bottom_sheet.dart";
 import "package:baybai/features/home/presentation/widgets/explore_card.dart";
-import "package:baybai/shared/components/icons/solar_icon.dart";
+import "package:baybai/features/quiz/presentation/widgets/quiz_options_bottom_sheet.dart";
 
 class ExploreSection extends StatelessWidget {
-  final Map<int, bool> completedLessons;
-
-  const ExploreSection({super.key, this.completedLessons = const {}});
+  const ExploreSection({super.key});
 
   @override
   Widget build(BuildContext context) {
-    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
     Widget buildCard({
       required IconData icon,
       required String label,
       required String description,
       required String route,
-      required bool isLocked,
+      VoidCallback? onTap,
     }) {
       return Expanded(
         child: ExploreCard(
           icon: icon,
           label: label,
-          description: isLocked ? "Locked" : description,
-          isLocked: isLocked,
-          onTap: isLocked ? null : () => Navigator.pushNamed(context, route),
+            description: description,
+            onTap: onTap ?? () => Navigator.pushNamed(context, route),
         ),
       );
     }
-
-    final isGameLocked = !(completedLessons[1] ?? false);
-    final isCharactersLocked = !(completedLessons[2] ?? false);
-    final isPracticeLocked = !(completedLessons[3] ?? false);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,7 +33,7 @@ class ExploreSection extends StatelessWidget {
         Text(
           "Explore",
           style: AppTextStyles.bigbody.copyWith(
-            color: isDarkMode ? AppColors.darkText : AppColors.text,
+            color: AppColors.grey12,
           ),
         ),
         const SizedBox(height: 8),
@@ -50,19 +42,18 @@ class ExploreSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               buildCard(
-                icon: AppSolarIcons.lesson,
+                icon: Icons.school,
                 label: "Lessons",
                 description: "Learn Topics",
                 route: "/lessons",
-                isLocked: false,
               ),
               const SizedBox(width: 8),
               buildCard(
-                icon: AppSolarIcons.game,
-                label: "Games",
-                description: "Play and learn",
-                route: "/game",
-                isLocked: isGameLocked,
+                icon: Icons.quiz,
+                label: "Quiz",
+                description: "Test knowledge",
+                route: "/quiz-setup",
+                onTap: () => showQuizOptionsBottomSheet(context),
               ),
             ],
           ),
@@ -73,20 +64,35 @@ class ExploreSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               buildCard(
-                icon: AppSolarIcons.text,
+                icon: Icons.text_fields,
                 label: "Characters",
                 description: "Meet symbols",
                 route: "/characters",
-                isLocked: isCharactersLocked,
               ),
               const SizedBox(width: 8),
               buildCard(
-                icon: AppSolarIcons.pen,
+                icon: Icons.edit,
                 label: "Practice",
                 description: "Write and test",
                 route: "/practice",
-                isLocked: isPracticeLocked,
               ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              buildCard(
+                icon: Icons.library_books,
+                label: "Flashcard",
+                description: "Review vocab",
+                route: "/flashcard",
+                onTap: () => showFlashcardOptionsBottomSheet(context),
+              ),
+              const SizedBox(width: 8),
+              const Expanded(child: SizedBox()),
             ],
           ),
         ),

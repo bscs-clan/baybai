@@ -24,6 +24,7 @@ class Button extends StatelessWidget {
 
   final Color? customBackgroundColor;
   final Color? customForegroundColor;
+  final Color? customBorderColor;
   final double? opacity;
 
   const Button({
@@ -42,6 +43,7 @@ class Button extends StatelessWidget {
     this.showShadow = false,
     this.customBackgroundColor,
     this.customForegroundColor,
+    this.customBorderColor,
     this.opacity,
   });
 
@@ -152,7 +154,9 @@ class Button extends StatelessWidget {
 
     final border = switch (type) {
       ButtonType.outline => Border.all(
-        color: isDark ? AppColors.darkWhite : AppColors.dark,
+        color:
+            customBorderColor ??
+            (isDark ? AppColors.darkWhite : AppColors.dark),
         width: 1,
       ),
       _ => null,

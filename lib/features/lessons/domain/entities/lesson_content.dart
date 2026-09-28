@@ -1,5 +1,3 @@
-enum LessonImageFit { cover, contain }
-
 enum LessonIcon { confetti }
 
 class LessonMetadata {
@@ -12,24 +10,10 @@ class LessonMetadata {
     required this.id,
     required this.number,
     required this.title,
-    this.description =
-        "Learn the basics of Baybayin and how words are written by sound.",
+    required this.description,
   });
 }
 
-class WrongAnswerInfo {
-  final LessonContent question;
-  final String selectedOption;
-  final String correctOption;
-
-  const WrongAnswerInfo({
-    required this.question,
-    required this.selectedOption,
-    required this.correctOption,
-  });
-}
-
-/// A single syllable-symbol pair shown inside an AppCard on content slides.
 class LessonCardItem {
   final String text;
   final String baybayinSymbol;
@@ -60,24 +44,15 @@ class StrokeDemoItem {
 class LessonContent {
   final String title;
   final String baybayinText;
-  final String? image;
-  final double? imageHeight;
-  final double? imageWidth;
-  final LessonImageFit imageFit;
   final List<String>? options;
-  final List<String>? optionLabels;
   final String? correctOption;
   final LessonIcon? icon;
 
   final double? baybayinFontSize;
   final double? optionFontSize;
   final double? optionButtonHeight;
-  final double? titleFontSize;
-  final double? labelFontSize;
   final String? baybayinFontFamily;
   final String? optionFontFamily;
-  final String? titleFontFamily;
-  final String? labelFontFamily;
 
   final List<LessonCardItem>? cardItems;
   final bool showComparisonCard;
@@ -107,23 +82,14 @@ class LessonContent {
   const LessonContent({
     required this.title,
     this.baybayinText = "",
-    this.image,
-    this.icon,
-    this.imageHeight,
-    this.imageWidth,
-    this.imageFit = LessonImageFit.cover,
     this.options,
-    this.optionLabels,
     this.correctOption,
+    this.icon,
     this.baybayinFontSize,
     this.optionFontSize,
     this.optionButtonHeight,
-    this.titleFontSize,
-    this.labelFontSize,
     this.baybayinFontFamily,
     this.optionFontFamily,
-    this.titleFontFamily,
-    this.labelFontFamily,
     this.cardItems,
     this.showComparisonCard = false,
     this.showQuizTable = false,

@@ -32,10 +32,7 @@ class KudlitTableCard extends StatelessWidget {
         ? AppColors.darkListSeparator
         : AppColors.listSeparator;
     final cardBg = isDarkMode ? AppColors.darkCompBg : AppColors.white;
-    final textColor = isDarkMode ? AppColors.darkText : AppColors.text;
-    final pillColor = isDarkMode
-        ? AppColors.darkCompLight
-        : AppColors.compLight;
+    final pillColor = isDarkMode ? AppColors.darkCompLight : AppColors.compLight;
 
     return Container(
       decoration: BoxDecoration(
@@ -50,11 +47,11 @@ class KudlitTableCard extends StatelessWidget {
           IntrinsicHeight(
             child: Row(
               children: [
-                _HeaderCell(label: "Character", color: textColor),
+                _HeaderCell(label: "Character"),
                 Container(width: 1.5, color: borderColor),
-                _HeaderCell(label: "Kudlit", color: textColor),
+                _HeaderCell(label: "Kudlit"),
                 Container(width: 1.5, color: borderColor),
-                _HeaderCell(label: "Sound", color: textColor),
+                _HeaderCell(label: "Sound"),
               ],
             ),
           ),
@@ -155,19 +152,21 @@ class _HighlightedKudlitGlyph extends StatelessWidget {
 
 class _HeaderCell extends StatelessWidget {
   final String label;
-  final Color color;
 
-  const _HeaderCell({required this.label, required this.color});
+  const _HeaderCell({required this.label});
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDarkMode ? AppColors.darkText : AppColors.text;
+
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
         child: Text(
           label,
           style: AppTextStyles.body.copyWith(
-            color: color,
+            color: textColor,
             fontWeight: FontWeight.bold,
             fontSize: 13,
           ),

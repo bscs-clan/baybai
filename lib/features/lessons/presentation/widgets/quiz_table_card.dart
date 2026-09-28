@@ -102,7 +102,7 @@ class QuizTableCard extends StatelessWidget {
                     child: Text(
                       symbol,
                       style: AppTextStyles.heading.copyWith(
-                        fontFamily: 'Baybayin',
+                        fontFamily: "Baybayin",
                         fontSize: 48,
                         color: glyphColor,
                         height: 1.0,
@@ -122,7 +122,6 @@ class QuizTableCard extends StatelessWidget {
                       backgroundColor: slotBg,
                       textColor: slotTextColor,
                       textStyle: AppTextStyles.bigbody.copyWith(
-                        color: slotTextColor,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -183,12 +182,12 @@ class _AnswerSlot extends StatelessWidget {
                   ? Text(
                       answer!,
                       key: ValueKey(answer),
-                      style: textStyle,
+                      style: textStyle.copyWith(color: textColor),
                       textAlign: TextAlign.center,
                     )
                   : Text(
                       "_ _ _",
-                      key: const ValueKey('empty'),
+                      key: const ValueKey("empty"),
                       style: textStyle.copyWith(
                         color: borderColor,
                         letterSpacing: 4,

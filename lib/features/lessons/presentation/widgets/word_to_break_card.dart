@@ -26,21 +26,14 @@ class WordToBreakCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final resolvedBorderColor =
-        borderColor ??
-        (isDarkMode ? AppColors.darkListSeparator : AppColors.listSeparator);
-    final resolvedBackgroundColor =
-        backgroundColor ??
-        (isDarkMode ? AppColors.darkCompBg : AppColors.white);
+    final resolvedBorderColor = AppColors.grey6;
 
     return Container(
       width: double.infinity,
       padding: padding,
       decoration: BoxDecoration(
-        color: resolvedBackgroundColor,
         borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(color: resolvedBorderColor, width: 1.5),
+        border: Border.all(color: resolvedBorderColor, width: 1),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -49,21 +42,16 @@ class WordToBreakCard extends StatelessWidget {
             label,
             style:
                 labelStyle ??
-                AppTextStyles.body.copyWith(
-                  color: isDarkMode ? AppColors.white : AppColors.dark,
-                ),
+                AppTextStyles.body.copyWith(color: AppColors.grey11),
           ),
           const SizedBox(height: 18),
           Text(
             word,
             style:
                 wordStyle ??
-                AppTextStyles.heading.copyWith(
+                AppTextStyles.body.copyWith(
                   fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  height: 1.0,
-                  letterSpacing: 2,
-                  color: isDarkMode ? AppColors.darkText : AppColors.text,
+                  color: AppColors.grey12,
                 ),
           ),
         ],

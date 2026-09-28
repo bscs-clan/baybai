@@ -16,20 +16,19 @@ import "package:baybai/features/dataset/presentation/bloc/dataset_bloc.dart";
 import "package:baybai/features/dataset/presentation/bloc/dataset_capture_cubit.dart";
 import "package:baybai/features/dataset/presentation/bloc/dataset_event.dart";
 import "package:baybai/features/flashcard/presentation/pages/flashcard_page.dart";
-import "package:baybai/features/game/presentation/pages/game_page.dart";
 import "package:baybai/features/home/presentation/pages/home.dart";
-import "package:baybai/features/lessons/presentation/pages/lesson_library_page.dart";
+import "package:baybai/features/lessons/presentation/pages/lesson_explore_page.dart";
 import "package:baybai/features/lessons/presentation/pages/lesson_page.dart";
 import "package:baybai/features/ocr/presentation/pages/ocr_page.dart";
 import "package:baybai/features/ocr/presentation/pages/scan_page.dart";
 import "package:baybai/features/onboarding/presentation/pages/onboarding.dart";
 import "package:baybai/features/practice/presentation/pages/practice_page.dart";
-import "package:baybai/features/quiz/presentation/pages/quiz_setup.dart";
+import "package:baybai/features/quiz/presentation/pages/quiz_setup_page.dart";
 import "package:baybai/features/settings/presentation/pages/settings.dart";
 import "package:baybai/features/settings/presentation/view_models/scan_settings_cubit.dart";
 import "package:baybai/features/settings/presentation/view_models/theme_cubit.dart";
 import "package:baybai/features/splash/presentation/pages/splash.dart";
-import "package:baybai/features/user_profile/presentation/pages/user_profile.dart";
+import "package:baybai/features/user_profile/presentation/pages/user_profile_page.dart";
 import "package:baybai/injection_container.dart";
 
 void main() async {
@@ -85,18 +84,27 @@ class MyApp extends StatelessWidget {
             "/signup": (context) => const SignUpScreen(),
             "/home": (context) => const HomeScreen(),
             "/settings": (context) => const SettingsScreen(),
-            "/user-profile": (context) => const UserProfileScreen(),
-            "/game": (context) => const GamePage(),
-            "/quiz-setup": (context) => const QuizSetupScreen(),
-            "/lessons": (context) => const LessonLibraryPage(),
+            "/lessons": (context) => LessonLibraryPage(),
             "/lesson": (context) => const LessonPage(),
-            "/flashcard": (context) => const FlashcardPage(),
             "/characters": (context) => const CharactersPage(),
             "/practice": (context) => const PracticePage(),
+            "/flashcard": (context) => const FlashcardPage(),
+            "/quiz-setup": (context) {
+              final args =
+                  ModalRoute.of(context)?.settings.arguments as Map? ?? {};
+              final questionLimit = args["questionLimit"] as int? ?? 10;
+              final timeLimit = args["timeLimit"] as String? ?? "No limit";
+
+              return QuizSetupPage(
+                questionLimit: questionLimit,
+                timeLimit: timeLimit,
+              );
+            },
             "/ocr": (context) => const OCRPage(),
             "/scan": (context) => const ScanPage(),
             "/dataset": (context) => const DatasetScreen(),
             "/account-settings": (context) => AccountSettingsScreen(),
+            "/user-profile": (context) => const UserProfilePage(),
           },
         ),
       ),

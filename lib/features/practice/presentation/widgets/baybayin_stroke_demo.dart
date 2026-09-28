@@ -30,14 +30,6 @@ class BaybayinStrokeDemoPainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round
       ..style = PaintingStyle.stroke;
 
-    final glow = Paint()
-      ..color = inkColor.withValues(alpha: 0.2)
-      ..strokeWidth = 13
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round
-      ..style = PaintingStyle.stroke
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
-
     var remaining = visiblePoints;
     for (final stroke in strokes) {
       if (remaining <= 0) break;
@@ -52,19 +44,11 @@ class BaybayinStrokeDemoPainter extends CustomPainter {
           .toList();
       final path = _smoothPath(scaled);
 
-      canvas.drawPath(path, glow);
       canvas.drawPath(path, ink);
 
       if (remaining == 0 && progress < 0.99) {
         final tip = scaled.last;
         canvas.drawCircle(tip, 5.5, Paint()..color = inkColor);
-        canvas.drawCircle(
-          tip,
-          12,
-          Paint()
-            ..color = inkColor.withValues(alpha: 0.25)
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
-        );
       }
     }
   }
