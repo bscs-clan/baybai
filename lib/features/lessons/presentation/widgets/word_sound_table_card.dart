@@ -102,7 +102,6 @@ class _WordSoundTableCardState extends State<WordSoundTableCard> {
                     child: Text(
                       "Words",
                       style: AppTextStyles.body.copyWith(
-                        fontWeight: FontWeight.bold,
                         color: textColor,
                       ),
                       textAlign: TextAlign.center,
@@ -121,7 +120,6 @@ class _WordSoundTableCardState extends State<WordSoundTableCard> {
                     child: Text(
                       "Sounds Like",
                       style: AppTextStyles.body.copyWith(
-                        fontWeight: FontWeight.bold,
                         color: textColor,
                       ),
                       textAlign: TextAlign.center,

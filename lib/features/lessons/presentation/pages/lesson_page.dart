@@ -21,7 +21,6 @@ class _LessonPageState extends State<LessonPage> {
   int _currentIndex = 0;
   late final List<LessonContent> _lessons;
   late final int _lessonId;
-  late final DateTime _startedAt;
   bool _isInitialized = false;
 
   final Map<int, String> _userAnswers = {};
@@ -31,7 +30,6 @@ class _LessonPageState extends State<LessonPage> {
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: _currentIndex);
-    _startedAt = DateTime.now();
   }
 
   @override
@@ -59,9 +57,6 @@ class _LessonPageState extends State<LessonPage> {
       final correctAnswers = questionResults
           .where((result) => result.status == "Correct")
           .length;
-      final skippedAnswers = questionResults
-          .where((result) => result.status == "Skipped")
-          .length;
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
@@ -69,8 +64,6 @@ class _LessonPageState extends State<LessonPage> {
             lessonId: _lessonId,
             correctAnswers: correctAnswers,
             totalQuestions: questionResults.length,
-            skippedAnswers: skippedAnswers,
-            elapsedTime: DateTime.now().difference(_startedAt),
             questionResults: questionResults,
           ),
         ),
@@ -86,9 +79,7 @@ class _LessonPageState extends State<LessonPage> {
       if (lesson.options == null || lesson.options!.isEmpty) continue;
 
       final selectedOption = _selectedOptions[index];
-      final status = selectedOption == null
-          ? "Skipped"
-          : selectedOption == lesson.correctOption
+      final status = selectedOption == lesson.correctOption
           ? "Correct"
           : "Wrong";
 

@@ -21,8 +21,6 @@ class LessonCompletePage extends StatefulWidget {
   final int lessonId;
   final int correctAnswers;
   final int totalQuestions;
-  final int skippedAnswers;
-  final Duration elapsedTime;
   final List<LessonQuestionResult> questionResults;
 
   const LessonCompletePage({
@@ -30,8 +28,6 @@ class LessonCompletePage extends StatefulWidget {
     required this.lessonId,
     required this.correctAnswers,
     required this.totalQuestions,
-    required this.skippedAnswers,
-    required this.elapsedTime,
     required this.questionResults,
   });
 
@@ -45,8 +41,7 @@ class _LessonCompletePageState extends State<LessonCompletePage> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final wrongAnswers =
-        widget.totalQuestions - widget.correctAnswers - widget.skippedAnswers;
+    final wrongAnswers = widget.totalQuestions - widget.correctAnswers;
     final scorePercentage = widget.totalQuestions == 0
         ? 0
         : ((widget.correctAnswers / widget.totalQuestions) * 100).round();
@@ -70,18 +65,12 @@ class _LessonCompletePageState extends State<LessonCompletePage> {
                   style: AppTextStyles.body.copyWith(color: AppColors.grey10),
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "${widget.correctAnswers}/${widget.totalQuestions}",
-                      style: AppTextStyles.bigbody,
-                    ),
-                    Text(
-                      _formatElapsedTime(widget.elapsedTime),
-                      style: AppTextStyles.bigbody,
-                    ),
-                  ],
+                Text(
+                  _performanceMessage(
+                    correctAnswers: widget.correctAnswers,
+                    totalQuestions: widget.totalQuestions,
+                  ),
+                  style: AppTextStyles.bigbody,
                 ),
                 const SizedBox(height: 24),
                 SizedBox(
@@ -133,11 +122,6 @@ class _LessonCompletePageState extends State<LessonCompletePage> {
                         label: "Wrong",
                         count: wrongAnswers,
                       ),
-                      _ScoreLegendItem(
-                        color: AppColors.grey4,
-                        label: "Skipped",
-                        count: widget.skippedAnswers,
-                      ),
                     ],
                   ),
                 ),
@@ -172,13 +156,6 @@ class _LessonCompletePageState extends State<LessonCompletePage> {
                         setState(() => _selectedQuestionType = value);
                       },
                       itemBuilder: (context) => const [
-                        PopupMenuItem<String>(
-                          value: "Skipped",
-                          child: _QuestionTypeMenuItem(
-                            icon: Icons.remove,
-                            label: "Skipped",
-                          ),
-                        ),
                         PopupMenuItem<String>(
                           value: "Correct",
                           child: _QuestionTypeMenuItem(
@@ -233,37 +210,42 @@ class _LessonCompletePageState extends State<LessonCompletePage> {
                     },
                   ),
                 ),
-                const SizedBox(height: 18),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Button(
-                        label: "Retake Lesson",
-                        width: double.infinity,
-                        type: ButtonType.outline,
-                        customBorderColor: AppColors.grey5,
-                        size: ButtonSize.md,
-                        onTap: () => Navigator.of(context).pushReplacementNamed(
-                          "/lesson",
-                          arguments: widget.lessonId,
-                        ),
-                      ),
+              ],
+            ),
+          ),
+        ),
+        bottomNavigationBar: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Button(
+                    label: "Try Again",
+                    width: double.infinity,
+                    type: ButtonType.outline,
+                    customBorderColor: AppColors.grey5,
+                    size: ButtonSize.md,
+                    onTap: () => Navigator.of(context).pushReplacementNamed(
+                      "/lesson",
+                      arguments: widget.lessonId,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Button(
-                        label: "Done",
-                        width: double.infinity,
-                        type: ButtonType.primary,
-                        size: ButtonSize.md,
-                        customBackgroundColor: AppColors.blue9,
-                        customForegroundColor: AppColors.white,
-                        onTap: () => Navigator.of(
-                          context,
-                        ).pushNamedAndRemoveUntil("/home", (route) => false),
-                      ),
-                    ),
-                  ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Button(
+                    label: "Done",
+                    width: double.infinity,
+                    type: ButtonType.primary,
+                    size: ButtonSize.md,
+                    customBackgroundColor: AppColors.blue9,
+                    customForegroundColor: AppColors.white,
+                    onTap: () => Navigator.of(
+                      context,
+                    ).pushNamedAndRemoveUntil("/home", (route) => false),
+                  ),
                 ),
               ],
             ),
@@ -271,6 +253,21 @@ class _LessonCompletePageState extends State<LessonCompletePage> {
         ),
       ),
     );
+  }
+
+  String _performanceMessage({
+    required int correctAnswers,
+    required int totalQuestions,
+  }) {
+    if (totalQuestions == 0 || correctAnswers == 0) {
+      return "Better try next time";
+    }
+
+    final accuracy = correctAnswers / totalQuestions;
+    if (accuracy == 1) return "Awesome!";
+    if (accuracy >= 0.75) return "Great job!";
+    if (accuracy >= 0.5) return "Nice!";
+    return "Better try next time";
   }
 }
 
@@ -382,11 +379,4 @@ class _ScoreCirclePainter extends CustomPainter {
     return correctFraction != oldDelegate.correctFraction ||
         wrongFraction != oldDelegate.wrongFraction;
   }
-}
-
-String _formatElapsedTime(Duration duration) {
-  final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, "0");
-  final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, "0");
-
-  return "$minutes:$seconds";
 }

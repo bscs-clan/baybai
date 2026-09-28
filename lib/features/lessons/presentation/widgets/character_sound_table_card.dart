@@ -23,9 +23,6 @@ class CharacterSoundTableCard extends StatelessWidget {
         ? AppColors.darkListSeparator
         : AppColors.listSeparator;
     final textColor = isDarkMode ? AppColors.darkText : AppColors.text;
-    final pillColor = isDarkMode
-        ? AppColors.darkCompLight
-        : AppColors.compLight;
 
     return Container(
       decoration: BoxDecoration(
@@ -51,16 +48,9 @@ class CharacterSoundTableCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      width: 72,
+                      width: 48,
                       height: 48,
                       alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: borderColor.withValues(alpha: 0.4),
-                          width: 1.5,
-                        ),
-                      ),
                       child: Text(
                         example.baybayinSymbol,
                         style: AppTextStyles.heading.copyWith(
@@ -72,25 +62,20 @@ class CharacterSoundTableCard extends StatelessWidget {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Icon(
                         Icons.arrow_forward_rounded,
-                        color: textColor.withValues(alpha: 0.7),
+                        color:AppColors.grey3,
                         size: 24,
                       ),
                     ),
                     Container(
-                      width: 72,
-                      height: 40,
+                      width: 48,
+                      height: 48,
                       alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: pillColor,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
                       child: Text(
                         example.text,
                         style: AppTextStyles.body.copyWith(
-                          fontWeight: FontWeight.bold,
                           color: textColor,
                         ),
                       ),
