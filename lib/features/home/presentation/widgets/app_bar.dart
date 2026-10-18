@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/shared/components/buttons/icon_button.dart";
 
@@ -14,27 +15,44 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       surfaceTintColor: Colors.transparent,
       scrolledUnderElevation: 0,
       toolbarHeight: 64,
-      actionsPadding: const EdgeInsets.symmetric(horizontal: 24),
-      actions: [
-        CustomIconButton(
-          onTap: () {
-            Navigator.pushNamed(context, "/user-profile");
-          },
-          child: Image.asset(
-            "assets/images/img_profile.jpg",
-            width: 48,
-            height: 48,
-            fit: BoxFit.cover,
+      leadingWidth: 72,
+      leading: Padding(
+         padding: const EdgeInsets.only(left: 24, top: 8, bottom: 8),
+        child: SizedBox(
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: () {
+                Navigator.pushNamed(context, "/user-profile");
+              },
+              child: ClipOval(
+                child: Image.asset(
+                  "assets/images/img_profile.jpg",
+                  width: 40,
+                  height: 40,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
           ),
         ),
-        const SizedBox(width: 8),
+      ),
+      actionsPadding: const EdgeInsets.only(right: 24),
+      actions: [
         CustomIconButton(
           onTap: () {
             Navigator.pushNamed(context, "/settings");
           },
-          icon: Icons.settings,
+          size: 32,
           color: Colors.transparent,
-          borderColor: AppColors.grey3,
+          child: HugeIcon(
+            icon: HugeIcons.strokeRoundedSettings01,
+            size: 24,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? AppColors.darkText
+                : AppColors.icon,
+          ),
         ),
       ],
     );

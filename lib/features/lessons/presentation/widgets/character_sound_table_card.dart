@@ -16,6 +16,13 @@ class CharacterSoundTableCard extends StatelessWidget {
     LessonCardItem(text: "Sa", baybayinSymbol: "\u1710"),
   ];
 
+  bool _isBaybayinGlyph(String value) {
+    if (value.isEmpty) return false;
+    return value.runes.every((codePoint) {
+      return codePoint >= 0x1700 && codePoint <= 0x171F;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -48,34 +55,42 @@ class CharacterSoundTableCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      width: 48,
-                      height: 48,
+                      width: 64,
+                      height: 56,
                       alignment: Alignment.center,
                       child: Text(
                         example.baybayinSymbol,
-                        style: AppTextStyles.heading.copyWith(
-                          fontFamily: "Baybayin",
-                          fontSize: 30,
-                          color: textColor,
-                          height: 1.0,
-                        ),
+                        style: _isBaybayinGlyph(example.baybayinSymbol)
+                            ? AppTextStyles.heading.copyWith(
+                                fontFamily: "Baybayin",
+                                fontSize: 30,
+                                color: textColor,
+                                height: 1.0,
+                              )
+                            : AppTextStyles.body.copyWith(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                                color: textColor,
+                              ),
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Icon(
                         Icons.arrow_forward_rounded,
-                        color:AppColors.grey3,
+                        color: AppColors.grey3,
                         size: 24,
                       ),
                     ),
                     Container(
-                      width: 48,
-                      height: 48,
+                      width: 64,
+                      height: 56,
                       alignment: Alignment.center,
                       child: Text(
                         example.text,
                         style: AppTextStyles.body.copyWith(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
                           color: textColor,
                         ),
                       ),

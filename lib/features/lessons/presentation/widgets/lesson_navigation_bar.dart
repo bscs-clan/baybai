@@ -29,10 +29,7 @@ class LessonNavigationBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final isLast = currentIndex == totalLessons - 1;
     final label = customNextLabel ?? (isLast ? "Finish" : "Continue");
-    final icon = showNextIcon
-        ? (customNextIcon ??
-              (isLast ? Icons.check : null))
-        : null;
+    final icon = null;
     final isEnabled = onNext != null;
 
     return Padding(

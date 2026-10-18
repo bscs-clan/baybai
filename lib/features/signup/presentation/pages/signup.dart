@@ -3,9 +3,17 @@ import "package:baybai/core/theme/text.dart";
 import "package:baybai/shared/components/buttons/button.dart";
 import "package:baybai/shared/components/inputs/input.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 
-class SignUpScreen extends StatelessWidget {
+class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
+
+  @override
+  State<SignUpScreen> createState() => _SignUpScreenState();
+}
+
+class _SignUpScreenState extends State<SignUpScreen> {
+  bool _isPasswordVisible = false;
 
   @override
   Widget build(BuildContext context) {
@@ -13,9 +21,7 @@ class SignUpScreen extends StatelessWidget {
     final textColor = isDarkMode ? AppColors.darkText : AppColors.text;
 
     return Scaffold(
-      backgroundColor: isDarkMode
-          ? AppColors.darkBackground
-          : AppColors.background,
+      backgroundColor: isDarkMode ? AppColors.darkBackground : AppColors.background,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -32,31 +38,46 @@ class SignUpScreen extends StatelessWidget {
                         const Spacer(),
                         const SizedBox(height: 56),
                         Text(
-                          "Create Account",
-                          style: AppTextStyles.heading.copyWith(
+                          "Sign Up",
+                          style: AppTextStyles.boldXl.copyWith(
                             color: textColor,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "Create an account and start learning Baybayin.",
+                          style: AppTextStyles.regularSm.copyWith(
+                            color: isDarkMode
+                                ? AppColors.darkText
+                                : AppColors.grey6,
                           ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 56),
                         Input(
-                          leftIcon: Icons.person,
                           hintText: "Name",
                           textInputAction: TextInputAction.next,
                         ),
                         const SizedBox(height: 8),
                         Input(
-                          leftIcon: Icons.email,
                           hintText: "Email",
                           keyboardType: TextInputType.emailAddress,
                           textInputAction: TextInputAction.next,
                         ),
                         const SizedBox(height: 8),
                         Input(
-                          leftIcon: Icons.lock,
+                          rightIcon: _isPasswordVisible
+                              ? HugeIcons.strokeRoundedViewOff
+                              : HugeIcons.strokeRoundedView,
                           hintText: "Password",
-                          obscureText: true,
+                          obscureText: !_isPasswordVisible,
                           textInputAction: TextInputAction.done,
+                          onRightIconTap: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
                         ),
                         const SizedBox(height: 24),
                         Button(
@@ -65,6 +86,9 @@ class SignUpScreen extends StatelessWidget {
                           width: double.infinity,
                           label: "Sign Up",
                           size: ButtonSize.md,
+                          height: 48,
+                          customBackgroundColor: AppColors.blue6,
+                          textStyle: AppTextStyles.boldSm,
                         ),
                         const Spacer(),
                         const SizedBox(height: 56),
@@ -72,19 +96,21 @@ class SignUpScreen extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              "Already have an account?",
-                              style: AppTextStyles.body.copyWith(
+                              "Have an account?",
+                              style: AppTextStyles.regularSm.copyWith(
                                 color: textColor,
                               ),
                             ),
                             const SizedBox(width: 8),
                             GestureDetector(
-                              onTap: () =>
-                                  Navigator.pushReplacementNamed(context, "/login"),
+                              onTap: () => Navigator.pushReplacementNamed(
+                                context,
+                                "/login",
+                              ),
                               child: Text(
-                                "Sign In",
-                                style: AppTextStyles.title.copyWith(
-                                  color: AppColors.primary,
+                                "Log In",
+                                style: AppTextStyles.regularSm.copyWith(
+                                  color: AppColors.blue6,
                                 ),
                               ),
                             ),

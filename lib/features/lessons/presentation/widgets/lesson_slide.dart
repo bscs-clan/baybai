@@ -4,8 +4,11 @@ import "package:baybai/core/theme/text.dart";
 import "package:baybai/features/lessons/domain/entities/lesson_content.dart";
 import "package:baybai/features/lessons/presentation/widgets/kudlit_practice_card.dart";
 import "package:baybai/features/lessons/presentation/widgets/kudlit_table_card.dart";
+import "package:baybai/features/lessons/presentation/widgets/virama_table_card.dart";
 import "package:baybai/features/lessons/presentation/widgets/lesson_card_items.dart";
 import "package:baybai/features/lessons/presentation/widgets/character_sound_table_card.dart";
+import "package:baybai/features/lessons/presentation/widgets/final_consonant_card.dart";
+import "package:baybai/features/lessons/presentation/widgets/sound_table_card.dart";
 import "package:baybai/features/lessons/presentation/widgets/comparison_card.dart";
 import "package:baybai/features/lessons/presentation/widgets/quiz_table_card.dart";
 import "package:baybai/features/lessons/presentation/widgets/shared_kudlit_vowel_card.dart";
@@ -17,6 +20,7 @@ import "package:baybai/features/lessons/presentation/widgets/word_card.dart";
 import "package:baybai/features/lessons/presentation/widgets/word_to_break_card.dart";
 import "package:baybai/features/lessons/presentation/widgets/empty_slot.dart";
 import "package:baybai/features/lessons/presentation/widgets/break_word_drag_slot.dart";
+import "package:baybai/features/lessons/presentation/widgets/lesson_text_answer_input.dart";
 import "package:baybai/shared/components/buttons/button.dart";
 
 class LessonSlide extends StatefulWidget {
@@ -167,10 +171,12 @@ class _LessonSlideState extends State<LessonSlide> {
                               height: optionButtonHeight,
                               borderRadius: BorderRadius.circular(16),
                               customBorderColor: AppColors.grey6,
-                              customBackgroundColor:
-                                  isDarkMode ? AppColors.darkBox : AppColors.grey1,
-                              customForegroundColor:
-                                  isDarkMode ? AppColors.darkText : AppColors.text,
+                              customBackgroundColor: isDarkMode
+                                  ? AppColors.darkBox
+                                  : AppColors.grey1,
+                              customForegroundColor: isDarkMode
+                                  ? AppColors.darkText
+                                  : AppColors.text,
                               textStyle: AppTextStyles.body.copyWith(
                                 fontFamily: widget.lesson.optionFontFamily,
                                 fontSize: widget.lesson.optionFontSize,
@@ -203,151 +209,201 @@ class _LessonSlideState extends State<LessonSlide> {
   @override
   Widget build(BuildContext context) {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final lessonTitle = widget.lesson.title;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    if (widget.lesson.icon != null) ...[
-                      Icon(
-                        _mapLessonIcon(widget.lesson.icon!),
-                        color: isDarkMode ? AppColors.darkText : AppColors.text,
-                        size: 28,
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                    Expanded(
-                      child: Text(
-                        widget.lesson.title,
-                        style: AppTextStyles.body.copyWith(
-                          color: isDarkMode
-                              ? AppColors.darkText
-                              : AppColors.text,
-                        ),
-                        textAlign: TextAlign.left,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                if (widget.lesson.showComparisonCard) const ComparisonCard(),
-                if (widget.lesson.showSyllableTableCard)
-                  const SyllableTableCard(),
-                if (widget.lesson.showWordSoundTableCard)
-                  const WordSoundTableCard(),
-                if (widget.lesson.showCharacterSoundTableCard)
-                  CharacterSoundTableCard(
-                    examples: widget.lesson.characterSoundItems,
-                  ),
-                if (widget.lesson.showVowelSoundTableCard)
-                  VowelSoundTableCard(examples: widget.lesson.vowelSoundItems),
-                if (widget.lesson.showKudlitTableCard)
-                  KudlitTableCard(examples: widget.lesson.kudlitTableItems),
-                if (widget.lesson.showSharedKudlitVowelCard)
-                  const SharedKudlitVowelCard(),
-                if (widget.lesson.showStrokeDemoCard &&
-                    widget.lesson.strokeDemoItems != null &&
-                    widget.lesson.strokeDemoItems!.isNotEmpty)
-                  VowelStrokeDemoCard(items: widget.lesson.strokeDemoItems!),
-                if (widget.lesson.kudlitPracticeBaseSymbol != null) ...[
-                  KudlitPracticeCard(
-                    baseSymbol: widget.lesson.kudlitPracticeBaseSymbol!,
-                    baseSound: widget.lesson.kudlitPracticeBaseSound ?? "",
-                    targetSound: widget.lesson.kudlitPracticeTargetSound ?? "",
-                    selectedOption: widget.selectedOption,
-                  ),
-                ],
-                if (widget.lesson.showWordCard &&
-                    widget.lesson.wordCardText != null) ...[
-                  const SizedBox(height: 12),
-                  WordCard(word: widget.lesson.wordCardText!),
-                ],
-                if (widget.lesson.wordToBreak != null) ...[
-                  WordToBreakCard(word: widget.lesson.wordToBreak!),
-                  if (!widget.lesson.showAnswerBox) ...[
-                    const SizedBox(height: 42),
-                    Text(
-                      "Drag buttons here",
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.body.copyWith(color: AppColors.grey8),
-                    ),
-                    const SizedBox(height: 12),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (lessonTitle != null && lessonTitle.isNotEmpty) ...[
+                    const SizedBox(height: 24),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        for (int i = 0; i < _droppedItems.length; i++) ...[
-                          _buildDragTarget(i),
-                          if (i < _droppedItems.length - 1)
-                            const SizedBox(width: 6),
+                        if (widget.lesson.icon != null) ...[
+                          Icon(
+                            _mapLessonIcon(widget.lesson.icon!),
+                            color: isDarkMode
+                                ? AppColors.darkText
+                                : AppColors.text,
+                            size: 28,
+                          ),
+                          const SizedBox(width: 8),
                         ],
+                        Expanded(
+                          child: Text(
+                            lessonTitle,
+                            style: AppTextStyles.body.copyWith(
+                              color: isDarkMode
+                                  ? AppColors.darkText
+                                  : AppColors.text,
+                            ),
+                            textAlign: TextAlign.left,
+                          ),
+                        ),
                       ],
                     ),
+                    const SizedBox(height: 24),
                   ],
-                ],
-                if (widget.lesson.matchCharacters != null) ...[
-                  _buildCharacterMatchRows(isDarkMode),
-                ],
-                if (widget.lesson.showAnswerBox) ...[
-                  const SizedBox(height: 12),
-                  _buildAnswerArea(isDarkMode),
-                ],
-                if (widget.lesson.cardItems != null &&
-                    widget.lesson.cardItems!.isNotEmpty)
-                  LessonCardItems(cardItems: widget.lesson.cardItems!),
-                if (widget.lesson.description != null) ...[
-                  const SizedBox(height: 24),
-                  _buildDescription(widget.lesson.description!, isDarkMode),
-                ],
-                if (widget.lesson.showQuizTable &&
-                    widget.lesson.baybayinText.isNotEmpty)
-                  QuizTableCard(
-                    symbol: widget.lesson.baybayinText,
-                    selectedAnswer: widget.selectedOption,
-                    hasChecked: widget.hasChecked,
-                    correctOption: widget.lesson.correctOption,
-                  )
-                else if (widget.lesson.baybayinText.isNotEmpty &&
-                    widget.lesson.options != null &&
-                    widget.lesson.options!.isNotEmpty)
-                  Center(
-                    child: Text(
-                      widget.lesson.baybayinText,
-                      style: AppTextStyles.heading.copyWith(
-                        fontFamily:
-                            widget.lesson.baybayinFontFamily ?? 'Baybayin',
-                        fontSize:
-                            widget.lesson.baybayinFontSize ??
-                            ((widget.lesson.baybayinFontFamily != null &&
-                                    widget.lesson.baybayinFontFamily !=
-                                        'Baybayin')
-                                ? 64
-                                : 96),
-                        fontWeight: FontWeight.bold,
-                        color: isDarkMode ? AppColors.white : AppColors.dark,
-                        height: 1.0,
+                  if (widget.lesson.showComparisonCard) const ComparisonCard(),
+                  if (widget.lesson.showSyllableTableCard)
+                    const SyllableTableCard(),
+                  if (widget.lesson.showWordSoundTableCard)
+                    WordSoundTableCard(
+                      examples:
+                          widget.lesson.wordSoundTableItems ??
+                          const [
+                            WordSoundTableItem(word: "City", sound: "Siti"),
+                            WordSoundTableItem(word: "Knight", sound: "Nayt"),
+                            WordSoundTableItem(word: "Photo", sound: "Poto"),
+                            WordSoundTableItem(word: "School", sound: "Skul"),
+                            WordSoundTableItem(word: "Cake", sound: "Keyk"),
+                          ],
+                      leftTitle:
+                          widget.lesson.wordSoundTableFirstColumnTitle ??
+                          "Words",
+                      rightTitle:
+                          widget.lesson.wordSoundTableSecondColumnTitle ??
+                          "Sounds Like",
+                    ),
+                  if (widget.lesson.showCharacterSoundTableCard)
+                    CharacterSoundTableCard(
+                      examples: widget.lesson.characterSoundItems,
+                    ),
+                  if (widget.lesson.showSoundTableCard)
+                    SoundTableCard(
+                      title: widget.lesson.soundTableTitle,
+                      mappings: widget.lesson.soundTableMappings ?? const [],
+                      examples: widget.lesson.soundTableExamples ?? const [],
+                    ),
+                  if (widget.lesson.showFinalConsonantCard)
+                    const FinalConsonantCard(),
+                  if (widget.lesson.showVowelSoundTableCard)
+                    VowelSoundTableCard(
+                      examples: widget.lesson.vowelSoundItems,
+                    ),
+                  if (widget.lesson.showKudlitTableCard)
+                    KudlitTableCard(examples: widget.lesson.kudlitTableItems),
+                  if (widget.lesson.showViramaTableCard)
+                    ViramaTableCard(
+                      showExplanations: widget.lesson.showViramaExplanations,
+                    ),
+                  if (widget.lesson.showSharedKudlitVowelCard)
+                    const SharedKudlitVowelCard(),
+                  if (widget.lesson.showStrokeDemoCard &&
+                      widget.lesson.strokeDemoItems != null &&
+                      widget.lesson.strokeDemoItems!.isNotEmpty)
+                    VowelStrokeDemoCard(items: widget.lesson.strokeDemoItems!),
+                  if (widget.lesson.kudlitPracticeBaseSymbol != null) ...[
+                    KudlitPracticeCard(
+                      baseSymbol: widget.lesson.kudlitPracticeBaseSymbol!,
+                      baseSound: widget.lesson.kudlitPracticeBaseSound ?? "",
+                      targetSound:
+                          widget.lesson.kudlitPracticeTargetSound ?? "",
+                      selectedOption: widget.selectedOption,
+                    ),
+                  ],
+                  if (widget.lesson.showWordCard &&
+                      widget.lesson.wordCardText != null) ...[
+                    const SizedBox(height: 12),
+                    WordCard(word: widget.lesson.wordCardText!),
+                  ],
+                  if (widget.lesson.wordToBreak != null) ...[
+                    WordToBreakCard(word: widget.lesson.wordToBreak!),
+                    if (!widget.lesson.showAnswerBox) ...[
+                      const SizedBox(height: 42),
+                      Text(
+                        "Drag buttons here",
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.body.copyWith(
+                          color: AppColors.grey8,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          for (int i = 0; i < _droppedItems.length; i++) ...[
+                            _buildDragTarget(i),
+                            if (i < _droppedItems.length - 1)
+                              const SizedBox(width: 6),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ],
+                  if (widget.lesson.matchCharacters != null) ...[
+                    _buildCharacterMatchRows(isDarkMode),
+                  ],
+                  if (widget.lesson.showAnswerBox) ...[
+                    const SizedBox(height: 12),
+                    _buildAnswerArea(isDarkMode),
+                  ],
+                  if (widget.lesson.cardItems != null &&
+                      widget.lesson.cardItems!.isNotEmpty)
+                    LessonCardItems(cardItems: widget.lesson.cardItems!),
+                  if (widget.lesson.description != null) ...[
+                    const SizedBox(height: 24),
+                    _buildDescription(widget.lesson.description!, isDarkMode),
+                  ],
+                  if (widget.lesson.showQuizTable &&
+                      widget.lesson.baybayinText.isNotEmpty)
+                    QuizTableCard(
+                      symbol: widget.lesson.baybayinText,
+                      selectedAnswer: widget.selectedOption,
+                      hasChecked: widget.hasChecked,
+                      correctOption: widget.lesson.correctOption,
+                    )
+                  else if (widget.lesson.baybayinText.isNotEmpty &&
+                      widget.lesson.options != null &&
+                      widget.lesson.options!.isNotEmpty)
+                    Center(
+                      child: Text(
+                        widget.lesson.baybayinText,
+                        style: AppTextStyles.heading.copyWith(
+                          fontFamily:
+                              widget.lesson.baybayinFontFamily ?? 'Baybayin',
+                          fontSize:
+                              widget.lesson.baybayinFontSize ??
+                              ((widget.lesson.baybayinFontFamily != null &&
+                                      widget.lesson.baybayinFontFamily !=
+                                          'Baybayin')
+                                  ? 64
+                                  : 96),
+                          fontWeight: FontWeight.bold,
+                          color: isDarkMode ? AppColors.white : AppColors.dark,
+                          height: 1.0,
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
-        if (widget.lesson.options != null &&
+        if (widget.lesson.showTextInput) ...[
+          _buildTextAnswerInput(),
+        ] else if (widget.lesson.options != null &&
             widget.lesson.options!.isNotEmpty) ...[
           _buildOptionsBox(isDarkMode),
         ],
       ],
+    );
+  }
+
+  Widget _buildTextAnswerInput() {
+    return LessonTextAnswerInput(
+      answer: widget.selectedOption,
+      enabled: !widget.hasChecked,
+      onChanged: widget.onOptionSelected,
     );
   }
 
@@ -518,8 +574,9 @@ class _LessonSlideState extends State<LessonSlide> {
                     iconSize: 24.0,
                     borderRadius: BorderRadius.circular(16),
                     customBorderColor: AppColors.grey6,
-                    customBackgroundColor:
-                        isDarkMode ? AppColors.darkBox : AppColors.grey1,
+                    customBackgroundColor: isDarkMode
+                        ? AppColors.darkBox
+                        : AppColors.grey1,
                     textStyle: AppTextStyles.body.copyWith(
                       fontFamily: widget.lesson.optionFontFamily,
                       fontSize: widget.lesson.optionFontSize,

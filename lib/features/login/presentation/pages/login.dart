@@ -1,8 +1,10 @@
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
+import "package:baybai/features/home/presentation/pages/home.dart";
 import "package:baybai/shared/components/buttons/button.dart";
 import "package:baybai/shared/components/inputs/input.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,12 +14,14 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  bool _isPasswordVisible = false;
+
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDarkMode ? AppColors.darkBox : AppColors.box,
+      backgroundColor: isDarkMode ? AppColors.darkBox : AppColors.background,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -34,57 +38,70 @@ class _LoginScreenState extends State<LoginScreen> {
                         const Spacer(),
                         const SizedBox(height: 56),
                         Text(
-                          "Sign In",
-                          style: AppTextStyles.heading.copyWith(
+                          "Log In",
+                          style: AppTextStyles.boldXl.copyWith(
                             color: isDarkMode
                                 ? AppColors.darkText
-                                : AppColors.text,
+                                : AppColors.grey10,
                           ),
                         ),
-                        const SizedBox(height: 56),
-                        Input(
-                          leftIcon: Icons.email,
-                          hintText: "Email",
-                        ),
                         const SizedBox(height: 8),
+                        Text(
+                          "Learn Baybayin, one step at a time.",
+                          style: AppTextStyles.regularSm.copyWith(
+                            color: isDarkMode
+                                ? AppColors.darkText
+                                : AppColors.grey6,
+                          ),
+                        ),
+
+                        const SizedBox(height: 56),
+                        Input(hintText: "Email"),
+                        const SizedBox(height: 12),
                         Input(
-                          leftIcon: Icons.lock,
+                          rightIcon: _isPasswordVisible
+                              ? HugeIcons.strokeRoundedViewOff
+                              : HugeIcons.strokeRoundedView,
                           hintText: "Password",
-                          obscureText: true,
-                        ),
-                        const SizedBox(height: 24),
-                        Button(
-                          onTap: () {
-                            Navigator.pushReplacementNamed(context, "/home");
+                          obscureText: !_isPasswordVisible,
+                          onRightIconTap: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
                           },
-                          width: double.infinity,
-                          label: "Sign In",
-                          size: ButtonSize.md,
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 12),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            Text(
-                              "Forgot password?",
-                              style: AppTextStyles.body.copyWith(
-                                color: isDarkMode
-                                    ? AppColors.darkText
-                                    : AppColors.text,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
                             GestureDetector(
                               onTap: () =>
                                   Navigator.pushNamed(context, "/signup"),
                               child: Text(
-                                "Recover",
-                                style: AppTextStyles.title.copyWith(
-                                  color: AppColors.primary,
+                                "Forgot password?",
+                                style: AppTextStyles.boldSm.copyWith(
+                                  color: AppColors.blue9,
                                 ),
                               ),
                             ),
                           ],
+                        ),
+                        const SizedBox(height: 24),
+                        Button(
+                          onTap: () {
+                            Navigator.pushReplacement<void, void>(
+                              context,
+                              MaterialPageRoute<void>(
+                                builder: (_) => const HomeScreen(),
+                              ),
+                            );
+                          },
+                          width: double.infinity,
+                          label: "Log In",
+                          size: ButtonSize.md,
+                          height: 48,
+                          customBackgroundColor: AppColors.blue9,
+                          textStyle: AppTextStyles.boldSm,
                         ),
 
                         const Spacer(),
@@ -95,10 +112,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           children: [
                             Text(
                               "Don't have an account?",
-                              style: AppTextStyles.body.copyWith(
+                              style: AppTextStyles.regularSm.copyWith(
                                 color: isDarkMode
                                     ? AppColors.darkText
-                                    : AppColors.text,
+                                    : AppColors.grey10,
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -107,8 +124,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   Navigator.pushNamed(context, "/signup"),
                               child: Text(
                                 "Sign Up",
-                                style: AppTextStyles.title.copyWith(
-                                  color: AppColors.primary,
+                                style: AppTextStyles.regularSm.copyWith(
+                                  color: AppColors.blue9,
                                 ),
                               ),
                             ),

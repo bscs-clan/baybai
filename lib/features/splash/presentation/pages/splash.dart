@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:flutter_svg/flutter_svg.dart";
 import "package:shared_preferences/shared_preferences.dart";
 import "package:baybai/core/theme/colors.dart";
 
@@ -14,7 +15,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     _navigateToNextScreen();
   }
 
@@ -39,37 +40,41 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: isDarkMode ? AppColors.darkBackground : AppColors.white,
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Spacer(),
-          Center(
-            child: Image.asset(
-              "assets/images/ic_logo.png",
-              width: 140,
-              height: 140,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: AppColors.background,
+        statusBarIconBrightness: Brightness.dark,
+        systemNavigationBarColor: AppColors.background,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: isDarkMode
+            ? AppColors.darkBackground
+            : AppColors.background,
+        body: Stack(
+          children: [
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: MediaQuery.of(context).viewPadding.top,
+              child: const ColoredBox(color: AppColors.background),
             ),
-          ),
-          Spacer(),
-          Text(
-            "BaybAI",
-            style: TextStyle(
-              fontSize: Theme.of(context).textTheme.headlineSmall!.fontSize,
-              fontWeight: FontWeight.bold,
-              color: isDarkMode ? AppColors.darkText : AppColors.text,
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Center(
+                  child: SvgPicture.asset(
+                    "assets/images/logo.svg",
+                    width: 140,
+                    height: 140,
+                  ),
+                ),
+              ],
             ),
-          ),
-          Text(
-            "Scan, Transliterate, Learn",
-            style: TextStyle(
-              color: isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey,
-            ),
-          ),
-          SizedBox(height: 64),
-        ],
+          ],
+        ),
       ),
     );
   }

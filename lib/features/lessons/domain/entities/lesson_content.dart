@@ -21,6 +21,20 @@ class LessonCardItem {
   const LessonCardItem({required this.text, required this.baybayinSymbol});
 }
 
+class WordSoundTableItem {
+  final String word;
+  final String sound;
+
+  const WordSoundTableItem({required this.word, required this.sound});
+}
+
+class SoundTableItem {
+  final String spelling;
+  final String sound;
+
+  const SoundTableItem({required this.spelling, required this.sound});
+}
+
 class KudlitTableItem {
   final String baseSymbol;
   final String? kudlit;
@@ -42,7 +56,7 @@ class StrokeDemoItem {
 }
 
 class LessonContent {
-  final String title;
+  final String? title;
   final String baybayinText;
   final List<String>? options;
   final String? correctOption;
@@ -55,17 +69,28 @@ class LessonContent {
   final String? optionFontFamily;
 
   final List<LessonCardItem>? cardItems;
+  final List<WordSoundTableItem>? wordSoundTableItems;
+  final String? wordSoundTableFirstColumnTitle;
+  final String? wordSoundTableSecondColumnTitle;
   final bool showComparisonCard;
   final bool showQuizTable;
   final bool showSyllableTableCard;
   final bool showWordSoundTableCard;
   final bool showCharacterSoundTableCard;
+  final bool showSoundTableCard;
+  final bool showFinalConsonantCard;
+  final String? soundTableTitle;
+  final List<SoundTableItem>? soundTableMappings;
+  final List<SoundTableItem>? soundTableExamples;
   final bool showVowelSoundTableCard;
   final bool showKudlitTableCard;
+  final bool showViramaTableCard;
+  final bool showViramaExplanations;
   final bool showSharedKudlitVowelCard;
   final bool showStrokeDemoCard;
   final bool showWordCard;
   final bool showAnswerBox;
+  final bool showTextInput;
   final String? wordCardText;
   final String? description;
   final String? wordToBreak;
@@ -80,7 +105,7 @@ class LessonContent {
   final int? numSlots;
 
   const LessonContent({
-    required this.title,
+    this.title,
     this.baybayinText = "",
     this.options,
     this.correctOption,
@@ -91,17 +116,28 @@ class LessonContent {
     this.baybayinFontFamily,
     this.optionFontFamily,
     this.cardItems,
+    this.wordSoundTableItems,
+    this.wordSoundTableFirstColumnTitle,
+    this.wordSoundTableSecondColumnTitle,
     this.showComparisonCard = false,
     this.showQuizTable = false,
     this.showSyllableTableCard = false,
     this.showWordSoundTableCard = false,
     this.showCharacterSoundTableCard = false,
+    this.showSoundTableCard = false,
+    this.showFinalConsonantCard = false,
+    this.soundTableTitle,
+    this.soundTableMappings,
+    this.soundTableExamples,
     this.showVowelSoundTableCard = false,
     this.showKudlitTableCard = false,
+    this.showViramaTableCard = false,
+    this.showViramaExplanations = false,
     this.showSharedKudlitVowelCard = false,
     this.showStrokeDemoCard = false,
     this.showWordCard = false,
     this.showAnswerBox = false,
+    this.showTextInput = false,
     this.wordCardText,
     this.description,
     this.wordToBreak,

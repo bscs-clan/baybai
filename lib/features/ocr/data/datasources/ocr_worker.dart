@@ -17,7 +17,7 @@ const List<double> _detMean = [0.485, 0.456, 0.406];
 const List<double> _detStd = [0.229, 0.224, 0.225];
 
 // Recognition model constants
-const int _recInputHeight = 48;
+const int _recInputHeight = 64;
 const int _recInputWidth = 512;
 const int _recMinChars = 1;
 const int _liveFrameMaxLongSide = 1280;

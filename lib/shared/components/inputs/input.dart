@@ -1,6 +1,8 @@
 import "package:baybai/core/theme/colors.dart";
+import "package:baybai/core/theme/text.dart";
 import "package:baybai/shared/components/base/component_tokens.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:shadcn_flutter/shadcn_flutter.dart" as shadcn;
 
 enum InputSize { sm, md, lg }
@@ -62,27 +64,37 @@ class _InputState extends State<Input> {
   Widget build(BuildContext context) {
     final metrics = _InputMetrics.fromSize(widget.size);
 
-    final borderColor = _isFocused
-        ? AppColors.grey6
-        : AppColors.grey5;
+    final borderColor = _isFocused ? AppColors.blue6 : AppColors.grey2;
 
-    final iconColor = AppColors.grey10;
+    final iconColor = AppColors.grey5;
+    final inputTextStyle = AppTextStyles.regularSm.copyWith(
+      color: AppColors.grey10,
+    );
 
     return AnimatedContainer(
       duration: ComponentMotion.fast,
       height: metrics.height,
       decoration: BoxDecoration(
-        color: Colors.transparent,
+        color: AppColors.background,
         borderRadius: BorderRadius.circular(metrics.borderRadius),
         border: Border.all(color: borderColor, width: _isFocused ? 1.5 : 1),
+        boxShadow: _isFocused
+            ? [
+                BoxShadow(
+                  color: AppColors.blue6.withValues(alpha: 0.3),
+                  spreadRadius: 3,
+                  blurRadius: 0,
+                ),
+              ]
+            : null,
       ),
       child: Row(
         children: [
           if (widget.leftIcon != null)
             Padding(
               padding: EdgeInsets.only(left: metrics.horizontalPadding),
-              child: Icon(
-                widget.leftIcon,
+              child: HugeIcon(
+                icon: widget.leftIcon!,
                 size: metrics.iconSize,
                 color: iconColor,
               ),
@@ -92,36 +104,29 @@ class _InputState extends State<Input> {
             SizedBox(width: metrics.horizontalPadding),
 
           Expanded(
-            child: TextField(
-              focusNode: _focusNode,
-              controller: widget.controller,
-              enabled: widget.enabled,
-              obscureText: widget.obscureText,
-              keyboardType: widget.keyboardType,
-              textInputAction: widget.textInputAction,
-              onChanged: widget.onChanged,
-              cursorColor: AppColors.grey10,
-
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(
-                fontSize: metrics.fontSize,
-                color: AppColors.grey12,
-              ),
-
-              decoration: InputDecoration(
-                hintText: widget.hintText,
-                hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: metrics.fontSize,
-                  color: AppColors.grey10,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: TextField(
+                focusNode: _focusNode,
+                controller: widget.controller,
+                enabled: widget.enabled,
+                obscureText: widget.obscureText,
+                keyboardType: widget.keyboardType,
+                textInputAction: widget.textInputAction,
+                onChanged: widget.onChanged,
+                cursorColor: AppColors.grey10,
+                style: inputTextStyle,
+                decoration: InputDecoration(
+                  hintText: widget.hintText,
+                  hintStyle: inputTextStyle.copyWith(color: AppColors.grey5),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  errorBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
+                  isCollapsed: true,
+                  contentPadding: EdgeInsets.zero,
                 ),
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                errorBorder: InputBorder.none,
-                disabledBorder: InputBorder.none,
-                isCollapsed: true,
-                contentPadding: EdgeInsets.zero,
               ),
             ),
           ),
@@ -134,8 +139,8 @@ class _InputState extends State<Input> {
                 style: shadcn.ButtonStyle.ghostIcon(
                   size: shadcn.ButtonSize.small,
                 ).withPadding(padding: EdgeInsets.zero),
-                child: Icon(
-                  widget.rightIcon,
+                child: HugeIcon(
+                  icon: widget.rightIcon!,
                   size: metrics.iconSize,
                   color: iconColor,
                 ),
@@ -152,14 +157,12 @@ class _InputMetrics {
   final double horizontalPadding;
   final double iconSize;
   final double borderRadius;
-  final double fontSize;
 
   const _InputMetrics({
     required this.height,
     required this.horizontalPadding,
     required this.iconSize,
     required this.borderRadius,
-    required this.fontSize,
   });
 
   factory _InputMetrics.fromSize(InputSize size) {
@@ -169,21 +172,18 @@ class _InputMetrics {
         horizontalPadding: 12,
         iconSize: 18,
         borderRadius: ComponentRadius.sm,
-        fontSize: 14,
       ),
       InputSize.md => const _InputMetrics(
         height: 48,
         horizontalPadding: 14,
-        iconSize: 22,
-        borderRadius: ComponentRadius.md,
-        fontSize: 16,
+        iconSize: 24,
+        borderRadius: ComponentRadius.xs,
       ),
       InputSize.lg => const _InputMetrics(
         height: 56,
         horizontalPadding: 16,
         iconSize: 24,
         borderRadius: ComponentRadius.lg,
-        fontSize: 18,
       ),
     };
   }

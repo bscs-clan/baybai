@@ -26,7 +26,7 @@ class LessonLibraryPage extends StatelessWidget {
         centerTitle: true,
         title: Text(
           "Lessons",
-          style: AppTextStyles.bigbody.copyWith(color: AppColors.grey12),
+          style: AppTextStyles.bigbody.copyWith(color: AppColors.grey10),
         ),
       ),
       body: SafeArea(

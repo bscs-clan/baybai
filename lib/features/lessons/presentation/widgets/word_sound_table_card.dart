@@ -2,19 +2,25 @@ import "package:flutter/material.dart";
 import "package:audioplayers/audioplayers.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
-
-class _WordSoundExample {
-  final String word;
-  final String sound;
-
-  const _WordSoundExample({
-    required this.word,
-    required this.sound,
-  });
-}
+import "package:baybai/features/lessons/domain/entities/lesson_content.dart";
 
 class WordSoundTableCard extends StatefulWidget {
-  const WordSoundTableCard({super.key});
+  final List<WordSoundTableItem> examples;
+  final String leftTitle;
+  final String rightTitle;
+
+  const WordSoundTableCard({
+    super.key,
+    this.examples = const [
+      WordSoundTableItem(word: "City", sound: "Siti"),
+      WordSoundTableItem(word: "Knight", sound: "Nayt"),
+      WordSoundTableItem(word: "Photo", sound: "Poto"),
+      WordSoundTableItem(word: "School", sound: "Skul"),
+      WordSoundTableItem(word: "Cake", sound: "Keyk"),
+    ],
+    this.leftTitle = "Words",
+    this.rightTitle = "Sounds Like",
+  });
 
   @override
   State<WordSoundTableCard> createState() => _WordSoundTableCardState();
@@ -22,14 +28,6 @@ class WordSoundTableCard extends StatefulWidget {
 
 class _WordSoundTableCardState extends State<WordSoundTableCard> {
   late final AudioPlayer _audioPlayer;
-
-  static const List<_WordSoundExample> _examples = [
-    _WordSoundExample(word: "City", sound: "Siti"),
-    _WordSoundExample(word: "Knight", sound: "Nayt"),
-    _WordSoundExample(word: "Photo", sound: "Poto"),
-    _WordSoundExample(word: "School", sound: "Skul"),
-    _WordSoundExample(word: "Cake", sound: "Keyk"),
-  ];
 
   @override
   void initState() {
@@ -100,7 +98,7 @@ class _WordSoundTableCardState extends State<WordSoundTableCard> {
                       vertical: 12,
                     ),
                     child: Text(
-                      "Words",
+                      widget.leftTitle,
                       style: AppTextStyles.body.copyWith(
                         color: textColor,
                       ),
@@ -118,7 +116,7 @@ class _WordSoundTableCardState extends State<WordSoundTableCard> {
                       vertical: 12,
                     ),
                     child: Text(
-                      "Sounds Like",
+                      widget.rightTitle,
                       style: AppTextStyles.body.copyWith(
                         color: textColor,
                       ),
@@ -135,10 +133,10 @@ class _WordSoundTableCardState extends State<WordSoundTableCard> {
             color: borderColor,
           ),
           ...List.generate(
-            _examples.length,
+            widget.examples.length,
             (index) {
-              final example = _examples[index];
-              final isLast = index == _examples.length - 1;
+              final example = widget.examples[index];
+              final isLast = index == widget.examples.length - 1;
 
               return Column(
                 mainAxisSize: MainAxisSize.min,
@@ -159,21 +157,9 @@ class _WordSoundTableCardState extends State<WordSoundTableCard> {
                                   horizontal: 12,
                                   vertical: 4,
                                 ),
-                                decoration: BoxDecoration(
-                                  color: Colors.transparent,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: borderColor.withValues(
-                                      alpha: 0.4,
-                                    ),
-                                    width: 1,
-                                  ),
-                                ),
                                 child: Text(
                                   example.word,
                                   style: AppTextStyles.body.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
                                     color: textColor,
                                   ),
                                 ),
@@ -198,7 +184,7 @@ class _WordSoundTableCardState extends State<WordSoundTableCard> {
                                   height: 34,
                                   padding: const EdgeInsets.only(
                                     left: 8,
-                                    right: 4,
+                                    right: 8,
                                   ),
                                   decoration: BoxDecoration(
                                     color: pillColor,
@@ -214,8 +200,6 @@ class _WordSoundTableCardState extends State<WordSoundTableCard> {
                                         example.sound,
                                         textAlign: TextAlign.center,
                                         style: AppTextStyles.body.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 13,
                                           color: textColor,
                                         ),
                                       ),

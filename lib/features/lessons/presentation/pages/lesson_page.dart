@@ -38,7 +38,9 @@ class _LessonPageState extends State<LessonPage> {
     if (_isInitialized) return;
 
     final args = ModalRoute.of(context)?.settings.arguments;
-    _lessonId = (args is int && LessonData.lessons.containsKey(args)) ? args : 1;
+    _lessonId = (args is int && LessonData.lessons.containsKey(args))
+        ? args
+        : 1;
     _lessons = LessonData.lessons[_lessonId] ?? LessonData.lessons[1]!;
     _isInitialized = true;
   }
@@ -76,17 +78,23 @@ class _LessonPageState extends State<LessonPage> {
 
     for (var index = 0; index < _lessons.length; index++) {
       final lesson = _lessons[index];
-      if (lesson.options == null || lesson.options!.isEmpty) continue;
+      final hasOptions = lesson.options != null && lesson.options!.isNotEmpty;
+      if (!hasOptions && !lesson.showTextInput) continue;
 
       final selectedOption = _selectedOptions[index];
-      final status = selectedOption == lesson.correctOption
-          ? "Correct"
-          : "Wrong";
+      final isCorrect = lesson.showTextInput
+          ? selectedOption?.trim().toLowerCase() ==
+                lesson.correctOption?.trim().toLowerCase()
+          : selectedOption == lesson.correctOption;
+      final status = isCorrect ? "Correct" : "Wrong";
 
       results.add(
         LessonQuestionResult(
           questionNumber: results.length + 1,
-          question: lesson.title,
+          question:
+              lesson.title ??
+              lesson.wordCardText ??
+              "Question ${results.length + 1}",
           status: status,
         ),
       );
@@ -95,12 +103,12 @@ class _LessonPageState extends State<LessonPage> {
     return results;
   }
 
-
   @override
   Widget build(BuildContext context) {
     final currentLesson = _lessons[_currentIndex];
     final hasOptions =
-        currentLesson.options != null && currentLesson.options!.isNotEmpty;
+        (currentLesson.options != null && currentLesson.options!.isNotEmpty) ||
+        currentLesson.showTextInput;
 
     String? customNextLabel;
     bool showNextIcon = true;
@@ -115,7 +123,7 @@ class _LessonPageState extends State<LessonPage> {
 
       if (!hasChecked) {
         customNextLabel = "Check";
-        if (selectedOption != null) {
+        if (selectedOption != null && selectedOption.trim().isNotEmpty) {
           onNextAction = () {
             setState(() {
               _userAnswers[_currentIndex] = selectedOption;
@@ -129,7 +137,10 @@ class _LessonPageState extends State<LessonPage> {
             ? "Finish"
             : "Continue";
         onNextAction = _nextPage;
-        final isCorrect = selectedOption == currentLesson.correctOption;
+        final isCorrect = currentLesson.showTextInput
+            ? selectedOption?.trim().toLowerCase() ==
+                  currentLesson.correctOption?.trim().toLowerCase()
+            : selectedOption == currentLesson.correctOption;
         customNextBackgroundColor = isCorrect
             ? Colors.green.shade600
             : Colors.red.shade600;
