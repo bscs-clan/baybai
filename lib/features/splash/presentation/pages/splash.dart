@@ -42,15 +42,15 @@ class _SplashScreenState extends State<SplashScreen> {
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
-        statusBarColor: AppColors.background,
+        statusBarColor: AppColors.bg,
         statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarColor: AppColors.background,
+        systemNavigationBarColor: AppColors.bg,
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
         backgroundColor: isDarkMode
-            ? AppColors.darkBackground
-            : AppColors.background,
+            ? AppColors.gray100
+            : AppColors.bg,
         body: Stack(
           children: [
             Positioned(
@@ -58,7 +58,7 @@ class _SplashScreenState extends State<SplashScreen> {
               left: 0,
               right: 0,
               height: MediaQuery.of(context).viewPadding.top,
-              child: const ColoredBox(color: AppColors.background),
+              child: const ColoredBox(color: AppColors.bg),
             ),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -67,8 +67,8 @@ class _SplashScreenState extends State<SplashScreen> {
                 Center(
                   child: SvgPicture.asset(
                     "assets/images/logo.svg",
-                    width: 140,
-                    height: 140,
+                    width: 86,
+                    height: 86,
                   ),
                 ),
               ],

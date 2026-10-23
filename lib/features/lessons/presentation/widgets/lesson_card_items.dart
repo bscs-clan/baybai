@@ -43,19 +43,19 @@ class _CardItemTile extends StatelessWidget {
       children: [
         Text(
           item.text,
-          style: AppTextStyles.body.copyWith(
+          style: AppTextStyles.regularSm.copyWith(
             color: isDarkMode
-                ? AppColors.white.withValues(alpha: 0.5)
-                : AppColors.dark.withValues(alpha: 0.5),
+                ? AppColors.bg.withValues(alpha: 0.5)
+                : AppColors.gray100.withValues(alpha: 0.5),
           ),
           textAlign: TextAlign.center,
         ),
         Text(
           item.baybayinSymbol,
-          style: AppTextStyles.heading.copyWith(
+          style: AppTextStyles.boldXl.copyWith(
             fontFamily: 'Baybayin',
             fontSize: 48,
-            color: isDarkMode ? AppColors.white : AppColors.dark,
+            color: isDarkMode ? AppColors.bg : AppColors.gray100,
             height: 0.60,
           ),
           textAlign: TextAlign.center,

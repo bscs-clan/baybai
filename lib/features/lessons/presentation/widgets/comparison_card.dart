@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:audioplayers/audioplayers.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
@@ -36,7 +37,9 @@ class _ComparisonCardState extends State<ComparisonCard> {
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = AppColors.grey6;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final borderColor = isDarkMode ? AppColors.gray80 : AppColors.gray20;
+    final textColor = isDarkMode ? AppColors.gray10 : AppColors.gray100;
 
     return Container(
       decoration: BoxDecoration(
@@ -54,9 +57,7 @@ class _ComparisonCardState extends State<ComparisonCard> {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     child: Text(
                       "English",
-                      style: AppTextStyles.body.copyWith(
-                        color: AppColors.grey12,
-                      ),
+                      style: AppTextStyles.boldSm.copyWith(color: textColor),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -67,9 +68,7 @@ class _ComparisonCardState extends State<ComparisonCard> {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     child: Text(
                       "Baybayin",
-                      style: AppTextStyles.body.copyWith(
-                        color: AppColors.grey12,
-                      ),
+                      style: AppTextStyles.boldSm.copyWith(color: textColor),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -93,11 +92,11 @@ class _ComparisonCardState extends State<ComparisonCard> {
                       child: Text(
                         "B",
                         textAlign: TextAlign.center,
-                        style: AppTextStyles.heading.copyWith(
+                        style: AppTextStyles.boldXl.copyWith(
                           fontSize: 42,
                           height: 1.0,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.grey12,
+                          color: textColor,
                         ),
                       ),
                     ),
@@ -112,7 +111,7 @@ class _ComparisonCardState extends State<ComparisonCard> {
                           fontFamily: "Baybayin",
                           fontSize: 48,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.grey12,
+                          color: textColor,
                           height: 1.0,
                         ),
                       ),
@@ -124,10 +123,10 @@ class _ComparisonCardState extends State<ComparisonCard> {
                 children: [
                   TableCell(
                     child: Padding(
-                      padding: const EdgeInsets.only(top: 16, bottom: 16),
-                      child: Icon(
-                        Icons.arrow_downward_rounded,
-                        color: AppColors.grey6,
+                      padding: const EdgeInsets.only(top: 8 , bottom: 8),
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedArrowBigDownDash,
+                        color: AppColors.gray30,
                         size: 24,
                       ),
                     ),
@@ -135,9 +134,9 @@ class _ComparisonCardState extends State<ComparisonCard> {
                   TableCell(
                     child: Padding(
                       padding: const EdgeInsets.only(top: 16, bottom: 16),
-                      child: Icon(
-                        Icons.arrow_downward_rounded,
-                        color: AppColors.grey6,
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedArrowBigDownDash,
+                        color: AppColors.gray30,
                         size: 24,
                       ),
                     ),
@@ -155,14 +154,14 @@ class _ComparisonCardState extends State<ComparisonCard> {
                           height: 38,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            color: AppColors.grey3,
+                            color: AppColors.gray10,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             "B (letter)",
                             textAlign: TextAlign.center,
-                            style: AppTextStyles.body.copyWith(
-                              color: AppColors.text,
+                            style: AppTextStyles.regularSm.copyWith(
+                              color: textColor,
                             ),
                           ),
                         ),
@@ -179,7 +178,7 @@ class _ComparisonCardState extends State<ComparisonCard> {
                             margin: const EdgeInsets.symmetric(horizontal: 16),
                             height: 38,
                             decoration: BoxDecoration(
-                              color: AppColors.blue3,
+                              color: AppColors.gray10,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Padding(
@@ -193,21 +192,21 @@ class _ComparisonCardState extends State<ComparisonCard> {
                                     child: Text(
                                       "Ba",
                                       textAlign: TextAlign.center,
-                                      style: AppTextStyles.body.copyWith(
-                                        color: AppColors.text,
+                                      style: AppTextStyles.regularSm.copyWith(
+                                        color: textColor,
                                       ),
                                     ),
                                   ),
                                   Container(
-                                    padding: const EdgeInsets.all(6),
+                                    padding: const EdgeInsets.all(4),
                                     decoration: BoxDecoration(
-                                      color: AppColors.blue6,
+                                      color: AppColors.primary30,
                                       shape: BoxShape.circle,
                                     ),
-                                    child: Icon(
-                                      Icons.volume_up_rounded,
-                                      size: 16,
-                                      color: AppColors.grey12,
+                                    child: HugeIcon(
+                                      icon: HugeIcons.strokeRoundedVolume02,
+                                      size: 24,
+                                      color: AppColors.primary60,
                                     ),
                                   ),
                                 ],

@@ -13,18 +13,14 @@ class SharedKudlitVowelCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final borderColor = isDarkMode
-        ? AppColors.darkListSeparator
-        : AppColors.listSeparator;
-    final cardBg = isDarkMode ? AppColors.darkCompBg : AppColors.white;
-    final textColor = isDarkMode ? AppColors.darkText : AppColors.text;
-    final pillColor = isDarkMode
-        ? AppColors.darkCompLight
-        : AppColors.compLight;
+    final borderColor = isDarkMode ? AppColors.gray80 : AppColors.gray20;
+    final cardBg = isDarkMode ? AppColors.gray80 : AppColors.bg;
+    final textColor = isDarkMode ? AppColors.gray10 : AppColors.gray100;
+    final pillColor = isDarkMode ? AppColors.gray80 : AppColors.gray10;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.symmetric(vertical: 18),
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(24),
@@ -40,66 +36,72 @@ class SharedKudlitVowelCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Padding(
-                padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
+                padding: EdgeInsets.fromLTRB(20, 0, 20, isLast ? 0 : 12),
                 child: Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        example.symbol,
-                        style: AppTextStyles.heading.copyWith(
-                          fontFamily: "Baybayin",
-                          fontSize: 52,
-                          color: textColor,
-                          height: 1.0,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      child: Text(
-                        "can be",
-                        style: AppTextStyles.body.copyWith(
-                          color: isDarkMode
-                              ? AppColors.darkTextGrey
-                              : AppColors.textGrey,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
+                      child: Center(
+                        child: Text(
+                          example.symbol,
+                          style: AppTextStyles.boldXl.copyWith(
+                            fontFamily: "Baybayin",
+                            fontSize: 32,
+                            color: textColor,
+                            height: 1.0,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
                       ),
                     ),
                     Expanded(
-                      child: Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: example.sounds
-                            .map(
-                              (sound) => Container(
-                                width: 54,
-                                height: 38,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: pillColor,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  sound,
-                                  style: AppTextStyles.body.copyWith(
-                                    color: textColor,
+                      child: Center(
+                        child: Text(
+                          "Can be",
+                          style: AppTextStyles.boldSm.copyWith(
+                            color: isDarkMode
+                                ? AppColors.gray40
+                                : AppColors.gray50,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Center(
+                        child: Container(
+                          constraints: const BoxConstraints(minHeight: 38),
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          decoration: BoxDecoration(
+                            color: pillColor,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(text: _capitalize(example.sounds[0])),
+                                TextSpan(
+                                  text: "  or  ",
+                                  style: AppTextStyles.regularSm.copyWith(
+                                    color: AppColors.gray50,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
+                                TextSpan(text: _capitalize(example.sounds[1])),
+                              ],
+                              style: AppTextStyles.boldSm.copyWith(
+                                color: textColor,
                               ),
-                            )
-                            .toList(),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
               if (!isLast) ...[
-                Divider(height: 1, thickness: 1.0, color: borderColor),
+                Divider(height: 1.5, thickness: 1.5, color: borderColor),
                 const SizedBox(height: 16),
               ],
             ],
@@ -108,6 +110,9 @@ class SharedKudlitVowelCard extends StatelessWidget {
       ),
     );
   }
+
+  String _capitalize(String sound) =>
+      "${sound[0].toUpperCase()}${sound.substring(1)}";
 }
 
 class _SharedKudlitExample {

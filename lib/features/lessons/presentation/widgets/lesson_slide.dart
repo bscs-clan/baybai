@@ -1,4 +1,7 @@
+import "dart:math";
+
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
 import "package:baybai/features/lessons/domain/entities/lesson_content.dart";
@@ -7,6 +10,7 @@ import "package:baybai/features/lessons/presentation/widgets/kudlit_table_card.d
 import "package:baybai/features/lessons/presentation/widgets/virama_table_card.dart";
 import "package:baybai/features/lessons/presentation/widgets/lesson_card_items.dart";
 import "package:baybai/features/lessons/presentation/widgets/character_sound_table_card.dart";
+import "package:baybai/features/lessons/presentation/widgets/character_match_card.dart";
 import "package:baybai/features/lessons/presentation/widgets/final_consonant_card.dart";
 import "package:baybai/features/lessons/presentation/widgets/sound_table_card.dart";
 import "package:baybai/features/lessons/presentation/widgets/comparison_card.dart";
@@ -43,10 +47,13 @@ class LessonSlide extends StatefulWidget {
 
 class _LessonSlideState extends State<LessonSlide> {
   late final List<String?> _droppedItems;
+  late final List<String> _shuffledOptions;
 
   @override
   void initState() {
     super.initState();
+    _shuffledOptions = List<String>.of(widget.lesson.options ?? const [])
+      ..shuffle(Random());
     final partsCount =
         widget.lesson.numSlots ??
         widget.lesson.matchCharacters?.length ??
@@ -85,15 +92,15 @@ class _LessonSlideState extends State<LessonSlide> {
     }
   }
 
-  IconData _mapLessonIcon(LessonIcon icon) {
+  List<List<dynamic>> _mapLessonIcon(LessonIcon icon) {
     return switch (icon) {
-      LessonIcon.confetti => Icons.celebration,
+      LessonIcon.confetti => HugeIcons.strokeRoundedParty,
     };
   }
 
   Widget _buildDescription(String text, bool isDarkMode) {
-    final baseColor = isDarkMode ? AppColors.darkText : AppColors.text;
-    final baseStyle = AppTextStyles.body.copyWith(color: baseColor);
+    final baseColor = isDarkMode ? AppColors.gray10 : AppColors.gray100;
+    final baseStyle = AppTextStyles.regularSm.copyWith(color: baseColor);
 
     final List<TextSpan> spans = [];
     final RegExp regex = RegExp(r'\*\*(.*?)\*\*');
@@ -106,7 +113,7 @@ class _LessonSlideState extends State<LessonSlide> {
       spans.add(
         TextSpan(
           text: match.group(1),
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: AppTextStyles.boldSm.copyWith(color: baseColor),
         ),
       );
       lastIndex = match.end;
@@ -141,7 +148,7 @@ class _LessonSlideState extends State<LessonSlide> {
       children: [
         CustomPaint(
           painter: DashedBorderPainter(
-            color: AppColors.compGrey.withValues(alpha: 0.3),
+            color: AppColors.gray20,
             strokeWidth: 1.2,
             dashWidth: 6.0,
             gap: 4.0,
@@ -149,7 +156,9 @@ class _LessonSlideState extends State<LessonSlide> {
           ),
           child: Container(
             width: double.infinity,
-            height: optionButtonHeight + 28,
+            constraints: BoxConstraints(
+              minHeight: optionButtonHeight + 28,
+            ),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
               color: Colors.transparent,
@@ -167,17 +176,12 @@ class _LessonSlideState extends State<LessonSlide> {
                               key: ValueKey('answer-piece-$piece'),
                               label: piece,
                               size: ButtonSize.sm,
-                              type: ButtonType.outline,
+                              type: ButtonType.secondary,
                               height: optionButtonHeight,
                               borderRadius: BorderRadius.circular(16),
-                              customBorderColor: AppColors.grey6,
-                              customBackgroundColor: isDarkMode
-                                  ? AppColors.darkBox
-                                  : AppColors.grey1,
-                              customForegroundColor: isDarkMode
-                                  ? AppColors.darkText
-                                  : AppColors.text,
-                              textStyle: AppTextStyles.body.copyWith(
+                              customBackgroundColor: AppColors.primary20,
+                              customForegroundColor: AppColors.primary100,
+                              textStyle: AppTextStyles.boldSm.copyWith(
                                 fontFamily: widget.lesson.optionFontFamily,
                                 fontSize: widget.lesson.optionFontSize,
                               ),
@@ -229,22 +233,22 @@ class _LessonSlideState extends State<LessonSlide> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         if (widget.lesson.icon != null) ...[
-                          Icon(
-                            _mapLessonIcon(widget.lesson.icon!),
+                          HugeIcon(
+                            icon: _mapLessonIcon(widget.lesson.icon!),
                             color: isDarkMode
-                                ? AppColors.darkText
-                                : AppColors.text,
-                            size: 28,
+                                ? AppColors.gray10
+                                : AppColors.gray100,
+                            size: 24,
                           ),
                           const SizedBox(width: 8),
                         ],
                         Expanded(
                           child: Text(
                             lessonTitle,
-                            style: AppTextStyles.body.copyWith(
+                            style: AppTextStyles.regularSm.copyWith(
                               color: isDarkMode
-                                  ? AppColors.darkText
-                                  : AppColors.text,
+                                  ? AppColors.gray10
+                                  : AppColors.gray100,
                             ),
                             textAlign: TextAlign.left,
                           ),
@@ -321,10 +325,10 @@ class _LessonSlideState extends State<LessonSlide> {
                     if (!widget.lesson.showAnswerBox) ...[
                       const SizedBox(height: 42),
                       Text(
-                        "Drag buttons here",
+                        "Drag here",
                         textAlign: TextAlign.center,
-                        style: AppTextStyles.body.copyWith(
-                          color: AppColors.grey8,
+                        style: AppTextStyles.regularXs.copyWith(
+                          color: AppColors.gray50,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -341,7 +345,14 @@ class _LessonSlideState extends State<LessonSlide> {
                     ],
                   ],
                   if (widget.lesson.matchCharacters != null) ...[
-                    _buildCharacterMatchRows(isDarkMode),
+                    CharacterMatchCard(
+                      characters: widget.lesson.matchCharacters!,
+                      isDarkMode: isDarkMode,
+                      answerSlots: List.generate(
+                        widget.lesson.matchCharacters!.length,
+                        (index) => _buildDragTarget(index, expand: false),
+                      ),
+                    ),
                   ],
                   if (widget.lesson.showAnswerBox) ...[
                     const SizedBox(height: 12),
@@ -368,7 +379,7 @@ class _LessonSlideState extends State<LessonSlide> {
                     Center(
                       child: Text(
                         widget.lesson.baybayinText,
-                        style: AppTextStyles.heading.copyWith(
+                        style: AppTextStyles.boldXl.copyWith(
                           fontFamily:
                               widget.lesson.baybayinFontFamily ?? 'Baybayin',
                           fontSize:
@@ -379,7 +390,7 @@ class _LessonSlideState extends State<LessonSlide> {
                                   ? 64
                                   : 96),
                           fontWeight: FontWeight.bold,
-                          color: isDarkMode ? AppColors.white : AppColors.dark,
+                          color: isDarkMode ? AppColors.bg : AppColors.gray100,
                           height: 1.0,
                         ),
                       ),
@@ -392,7 +403,12 @@ class _LessonSlideState extends State<LessonSlide> {
         if (widget.lesson.showTextInput) ...[
           _buildTextAnswerInput(),
         ] else if (widget.lesson.options != null &&
-            widget.lesson.options!.isNotEmpty) ...[
+            widget.lesson.options!.isNotEmpty &&
+            (!widget.hasChecked ||
+                (widget.lesson.showWordCard &&
+                    const {"CAKE", "PHOTO", "COFFEE", "BE", "KO"}.contains(
+                      widget.lesson.wordCardText?.toUpperCase(),
+                    )))) ...[
           _buildOptionsBox(isDarkMode),
         ],
       ],
@@ -423,8 +439,8 @@ class _LessonSlideState extends State<LessonSlide> {
       ),
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      children: List.generate(widget.lesson.options!.length, (index) {
-        final option = widget.lesson.options![index];
+      children: List.generate(_shuffledOptions.length, (index) {
+        final option = _shuffledOptions[index];
         final isSelected = option == widget.selectedOption;
         final isCorrect = option == widget.lesson.correctOption;
 
@@ -435,14 +451,14 @@ class _LessonSlideState extends State<LessonSlide> {
         final isCorrectSelected = widget.hasChecked && isSelected && isCorrect;
 
         if (isSelected && !widget.hasChecked) {
-          customBg = AppColors.compBg;
-          customFg = AppColors.dark;
+          customBg = AppColors.gray20;
+          customFg = AppColors.gray100;
         } else if (isCorrectSelected) {
-          customBg = AppColors.primary.withValues(alpha: .5);
-          customFg = AppColors.dark;
+          customBg = AppColors.primary60.withValues(alpha: .5);
+          customFg = AppColors.gray100;
         } else if (isWrongSelected) {
-          customBg = AppColors.dark.withValues(alpha: .5);
-          customFg = AppColors.dark;
+          customBg = AppColors.gray100.withValues(alpha: .5);
+          customFg = AppColors.gray100;
         }
 
         if (isAnswerMode) {
@@ -456,19 +472,16 @@ class _LessonSlideState extends State<LessonSlide> {
           return Button(
             label: option,
             size: ButtonSize.md,
-            type: ButtonType.outline,
+            type: ButtonType.secondary,
             height: optionButtonHeight,
             iconSize: 24.0,
             borderRadius: BorderRadius.circular(16),
-            customBorderColor: AppColors.grey6,
-            textStyle: AppTextStyles.body.copyWith(
+            textStyle: AppTextStyles.boldSm.copyWith(
               fontFamily: widget.lesson.optionFontFamily,
               fontSize: widget.lesson.optionFontSize,
             ),
-            customBackgroundColor:
-                customBg ?? (isDarkMode ? AppColors.darkBox : AppColors.grey1),
-            customForegroundColor:
-                customFg ?? (isDarkMode ? AppColors.darkText : AppColors.text),
+            customBackgroundColor: AppColors.primary20,
+            customForegroundColor: AppColors.primary100,
             onTap: widget.hasChecked
                 ? null
                 : () {
@@ -483,21 +496,76 @@ class _LessonSlideState extends State<LessonSlide> {
 
         if (isMatchMode) {
           final isDropped = _droppedItems.contains(option);
-          final optionButton = AbsorbPointer(
-            child: Button(
-              label: option,
-              size: ButtonSize.md,
-              type: ButtonType.secondary,
-              height: optionButtonHeight,
-              iconSize: 24.0,
-              borderRadius: BorderRadius.circular(64),
-              textStyle: AppTextStyles.body.copyWith(
-                fontFamily: widget.lesson.optionFontFamily,
-                fontSize: widget.lesson.optionFontSize,
-              ),
-              customBackgroundColor: AppColors.white,
-              customForegroundColor: AppColors.text,
-              onTap: () {},
+          final optionButton = DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.02),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                AbsorbPointer(
+                  child: Button(
+                    label: option,
+                    size: ButtonSize.sm,
+                    type: ButtonType.secondary,
+                    height: optionButtonHeight,
+                    iconSize: 24.0,
+                    borderRadius: BorderRadius.circular(16),
+                    customBackgroundColor: isDarkMode
+                        ? AppColors.gray90
+                        : AppColors.primary20,
+                    textStyle: AppTextStyles.boldSm.copyWith(
+                      fontFamily: widget.lesson.optionFontFamily,
+                      fontSize: widget.lesson.optionFontSize,
+                    ),
+                    customForegroundColor: AppColors.primary100,
+                    onTap: () {},
+                  ),
+                ),
+                Positioned(
+                  left: 0,
+                  child: IgnorePointer(
+                    child: Container(
+                      width: 12,
+                      height: optionButtonHeight,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary30,
+                        borderRadius: const BorderRadius.horizontal(
+                          left: Radius.circular(16),
+                        ),
+                      ),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: List.generate(
+                            5,
+                            (row) => Padding(
+                              padding: EdgeInsets.only(
+                                bottom: row == 4 ? 0 : 2,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _buildGripDot(),
+                                  const SizedBox(width: 3),
+                                  _buildGripDot(),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           );
 
@@ -517,30 +585,58 @@ class _LessonSlideState extends State<LessonSlide> {
         }
 
         final isWordCardOption = widget.lesson.showWordCard;
+        final isLessonOneSoundQuiz = const {"CAKE", "PHOTO", "COFFEE"}
+            .contains(widget.lesson.wordCardText?.toUpperCase());
+        final isQuizTableOption = widget.lesson.showQuizTable;
+        final isLessonThreeBaybayinQuiz =
+            isWordCardOption &&
+            widget.lesson.optionFontFamily == "Baybayin" &&
+            const {"BE", "KO"}.contains(
+              widget.lesson.wordCardText?.toUpperCase(),
+            );
+        final useSoundQuizStyle = isLessonOneSoundQuiz ||
+            isQuizTableOption ||
+            isKudlitPractice ||
+            isLessonThreeBaybayinQuiz;
         final isWordCardSelected = isWordCardOption && isSelected;
         final buttonWidget = Button(
           label: option,
-          size: ButtonSize.md,
-          type: isWordCardSelected
+          size: isLessonThreeBaybayinQuiz ? ButtonSize.sm : ButtonSize.md,
+          type: useSoundQuizStyle || isWordCardSelected
               ? ButtonType.secondary
               : isWordCardOption
               ? ButtonType.outline
               : ButtonType.secondary,
           height: optionButtonHeight,
           iconSize: 24.0,
-          borderRadius: isWordCardOption ? BorderRadius.circular(16) : null,
-          customBorderColor: isWordCardOption ? AppColors.grey3 : null,
-          textStyle: AppTextStyles.body.copyWith(
+          borderRadius:
+              isWordCardOption || isQuizTableOption || isKudlitPractice
+              ? BorderRadius.circular(16)
+              : null,
+          customBorderColor:
+              isWordCardOption || isQuizTableOption || isKudlitPractice
+              ? AppColors.gray20
+              : null,
+          textStyle: (useSoundQuizStyle
+                  ? AppTextStyles.boldSm
+                  : AppTextStyles.regularSm)
+              .copyWith(
             fontFamily: widget.lesson.optionFontFamily,
             fontSize: widget.lesson.optionFontSize,
           ),
-          customBackgroundColor: isWordCardSelected
-              ? AppColors.grey3
+          customBackgroundColor: useSoundQuizStyle
+              ? (isSelected ? AppColors.primary20 : AppColors.gray10)
+              : isWordCardSelected
+              ? AppColors.gray20
               : isWordCardOption
               ? (customBg ?? Colors.transparent)
               : customBg,
-          customForegroundColor: isWordCardOption
-              ? (customFg ?? AppColors.text)
+          customForegroundColor: useSoundQuizStyle
+              ? (isSelected
+                    ? AppColors.primary100
+                    : AppColors.gray100)
+              : isWordCardOption
+              ? (customFg ?? AppColors.gray100)
               : customFg,
           onTap: (widget.hasChecked && !isSelected)
               ? null
@@ -568,47 +664,55 @@ class _LessonSlideState extends State<LessonSlide> {
                 AbsorbPointer(
                   child: Button(
                     label: option,
-                    size: ButtonSize.md,
-                    type: ButtonType.outline,
+                    size: ButtonSize.sm,
+                    type: ButtonType.secondary,
                     height: optionButtonHeight,
                     iconSize: 24.0,
                     borderRadius: BorderRadius.circular(16),
-                    customBorderColor: AppColors.grey6,
                     customBackgroundColor: isDarkMode
-                        ? AppColors.darkBox
-                        : AppColors.grey1,
-                    textStyle: AppTextStyles.body.copyWith(
+                        ? AppColors.gray90
+                        : AppColors.primary20,
+                    textStyle: AppTextStyles.boldSm.copyWith(
                       fontFamily: widget.lesson.optionFontFamily,
                       fontSize: widget.lesson.optionFontSize,
                     ),
-                    customForegroundColor: AppColors.text,
+                    customForegroundColor: AppColors.primary100,
                     onTap: () {},
                   ),
                 ),
                 Positioned(
-                  left: 12,
+                  left: 0,
                   child: IgnorePointer(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 4,
-                          height: 4,
-                          decoration: const BoxDecoration(
-                            color: AppColors.grey8,
-                            shape: BoxShape.circle,
+                    child: Container(
+                      width: 12,
+                      height: optionButtonHeight,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary30,
+                        borderRadius: const BorderRadius.horizontal(
+                          left: Radius.circular(16),
+                        ),
+                      ),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: List.generate(
+                            5,
+                            (row) => Padding(
+                              padding: EdgeInsets.only(
+                                bottom: row == 4 ? 0 : 2,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _buildGripDot(),
+                                  const SizedBox(width: 3),
+                                  _buildGripDot(),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 3),
-                        Container(
-                          width: 4,
-                          height: 4,
-                          decoration: const BoxDecoration(
-                            color: AppColors.grey8,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -643,14 +747,6 @@ class _LessonSlideState extends State<LessonSlide> {
     );
 
     final optionsContent = Container(
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(
-            color: AppColors.compGrey.withValues(alpha: 0.3),
-            width: 1.5,
-          ),
-        ),
-      ),
       padding: EdgeInsets.fromLTRB(24, 16, 24, isBreakMode ? 2 : 16),
       child: grid,
     );
@@ -665,52 +761,14 @@ class _LessonSlideState extends State<LessonSlide> {
     );
   }
 
-  Widget _buildCharacterMatchRows(bool isDarkMode) {
-    final characters = widget.lesson.matchCharacters!;
-    final textColor = isDarkMode ? AppColors.darkText : AppColors.text;
-
-    return Column(
-      children: List.generate(characters.length, (index) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: index == characters.length - 1 ? 0 : 12,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 72,
-                height: 56,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: isDarkMode ? AppColors.darkCompBg : AppColors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.grey6, width: 1.5),
-                ),
-                child: Text(
-                  characters[index],
-                  style: AppTextStyles.heading.copyWith(
-                    fontFamily: "Baybayin",
-                    fontSize: 34,
-                    color: textColor,
-                    height: 1.0,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Icon(
-                  Icons.arrow_forward_rounded,
-                  color: textColor.withValues(alpha: 0.7),
-                  size: 22,
-                ),
-              ),
-              Expanded(child: _buildDragTarget(index, expand: false)),
-            ],
-          ),
-        );
-      }),
-    );
-  }
+  Widget _buildGripDot() => Container(
+    width: 2.5,
+    height: 2.5,
+    decoration: const BoxDecoration(
+      color: AppColors.primary50,
+      shape: BoxShape.circle,
+    ),
+  );
 
   Widget _buildDragTarget(int index, {bool expand = true}) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -757,39 +815,21 @@ class _LessonSlideState extends State<LessonSlide> {
       },
       builder: (context, candidateData, rejectedData) {
         if (_droppedItems[index] != null) {
-          Color? customBg;
-          Color? customFg;
-
-          if (widget.hasChecked) {
-            final isCorrect =
-                correctParts != null &&
-                index < correctParts.length &&
-                _droppedItems[index] == correctParts[index];
-
-            if (isCorrect) {
-              customBg = AppColors.primary.withValues(alpha: .5);
-              customFg = AppColors.dark;
-            } else {
-              customBg = AppColors.dark.withValues(alpha: .5);
-              customFg = AppColors.dark;
-            }
-          } else {
-            customBg = isDarkMode ? AppColors.darkCompLight : AppColors.white;
-          }
-
           final droppedButton = Button(
             label: _droppedItems[index]!,
             size: ButtonSize.md,
             type: ButtonType.secondary,
             height: optionButtonHeight,
             iconSize: 24.0,
-            borderRadius: BorderRadius.circular(24),
-            textStyle: AppTextStyles.body.copyWith(
+            borderRadius: BorderRadius.circular(16),
+            textStyle: AppTextStyles.boldSm.copyWith(
               fontFamily: widget.lesson.optionFontFamily,
               fontSize: widget.lesson.optionFontSize,
             ),
-            customBackgroundColor: customBg,
-            customForegroundColor: customFg,
+            customBackgroundColor: isDarkMode
+                ? AppColors.gray90
+                : AppColors.primary20,
+            customForegroundColor: AppColors.primary100,
             onTap: widget.hasChecked
                 ? null
                 : () {
@@ -800,7 +840,63 @@ class _LessonSlideState extends State<LessonSlide> {
                   },
           );
 
-          return SizedBox(height: optionButtonHeight, child: droppedButton);
+          return SizedBox(
+            height: optionButtonHeight,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  droppedButton,
+                  Positioned(
+                    left: 0,
+                    child: IgnorePointer(
+                      child: Container(
+                        width: 12,
+                        height: optionButtonHeight,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary30,
+                          borderRadius: const BorderRadius.horizontal(
+                            left: Radius.circular(16),
+                          ),
+                        ),
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: List.generate(
+                              5,
+                              (row) => Padding(
+                                padding: EdgeInsets.only(
+                                  bottom: row == 4 ? 0 : 2,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _buildGripDot(),
+                                    const SizedBox(width: 3),
+                                    _buildGripDot(),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
         }
         return SizedBox(height: optionButtonHeight, child: const EmptySlot());
       },

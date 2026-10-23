@@ -10,7 +10,8 @@ class EmptySlot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = AppColors.grey8;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final borderColor = isDarkMode ? AppColors.gray60 : AppColors.gray40;
 
     return CustomPaint(
       painter: DashedBorderPainter(

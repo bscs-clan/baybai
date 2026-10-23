@@ -51,7 +51,7 @@ class _LessonTextAnswerInputState extends State<LessonTextAnswerInput> {
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(
-            color: AppColors.compGrey.withValues(alpha: 0.3),
+            color: AppColors.gray60.withValues(alpha: 0.3),
             width: 1.5,
           ),
         ),

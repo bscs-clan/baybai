@@ -19,14 +19,12 @@ class FinalConsonantCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final borderColor = isDarkMode
-        ? AppColors.darkListSeparator
-        : AppColors.listSeparator;
-    final textColor = isDarkMode ? AppColors.darkText : AppColors.text;
+    final borderColor = isDarkMode ? AppColors.gray80 : AppColors.gray20;
+    final textColor = isDarkMode ? AppColors.gray10 : AppColors.gray100;
 
     return Container(
       decoration: BoxDecoration(
-        color: isDarkMode ? AppColors.darkCompBg : AppColors.white,
+        color: isDarkMode ? AppColors.gray80 : AppColors.bg,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: borderColor, width: 1.5),
       ),
@@ -52,7 +50,7 @@ class FinalConsonantCard extends StatelessWidget {
                     children: [
                       Text(
                         explanation.title,
-                        style: AppTextStyles.body.copyWith(
+                        style: AppTextStyles.regularSm.copyWith(
                           color: textColor,
                           fontWeight: FontWeight.w600,
                         ),
@@ -60,14 +58,15 @@ class FinalConsonantCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         explanation.description,
-                        style: AppTextStyles.body.copyWith(color: textColor),
+                        style: AppTextStyles.regularSm.copyWith(
+                          color: textColor,
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
-              if (!isLast)
-                Divider(height: 1, thickness: 1, color: borderColor),
+              if (!isLast) Divider(height: 1, thickness: 1, color: borderColor),
             ],
           );
         }),

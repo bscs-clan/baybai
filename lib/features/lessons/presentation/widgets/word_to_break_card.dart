@@ -26,7 +26,7 @@ class WordToBreakCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final resolvedBorderColor = AppColors.grey6;
+    final resolvedBorderColor = AppColors.gray20;
 
     return Container(
       width: double.infinity,
@@ -42,16 +42,15 @@ class WordToBreakCard extends StatelessWidget {
             label,
             style:
                 labelStyle ??
-                AppTextStyles.body.copyWith(color: AppColors.grey11),
+                AppTextStyles.regularXs.copyWith(color: AppColors.gray50),
           ),
           const SizedBox(height: 18),
           Text(
             word,
             style:
                 wordStyle ??
-                AppTextStyles.body.copyWith(
-                  fontSize: 24,
-                  color: AppColors.grey12,
+                AppTextStyles.boldXl.copyWith(
+                  color: AppColors.gray100,
                 ),
           ),
         ],

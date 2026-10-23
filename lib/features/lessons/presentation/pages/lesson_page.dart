@@ -1,5 +1,6 @@
 import "package:baybai/core/theme/colors.dart";
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 
 import "package:baybai/features/lessons/data/datasources/lesson_data_source.dart";
 import "package:baybai/features/lessons/domain/entities/lesson_content.dart";
@@ -105,6 +106,7 @@ class _LessonPageState extends State<LessonPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final currentLesson = _lessons[_currentIndex];
     final hasOptions =
         (currentLesson.options != null && currentLesson.options!.isNotEmpty) ||
@@ -115,6 +117,9 @@ class _LessonPageState extends State<LessonPage> {
     VoidCallback? onNextAction;
     Color? customNextBackgroundColor;
     Color? customNextForegroundColor;
+    String? feedbackLabel;
+    Color? feedbackColor;
+    Color? navigationBackgroundColor;
 
     if (hasOptions) {
       final hasChecked = _userAnswers.containsKey(_currentIndex);
@@ -141,75 +146,94 @@ class _LessonPageState extends State<LessonPage> {
             ? selectedOption?.trim().toLowerCase() ==
                   currentLesson.correctOption?.trim().toLowerCase()
             : selectedOption == currentLesson.correctOption;
+        feedbackLabel = isCorrect ? "That's right" : "Not quite";
+        feedbackColor = isCorrect
+            ? AppColors.bgSuccessContrast
+            : AppColors.bgErrorContrast;
+        navigationBackgroundColor = isCorrect
+            ? AppColors.bgSuccess
+            : AppColors.bgError;
         customNextBackgroundColor = isCorrect
-            ? Colors.green.shade600
-            : Colors.red.shade600;
-        customNextForegroundColor = AppColors.white;
+            ? AppColors.bgSuccessContrast
+            : AppColors.bgErrorContrast;
+        customNextForegroundColor = AppColors.bg;
       }
     } else {
       onNextAction = _nextPage;
     }
 
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24.0,
-                vertical: 8.0,
-              ),
-              child: SizedBox(
-                height: 48,
-                child: Row(
-                  children: [
-                    const CustomBackButton(),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: LessonProgressBar(
-                        currentIndex: _currentIndex,
-                        totalLessons: _lessons.length,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        systemNavigationBarColor:
+            navigationBackgroundColor ??
+            (isDarkMode ? AppColors.gray100 : AppColors.bg),
+        systemNavigationBarIconBrightness: Brightness.dark,
+        systemNavigationBarContrastEnforced: false,
+      ),
+      child: Scaffold(
+        body: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 8.0,
+                ),
+                child: SizedBox(
+                  height: 48,
+                  child: Row(
+                    children: [
+                      const CustomBackButton(),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: LessonProgressBar(
+                          currentIndex: _currentIndex,
+                          totalLessons: _lessons.length,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(),
-                onPageChanged: (index) {
-                  setState(() {
-                    _currentIndex = index;
-                  });
-                },
-                itemCount: _lessons.length,
-                itemBuilder: (context, index) {
-                  return LessonSlide(
-                    key: ValueKey('lesson-slide-$index'),
-                    lesson: _lessons[index],
-                    selectedOption: _selectedOptions[index],
-                    hasChecked: _userAnswers.containsKey(index),
-                    onOptionSelected: (option) {
-                      setState(() {
-                        _selectedOptions[index] = option;
-                      });
-                    },
-                  );
-                },
+              Expanded(
+                child: PageView.builder(
+                  controller: _pageController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  onPageChanged: (index) {
+                    setState(() {
+                      _currentIndex = index;
+                    });
+                  },
+                  itemCount: _lessons.length,
+                  itemBuilder: (context, index) {
+                    return LessonSlide(
+                      key: ValueKey('lesson-slide-$index'),
+                      lesson: _lessons[index],
+                      selectedOption: _selectedOptions[index],
+                      hasChecked: _userAnswers.containsKey(index),
+                      onOptionSelected: (option) {
+                        setState(() {
+                          _selectedOptions[index] = option;
+                        });
+                      },
+                    );
+                  },
+                ),
               ),
-            ),
-            LessonNavigationBar(
-              currentIndex: _currentIndex,
-              totalLessons: _lessons.length,
-              onNext: onNextAction,
-              customNextLabel: customNextLabel,
-              showNextIcon: showNextIcon,
-              customNextBackgroundColor: customNextBackgroundColor,
-              customNextForegroundColor: customNextForegroundColor,
-            ),
-          ],
+              LessonNavigationBar(
+                currentIndex: _currentIndex,
+                totalLessons: _lessons.length,
+                onNext: onNextAction,
+                customNextLabel: customNextLabel,
+                showNextIcon: showNextIcon,
+                customNextBackgroundColor: customNextBackgroundColor,
+                customNextForegroundColor: customNextForegroundColor,
+                feedbackLabel: feedbackLabel,
+                feedbackColor: feedbackColor,
+                navigationBackgroundColor: navigationBackgroundColor,
+              ),
+            ],
+          ),
         ),
       ),
     );

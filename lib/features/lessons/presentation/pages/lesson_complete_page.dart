@@ -1,6 +1,8 @@
 import "dart:math" as math;
 
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
 import "package:baybai/shared/components/buttons/button.dart";
@@ -37,10 +39,19 @@ class LessonCompletePage extends StatefulWidget {
 
 class _LessonCompletePageState extends State<LessonCompletePage> {
   String _selectedQuestionType = "Correct";
+  final ScrollController _questionListController = ScrollController();
+
+  @override
+  void dispose() {
+    _questionListController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final performanceTextColor =
+        isDarkMode ? AppColors.gray10 : AppColors.gray100;
     final wrongAnswers = widget.totalQuestions - widget.correctAnswers;
     final scorePercentage = widget.totalQuestions == 0
         ? 0
@@ -49,12 +60,17 @@ class _LessonCompletePageState extends State<LessonCompletePage> {
         .where((result) => result.status == _selectedQuestionType)
         .toList(growable: false);
 
-    return PopScope(
-      canPop: false,
-      child: Scaffold(
-        backgroundColor:
-            isDarkMode ? AppColors.darkBackground : AppColors.background,
-        body: SafeArea(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        systemNavigationBarColor: AppColors.bg,
+        systemNavigationBarIconBrightness: Brightness.dark,
+        systemNavigationBarContrastEnforced: false,
+      ),
+      child: PopScope(
+        canPop: false,
+        child: Scaffold(
+          backgroundColor: isDarkMode ? AppColors.gray100 : AppColors.bg,
+          body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -62,15 +78,33 @@ class _LessonCompletePageState extends State<LessonCompletePage> {
               children: [
                 Text(
                   "Your Score",
-                  style: AppTextStyles.body.copyWith(color: AppColors.grey10),
+                  style: AppTextStyles.regularSm.copyWith(
+                    color: AppColors.gray60,
+                  ),
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  _performanceMessage(
-                    correctAnswers: widget.correctAnswers,
-                    totalQuestions: widget.totalQuestions,
-                  ),
-                  style: AppTextStyles.bigbody,
+                Row(
+                  children: [
+                    HugeIcon(
+                      icon: widget.correctAnswers == 0
+                          ? HugeIcons.strokeRoundedCancel01
+                          : HugeIcons.strokeRoundedParty,
+                      size: 24,
+                      color: performanceTextColor,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _performanceMessage(
+                          correctAnswers: widget.correctAnswers,
+                          totalQuestions: widget.totalQuestions,
+                        ),
+                        style: AppTextStyles.boldLg.copyWith(
+                          color: performanceTextColor,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 24),
                 SizedBox(
@@ -96,8 +130,8 @@ class _LessonCompletePageState extends State<LessonCompletePage> {
                           ),
                           Text(
                             "$scorePercentage%",
-                            style: AppTextStyles.bigbody.copyWith(
-                              color: AppColors.grey11,
+                            style: AppTextStyles.boldXl.copyWith(
+                              color: AppColors.gray100,
                             ),
                           ),
                         ],
@@ -113,12 +147,12 @@ class _LessonCompletePageState extends State<LessonCompletePage> {
                     runSpacing: 8,
                     children: [
                       _ScoreLegendItem(
-                        color: AppColors.blue9,
+                        color: AppColors.primary60,
                         label: "Correct",
                         count: widget.correctAnswers,
                       ),
                       _ScoreLegendItem(
-                        color: AppColors.blue5,
+                        color: AppColors.primary30,
                         label: "Wrong",
                         count: wrongAnswers,
                       ),
@@ -126,31 +160,35 @@ class _LessonCompletePageState extends State<LessonCompletePage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                const Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: AppColors.grey6,
-                ),
+                const Divider(height: 1, thickness: 1, color: AppColors.gray20),
                 const SizedBox(height: 16),
                 Row(
                   children: [
                     Text(
                       _selectedQuestionType,
-                      style: AppTextStyles.body.copyWith(color: AppColors.grey12),
+                      style: AppTextStyles.regularSm.copyWith(
+                        color: AppColors.gray100,
+                      ),
                     ),
                     PopupMenuButton<String>(
-                      icon: const Icon(Icons.keyboard_arrow_down),
+                      icon: HugeIcon(
+                        icon: HugeIcons.strokeRoundedArrowDown01,
+                        size: 24,
+                        color: isDarkMode
+                            ? AppColors.gray10
+                            : AppColors.gray100,
+                      ),
                       iconSize: 24,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(
                         minWidth: 24,
                         minHeight: 24,
                       ),
-                      color: AppColors.grey1,
+                      color: AppColors.bg,
                       elevation: 1,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(6),
-                        side: const BorderSide(color: AppColors.grey3),
+                        side: const BorderSide(color: AppColors.gray20),
                       ),
                       onSelected: (value) {
                         setState(() => _selectedQuestionType = value);
@@ -159,14 +197,14 @@ class _LessonCompletePageState extends State<LessonCompletePage> {
                         PopupMenuItem<String>(
                           value: "Correct",
                           child: _QuestionTypeMenuItem(
-                            icon: Icons.check,
+                            icon: HugeIcons.strokeRoundedTick01,
                             label: "Correct",
                           ),
                         ),
                         PopupMenuItem<String>(
                           value: "Wrong",
                           child: _QuestionTypeMenuItem(
-                            icon: Icons.close,
+                            icon: HugeIcons.strokeRoundedCancel01,
                             label: "Wrong",
                           ),
                         ),
@@ -176,22 +214,28 @@ class _LessonCompletePageState extends State<LessonCompletePage> {
                 ),
                 SizedBox(
                   height: 160,
-                  child: ListView.separated(
-                    padding: EdgeInsets.zero,
-                    itemCount: visibleQuestions.length,
-                    separatorBuilder: (context, _) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final result = visibleQuestions[index];
+                  child: Scrollbar(
+                    controller: _questionListController,
+                    thumbVisibility: true,
+                    interactive: true,
+                    child: ListView.separated(
+                      controller: _questionListController,
+                      padding: const EdgeInsets.only(right: 8),
+                      itemCount: visibleQuestions.length,
+                      separatorBuilder: (context, _) =>
+                          const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final result = visibleQuestions[index];
 
-                      return Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                           SizedBox(
                             width: 28,
                             child: Text(
                               "${result.questionNumber}.",
-                              style: AppTextStyles.body.copyWith(
-                                color: AppColors.grey12,
+                              style: AppTextStyles.regularSm.copyWith(
+                                color: AppColors.gray100,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -200,14 +244,15 @@ class _LessonCompletePageState extends State<LessonCompletePage> {
                           Expanded(
                             child: Text(
                               result.question,
-                              style: AppTextStyles.body.copyWith(
-                                color: AppColors.grey12,
+                              style: AppTextStyles.regularSm.copyWith(
+                                color: AppColors.gray100,
                               ),
                             ),
                           ),
-                        ],
-                      );
-                    },
+                          ],
+                        );
+                      },
+                    ),
                   ),
                 ),
               ],
@@ -225,8 +270,9 @@ class _LessonCompletePageState extends State<LessonCompletePage> {
                     label: "Try Again",
                     width: double.infinity,
                     type: ButtonType.outline,
-                    customBorderColor: AppColors.grey5,
+                    customBorderColor: AppColors.gray20,
                     size: ButtonSize.md,
+                    textStyle: AppTextStyles.boldSm,
                     onTap: () => Navigator.of(context).pushReplacementNamed(
                       "/lesson",
                       arguments: widget.lessonId,
@@ -240,8 +286,9 @@ class _LessonCompletePageState extends State<LessonCompletePage> {
                     width: double.infinity,
                     type: ButtonType.primary,
                     size: ButtonSize.md,
-                    customBackgroundColor: AppColors.blue9,
-                    customForegroundColor: AppColors.white,
+                    textStyle: AppTextStyles.boldSm,
+                    customBackgroundColor: AppColors.primary60,
+                    customForegroundColor: AppColors.bg,
                     onTap: () => Navigator.of(
                       context,
                     ).pushNamedAndRemoveUntil("/home", (route) => false),
@@ -249,6 +296,7 @@ class _LessonCompletePageState extends State<LessonCompletePage> {
                 ),
               ],
             ),
+          ),
           ),
         ),
       ),
@@ -264,15 +312,15 @@ class _LessonCompletePageState extends State<LessonCompletePage> {
     }
 
     final accuracy = correctAnswers / totalQuestions;
-    if (accuracy == 1) return "Awesome!";
-    if (accuracy >= 0.75) return "Great job!";
-    if (accuracy >= 0.5) return "Nice!";
-    return "Better try next time";
+    if (accuracy == 1) return "Awesome";
+    if (accuracy >= 0.75) return "Great job";
+    if (accuracy >= 0.5) return "Nice";
+    return "Good try";
   }
 }
 
 class _QuestionTypeMenuItem extends StatelessWidget {
-  final IconData icon;
+  final List<List<dynamic>> icon;
   final String label;
 
   const _QuestionTypeMenuItem({required this.icon, required this.label});
@@ -282,9 +330,9 @@ class _QuestionTypeMenuItem extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: AppColors.grey9),
+        HugeIcon(icon: icon, color: AppColors.gray50, size: 24),
         const SizedBox(width: 12),
-        Text(label, style: AppTextStyles.body),
+        Text(label, style: AppTextStyles.regularSm),
       ],
     );
   }
@@ -306,7 +354,7 @@ class _ScoreLegendItem extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.grey3,
+        color: AppColors.gray10,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
@@ -320,7 +368,7 @@ class _ScoreLegendItem extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             "$label ($count)",
-            style: AppTextStyles.body.copyWith(color: AppColors.grey12),
+            style: AppTextStyles.regularSm.copyWith(color: AppColors.gray100),
           ),
         ],
       ),
@@ -344,16 +392,16 @@ class _ScoreCirclePainter extends CustomPainter {
     final radius = (size.width - strokeWidth) / 2;
     final rect = Rect.fromCircle(center: center, radius: radius);
     final backgroundPaint = Paint()
-      ..color = AppColors.grey4
+      ..color = AppColors.gray20
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth;
     final correctPaint = Paint()
-      ..color = AppColors.blue9
+      ..color = AppColors.primary60
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.butt;
     final wrongPaint = Paint()
-      ..color = AppColors.blue5
+      ..color = AppColors.primary30
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.butt;

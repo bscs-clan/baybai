@@ -36,10 +36,8 @@ class _VowelStrokeDemoCardState extends State<VowelStrokeDemoCard>
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final borderColor = isDarkMode
-        ? AppColors.darkListSeparator
-        : AppColors.listSeparator;
-    final canvasColor = isDarkMode ? AppColors.darkCompBg : AppColors.white;
+    final borderColor = isDarkMode ? AppColors.gray80 : AppColors.gray20;
+    final canvasColor = isDarkMode ? AppColors.gray80 : AppColors.bg;
     final selected = _selectedItem;
     final strokes = baybayinPracticeStrokesForLabel(selected.label);
 
@@ -65,7 +63,7 @@ class _VowelStrokeDemoCardState extends State<VowelStrokeDemoCard>
               painter: BaybayinStrokeDemoPainter(
                 strokes: strokes,
                 progress: progress,
-                inkColor: AppColors.primary,
+                inkColor: AppColors.primary60,
               ),
             ),
           );

@@ -1,4 +1,11 @@
 import "package:get_it/get_it.dart";
+import "package:baybai/features/auth/data/repositories/api_auth_repository.dart";
+import "package:baybai/features/auth/domain/repositories/auth_repository.dart";
+import "package:baybai/features/auth/domain/usecases/sign_in.dart";
+import "package:baybai/features/auth/domain/usecases/sign_up.dart";
+import "package:baybai/features/auth/domain/usecases/get_account_profile.dart";
+import "package:baybai/features/auth/domain/usecases/sign_out.dart";
+import "package:baybai/features/auth/domain/usecases/upload_profile_picture.dart";
 import "package:baybai/features/dataset/data/datasources/dataset_capture_datasource.dart";
 import "package:baybai/features/dataset/data/datasources/dataset_local_datasource.dart";
 import "package:baybai/features/dataset/data/repositories/dataset_repository_impl.dart";
@@ -25,6 +32,40 @@ import "package:baybai/features/settings/presentation/view_models/theme_cubit.da
 final serviceLoc = GetIt.instance;
 
 Future<void> initDependencies() async {
+  if (!serviceLoc.isRegistered<AuthRepository>()) {
+    serviceLoc.registerLazySingleton<AuthRepository>(ApiAuthRepository.new);
+  }
+
+  if (!serviceLoc.isRegistered<SignIn>()) {
+    serviceLoc.registerLazySingleton<SignIn>(
+      () => SignIn(serviceLoc<AuthRepository>()),
+    );
+  }
+
+  if (!serviceLoc.isRegistered<SignUp>()) {
+    serviceLoc.registerLazySingleton<SignUp>(
+      () => SignUp(serviceLoc<AuthRepository>()),
+    );
+  }
+
+  if (!serviceLoc.isRegistered<GetAccountProfile>()) {
+    serviceLoc.registerLazySingleton<GetAccountProfile>(
+      () => GetAccountProfile(serviceLoc<AuthRepository>()),
+    );
+  }
+
+  if (!serviceLoc.isRegistered<SignOut>()) {
+    serviceLoc.registerLazySingleton<SignOut>(
+      () => SignOut(serviceLoc<AuthRepository>()),
+    );
+  }
+
+  if (!serviceLoc.isRegistered<UploadProfilePicture>()) {
+    serviceLoc.registerLazySingleton<UploadProfilePicture>(
+      () => UploadProfilePicture(serviceLoc<AuthRepository>()),
+    );
+  }
+
   if (!serviceLoc.isRegistered<CameraService>()) {
     serviceLoc.registerLazySingleton<CameraService>(CameraService.new);
   }

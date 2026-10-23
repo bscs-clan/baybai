@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
 import "package:baybai/features/flashcard/presentation/widgets/flashcard_options_bottom_sheet.dart";
@@ -11,7 +12,7 @@ class ExploreSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget buildCard({
-      required IconData icon,
+      required List<List<dynamic>> icon,
       required String label,
       required String description,
       required String route,
@@ -21,8 +22,8 @@ class ExploreSection extends StatelessWidget {
         child: ExploreCard(
           icon: icon,
           label: label,
-            description: description,
-            onTap: onTap ?? () => Navigator.pushNamed(context, route),
+          description: description,
+          onTap: onTap ?? () => Navigator.pushNamed(context, route),
         ),
       );
     }
@@ -33,7 +34,9 @@ class ExploreSection extends StatelessWidget {
         Text(
           "Explore",
           style: AppTextStyles.bigbody.copyWith(
-            color: AppColors.grey12,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? AppColors.gray10
+                : AppColors.gray100,
           ),
         ),
         const SizedBox(height: 8),
@@ -42,14 +45,14 @@ class ExploreSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               buildCard(
-                icon: Icons.school,
+                icon: HugeIcons.strokeRoundedBook02,
                 label: "Lessons",
                 description: "Learn Topics",
                 route: "/lessons",
               ),
               const SizedBox(width: 8),
               buildCard(
-                icon: Icons.quiz,
+                icon: HugeIcons.strokeRoundedQuiz02,
                 label: "Quiz",
                 description: "Test knowledge",
                 route: "/quiz-setup",
@@ -64,14 +67,14 @@ class ExploreSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               buildCard(
-                icon: Icons.text_fields,
+                icon: HugeIcons.strokeRoundedText,
                 label: "Characters",
                 description: "Meet symbols",
                 route: "/characters",
               ),
               const SizedBox(width: 8),
               buildCard(
-                icon: Icons.edit,
+                icon: HugeIcons.strokeRoundedPencil,
                 label: "Practice",
                 description: "Write and test",
                 route: "/practice",
@@ -85,7 +88,7 @@ class ExploreSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               buildCard(
-                icon: Icons.library_books,
+                icon: HugeIcons.strokeRoundedNote,
                 label: "Flashcard",
                 description: "Review vocab",
                 route: "/flashcard",

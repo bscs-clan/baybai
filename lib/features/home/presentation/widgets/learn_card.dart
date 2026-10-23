@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
 import "package:baybai/shared/components/cards/app_card.dart";
@@ -10,7 +11,7 @@ class LearnCard extends StatefulWidget {
   final String description;
   final int? lessonId;
   final VoidCallback? onTap;
-  final IconData? icon;
+  final List<List<dynamic>>? icon;
   final bool isExpandable;
 
   const LearnCard({
@@ -34,6 +35,7 @@ class _LearnCardState extends State<LearnCard> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final effectiveTap =
         widget.onTap ??
         () {
@@ -47,7 +49,7 @@ class _LearnCardState extends State<LearnCard> {
     return AppCard(
       width: double.infinity,
       padding: EdgeInsets.zero,
-      backgroundColor: AppColors.grey3,
+      backgroundColor: isDarkMode ? AppColors.gray90 : AppColors.gray10,
       borderRadius: BorderRadius.circular(16),
       child: ClipRRect(
         child: Stack(
@@ -70,36 +72,43 @@ class _LearnCardState extends State<LearnCard> {
                             children: [
                               Text(
                                 widget.lessonNumber,
-                                style: AppTextStyles.body.copyWith(
-                                  color: AppColors.grey12,
+                                style: AppTextStyles.regularXs.copyWith(
+                                  color: isDarkMode
+                                      ? AppColors.gray10
+                                      : AppColors.gray60,
                                 ),
                               ),
+                              SizedBox(height: 8,),
                               Text(
                                 widget.title,
-                                style: AppTextStyles.bigbody.copyWith(
-                                  color: AppColors.grey12,
+                                style: AppTextStyles.boldMd.copyWith(
+                                  color: isDarkMode
+                                      ? AppColors.gray10
+                                      : AppColors.gray100,
                                 ),
                               ),
                             ],
                           ),
                         ),
                         if (widget.isExpandable)
-                          Icon(
-                            _isExpanded
-                                ? Icons.keyboard_arrow_up
-                                : Icons.keyboard_arrow_down,
-                            color: AppColors.grey10,
+                          HugeIcon(
+                            icon: _isExpanded
+                                ? HugeIcons.strokeRoundedArrowUp01
+                                : HugeIcons.strokeRoundedArrowDown01,
+                            color: isDarkMode
+                                ? AppColors.gray50
+                                : AppColors.gray60,
                             size: 24,
                           ),
                       ],
                     ),
                   ),
                   if (!widget.isExpandable || _isExpanded) ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 4),
                     Text(
                       widget.description,
-                      style: AppTextStyles.body.copyWith(
-                        color: AppColors.grey11,
+                      style: AppTextStyles.regularSm.copyWith(
+                        color: isDarkMode ? AppColors.gray40 : AppColors.gray70,
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -109,9 +118,14 @@ class _LearnCardState extends State<LearnCard> {
                         child: Button(
                           borderRadius: BorderRadius.circular(64),
                           label: "Start Lesson",
+                          textStyle: AppTextStyles.boldSm,
                           onTap: effectiveTap,
-                          customBackgroundColor: AppColors.blue9,
-                          customForegroundColor: AppColors.grey1,
+                          customBackgroundColor: isDarkMode
+                              ? AppColors.primary80
+                              : AppColors.primary60,
+                          customForegroundColor: isDarkMode
+                              ? AppColors.gray10
+                              : AppColors.gray10,
                         ),
                       ),
                     ),

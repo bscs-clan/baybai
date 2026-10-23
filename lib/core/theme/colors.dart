@@ -2,7 +2,7 @@ import "package:flutter/material.dart";
 
 class AppColors {
   // Light Theme
-  static const Color primary = Color(0xFF3D63DD);
+  static const Color primary = primary60;
   static const Color dark = Color(0xFF1E1F24);
   static const Color white = Color(0xFFFFFFFF);
   static const Color background = Color(0xFFEFF0F3);
@@ -20,7 +20,7 @@ class AppColors {
   static const Color inputBackground = Color(0xFFF5F5F5);
 
   // Dark Theme
-  static const Color darkPrimary = Color(0xFF3D63DD);
+  static const Color darkPrimary = primary60;
   static const Color darkDark = Color(0xFF121317);
   static const Color darkWhite = Color(0xFFFFFFFF);
   static const Color darkBackground = Color(0xFF0A0B0F);
@@ -34,10 +34,9 @@ class AppColors {
   static const Color darkListSeparator = Color(0xFF35363B);
   static const Color darkInputBackground = Color(0xFF1C1E25);
 
+  //light theme v2
 
-//light theme v2
-
-//Blue Colors
+  //Blue Colors
   static const Color blue12 = Color(0xFF242E5C);
   static const Color blue11 = Color(0xFF4D63CB);
   static const Color blue10 = Color(0xFF536AD7);
@@ -51,7 +50,7 @@ class AppColors {
   static const Color blue2 = Color(0xFFF7F9FF);
   static const Color blue1 = Color(0xFFFCFDFE);
 
-//Gray Colors
+  //Gray Colors
   static const Color grey12 = Color(0xFF1E1F24);
   static const Color grey11 = Color(0xFF62636C);
   static const Color grey10 = Color(0xFF80828D);
@@ -65,40 +64,70 @@ class AppColors {
   static const Color grey2 = Color(0xFFF9F9FB);
   static const Color grey1 = Color(0xFFFCFCFD);
 
-
   //Dark theme v2
 
-//blue color
+  //blue color
   static const Color darkblue1 = Color(0xFF0D101C);
-static const Color darkblue2 = Color(0xFF121725);
-static const Color darkblue3 = Color(0xFF1B2348);
-static const Color darkblue4 = Color(0xFF222D61);
-static const Color darkblue5 = Color(0xFF2A3773);
-static const Color darkblue6 = Color(0xFF344282);
-static const Color darkblue7 = Color(0xFF3E4F96);
-static const Color darkblue8 = Color(0xFF495CB0);
-static const Color darkblue9 = Color(0xFF5E77E8);
-static const Color darkblue10 = Color(0xFF536AD9);
-static const Color darkblue11 = Color(0xFF9AB2FF);
-static const Color darkblue12 = Color(0xFFD7E1FF);
+  static const Color darkblue2 = Color(0xFF121725);
+  static const Color darkblue3 = Color(0xFF1B2348);
+  static const Color darkblue4 = Color(0xFF222D61);
+  static const Color darkblue5 = Color(0xFF2A3773);
+  static const Color darkblue6 = Color(0xFF344282);
+  static const Color darkblue7 = Color(0xFF3E4F96);
+  static const Color darkblue8 = Color(0xFF495CB0);
+  static const Color darkblue9 = Color(0xFF5E77E8);
+  static const Color darkblue10 = Color(0xFF536AD9);
+  static const Color darkblue11 = Color(0xFF9AB2FF);
+  static const Color darkblue12 = Color(0xFFD7E1FF);
 
-//grey color
-static const Color darkgrey1 = Color(0xFF111113);
-static const Color darkgrey2 = Color(0xFF19191B);
-static const Color darkgrey3 = Color(0xFF222325);
-static const Color darkgrey4 = Color(0xFF292A2E);
-static const Color darkgrey5 = Color(0xFF303136);
-static const Color darkgrey6 = Color(0xFF393A40);
-static const Color darkgrey7 = Color(0xFF46484F);
-static const Color darkgrey8 = Color(0xFF5F606A);
-static const Color darkgrey9 = Color(0xFF6C6E79);
-static const Color darkgrey10 = Color(0xFF797B86);
-static const Color darkgrey11 = Color(0xFFB2B3BD);
-static const Color darkgrey12 = Color(0xFFEEEEF0);
+  //grey color
+  static const Color darkgrey1 = Color(0xFF111113);
+  static const Color darkgrey2 = Color(0xFF19191B);
+  static const Color darkgrey3 = Color(0xFF222325);
+  static const Color darkgrey4 = Color(0xFF292A2E);
+  static const Color darkgrey5 = Color(0xFF303136);
+  static const Color darkgrey6 = Color(0xFF393A40);
+  static const Color darkgrey7 = Color(0xFF46484F);
+  static const Color darkgrey8 = Color(0xFF5F606A);
+  static const Color darkgrey9 = Color(0xFF6C6E79);
+  static const Color darkgrey10 = Color(0xFF797B86);
+  static const Color darkgrey11 = Color(0xFFB2B3BD);
+  static const Color darkgrey12 = Color(0xFFEEEEF0);
 
+  //Latest Color
 
+  //Blue Colors
+  static const Color primary10 = Color(0xFFF4F6FF);
+  static const Color primary20 = Color(0xFFE8ECFF);
+  static const Color primary30 = Color(0xFFD1DAFF);
+  static const Color primary40 = Color(0xFFB3C1FF);
+  static const Color primary50 = Color(0xFF879BFF);
+  static const Color primary60 = Color(0xFF5E77E8);
+  static const Color primary70 = Color(0xFF485FC7);
+  static const Color primary80 = Color(0xFF35499E);
+  static const Color primary90 = Color(0xFF26366F);
+  static const Color primary100 = Color(0xFF131D42);
+
+  //Gray Colors
+  static const Color gray10 = Color(0xFFF4F6F7);
+  static const Color gray20 = Color(0xFFE8EBEB);
+  static const Color gray30 = Color(0xFFDADDDE);
+  static const Color gray40 = Color(0xFFC1C4C6);
+  static const Color gray50 = Color(0xFF898D8F);
+  static const Color gray60 = Color(0xFF6E7375);
+  static const Color gray70 = Color(0xFF53575A);
+  static const Color gray80 = Color(0xFF2F3133);
+  static const Color gray90 = Color(0xFF1F2224);
+  static const Color gray100 = Color(0xFF131214);
+
+  //Background Color
+  static const Color bg = Color(0xFFFFFFFF);
+
+  static const Color bgSuccess = Color(0xFFE8FAF0);
+  static const Color bgSuccessContrast = Color(0xFF008557);
+  static const Color bgError = Color(0xFFFFF3F0);
+  static const Color bgErrorContrast = Color(0xFFDB340B);
+  static const Color error = bgErrorContrast;
+  static const Color bgWarning = Color(0xFFFFF9E6);
+  static const Color bgWarningContrast = Color(0xFFFFD84D);
 }
-
-
-
- 

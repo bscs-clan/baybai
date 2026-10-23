@@ -11,6 +11,7 @@ class LessonLibraryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -26,7 +27,9 @@ class LessonLibraryPage extends StatelessWidget {
         centerTitle: true,
         title: Text(
           "Lessons",
-          style: AppTextStyles.bigbody.copyWith(color: AppColors.grey10),
+          style: AppTextStyles.boldLg.copyWith(
+            color: isDarkMode ? AppColors.gray10 : AppColors.gray100,
+          ),
         ),
       ),
       body: SafeArea(

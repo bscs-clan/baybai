@@ -13,6 +13,7 @@ class LessonProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final progress = totalLessons > 0 ? (currentIndex + 1) / totalLessons : 0.0;
 
     return Row(
@@ -28,9 +29,11 @@ class LessonProgressBar extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: value,
                   minHeight: 6,
-                  backgroundColor: AppColors.grey3,
+                  backgroundColor: isDarkMode
+                      ? AppColors.gray80
+                      : AppColors.gray20,
                   valueColor: const AlwaysStoppedAnimation<Color>(
-                    AppColors.blue9,
+                    AppColors.primary60,
                   ),
                 ),
               );

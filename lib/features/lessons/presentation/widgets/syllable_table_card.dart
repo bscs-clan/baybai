@@ -17,32 +17,33 @@ class SyllableTableCard extends StatelessWidget {
 
   static const List<_WordExample> _examples = [
     _WordExample(
-      latinLetters: ["B", "A", "T", "A"],
-      baybayinSyllables: ["BA", "TA"],
+      latinLetters: ["B", "a", "t", "a"],
+      baybayinSyllables: ["Ba", "ta"],
     ),
     _WordExample(
-      latinLetters: ["B", "A", "H", "A", "Y"],
-      baybayinSyllables: ["BA", "HA", "Y"],
+      latinLetters: ["B", "a", "h", "a", "y"],
+      baybayinSyllables: ["Ba", "ha", "y"],
+    ),
+   _WordExample(
+  latinLetters: ["B", "a", "s", "a"],
+  baybayinSyllables: ["Ba", "sa"],
+),
+    _WordExample(
+      latinLetters: ["K", "a", "m", "a"],
+      baybayinSyllables: ["Ka", "ma"],
     ),
     _WordExample(
-      latinLetters: ["L", "A", "R", "U", "A", "N"],
-      baybayinSyllables: ["LA", "RU", "AN"],
-    ),
-    _WordExample(
-      latinLetters: ["K", "A", "M", "A"],
-      baybayinSyllables: ["KA", "MA"],
-    ),
-    _WordExample(
-      latinLetters: ["U", "M", "A", "G", "A"],
-      baybayinSyllables: ["U", "MA", "GA"],
+      latinLetters: ["U", "m", "a", "g", "a"],
+      baybayinSyllables: ["U", "ma", "ga"],
     ),
   ];
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = AppColors.grey6;
-    final textColor = AppColors.grey12;
-    final pillColor = AppColors.blue3;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final borderColor = isDarkMode ? AppColors.gray80 : AppColors.gray20;
+    final textColor = isDarkMode ? AppColors.gray10 : AppColors.gray100;
+    final pillColor = isDarkMode ? AppColors.gray90 : AppColors.gray20;
 
     return Container(
       decoration: BoxDecoration(
@@ -59,8 +60,8 @@ class SyllableTableCard extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Text(
-                      "Latin",
-                      style: AppTextStyles.body.copyWith(color: textColor),
+                      "Latin Letters",
+                      style: AppTextStyles.boldSm.copyWith(color: textColor),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -70,8 +71,8 @@ class SyllableTableCard extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     child: Text(
-                      "Baybayin Logic",
-                      style: AppTextStyles.body.copyWith(color: textColor),
+                      "Baybayin Syllables",
+                      style: AppTextStyles.boldSm.copyWith(color: textColor),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -113,14 +114,12 @@ class SyllableTableCard extends StatelessWidget {
                                   height: 22,
                                   alignment: Alignment.center,
                                   decoration: BoxDecoration(
-                                    color: AppColors.grey3,
+                                    color: AppColors.gray20,
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
                                     e.value,
-                                    style: AppTextStyles.body.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
+                                    style: AppTextStyles.regularSm.copyWith(
                                       color: textColor,
                                     ),
                                   ),
@@ -162,9 +161,7 @@ class SyllableTableCard extends StatelessWidget {
                                       ),
                                       child: Text(
                                         e.value,
-                                        style: AppTextStyles.body.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 12,
+                                        style: AppTextStyles.regularSm.copyWith(
                                           color: textColor,
                                         ),
                                       ),

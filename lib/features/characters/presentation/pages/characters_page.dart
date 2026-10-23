@@ -26,8 +26,7 @@ class _CharactersPageState extends State<CharactersPage> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isDarkMode =
-        Theme.of(context).brightness == Brightness.dark;
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     final List<Map<String, String>> dummyCharacters = [
       {
@@ -194,11 +193,13 @@ class _CharactersPageState extends State<CharactersPage> {
 
     final normalizedSearchQuery = searchQuery.trim().toLowerCase();
     final filteredCharacters = dummyCharacters.where((character) {
-      final matchesCategory = selectedCategory == "All" ||
-        character["category"] == selectedCategory;
-      final matchesSearch = normalizedSearchQuery.isEmpty ||
-        character["label"]!.toLowerCase().contains(normalizedSearchQuery) ||
-        character["symbol"]!.contains(normalizedSearchQuery);
+      final matchesCategory =
+          selectedCategory == "All" ||
+          character["category"] == selectedCategory;
+      final matchesSearch =
+          normalizedSearchQuery.isEmpty ||
+          character["label"]!.toLowerCase().contains(normalizedSearchQuery) ||
+          character["symbol"]!.contains(normalizedSearchQuery);
 
       return matchesCategory && matchesSearch;
     }).toList();
@@ -213,16 +214,12 @@ class _CharactersPageState extends State<CharactersPage> {
         leadingWidth: 72,
         leading: const Padding(
           padding: EdgeInsets.only(left: 24.0),
-          child: Center(
-            child: CustomBackButton(),
-          ),
+          child: Center(child: CustomBackButton()),
         ),
         centerTitle: true,
         title: Text(
           "Characters",
-          style: AppTextStyles.bigbody.copyWith(
-            color: AppColors.grey12,
-          ),
+          style: AppTextStyles.bigbody.copyWith(color: AppColors.grey12),
         ),
       ),
       body: SafeArea(
@@ -246,8 +243,7 @@ class _CharactersPageState extends State<CharactersPage> {
             Expanded(
               child: GridView.builder(
                 padding: const EdgeInsets.all(24),
-                gridDelegate:
-                    const SliverGridDelegateWithFixedCrossAxisCount(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
                   crossAxisSpacing: 4,
                   mainAxisSpacing: 4,
@@ -258,11 +254,8 @@ class _CharactersPageState extends State<CharactersPage> {
                   final char = filteredCharacters[index];
 
                   return GestureDetector(
-                    onTap: () => _showCharacterBottomSheet(
-                      context,
-                      char,
-                      isDarkMode,
-                    ),
+                    onTap: () =>
+                        _showCharacterBottomSheet(context, char, isDarkMode),
                     child: Container(
                       decoration: ShapeDecoration(
                         color: AppColors.grey3,
@@ -294,10 +287,7 @@ class _CharactersPageState extends State<CharactersPage> {
                           Positioned(
                             left: 10,
                             bottom: 10,
-                            child: _buildCardSymbol(
-                              char,
-                           AppColors.grey12,
-                            ),
+                            child: _buildCardSymbol(char, AppColors.grey12),
                           ),
                         ],
                       ),
@@ -312,10 +302,7 @@ class _CharactersPageState extends State<CharactersPage> {
     );
   }
 
-  Widget _buildCardSymbol(
-    Map<String, String> character,
-    Color textColor,
-  ) {
+  Widget _buildCardSymbol(Map<String, String> character, Color textColor) {
     final symbolStyle = AppTextStyles.heading.copyWith(
       fontFamily: "Baybayin",
       fontSize: 42,
@@ -336,10 +323,7 @@ class _CharactersPageState extends State<CharactersPage> {
               color: textColor.withValues(alpha: 0.1),
             ),
           ),
-          TextSpan(
-            text: character["symbol"]!,
-            style: symbolStyle,
-          ),
+          TextSpan(text: character["symbol"]!, style: symbolStyle),
         ],
       ),
     );
@@ -355,17 +339,14 @@ class _CharactersPageState extends State<CharactersPage> {
       useSafeArea: true,
       isScrollControlled: true,
       constraints: const BoxConstraints(maxWidth: double.infinity),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.zero,
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       backgroundColor: AppColors.grey1,
       builder: (context) => DraggableScrollableSheet(
         expand: false,
         initialChildSize: 1.0,
         minChildSize: 0.35,
         maxChildSize: 1.0,
-        builder: (context, scrollController) =>
-            _CharacterBottomSheetContent(
+        builder: (context, scrollController) => _CharacterBottomSheetContent(
           character: character,
           isDarkMode: isDarkMode,
           scrollController: scrollController,
@@ -397,9 +378,7 @@ class _CharactersPageState extends State<CharactersPage> {
                   vertical: 10,
                 ),
                 decoration: ShapeDecoration(
-                  color: isSelected
-                      ? AppColors.blue9
-                      : Colors.transparent,
+                  color: isSelected ? AppColors.blue9 : Colors.transparent,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(64),
                     side: isSelected
@@ -410,14 +389,10 @@ class _CharactersPageState extends State<CharactersPage> {
                 child: Text(
                   category,
                   style: AppTextStyles.body.copyWith(
-                    fontWeight: isSelected
-                        ? FontWeight.w600
-                        : FontWeight.w400,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                     color: isSelected
                         ? Colors.white
-                        : (isDarkMode
-                            ? AppColors.darkText
-                            : AppColors.text),
+                        : (isDarkMode ? AppColors.darkText : AppColors.text),
                   ),
                 ),
               ),
@@ -455,15 +430,15 @@ class _CharacterBottomSheetContentState
   void initState() {
     super.initState();
     _audioPlayer = AudioPlayer();
-    _playerStateSubscription = _audioPlayer.onPlayerStateChanged.listen(
-      (state) {
-        if (mounted) {
-          setState(() {
-            _isPlaying = state == PlayerState.playing;
-          });
-        }
-      },
-    );
+    _playerStateSubscription = _audioPlayer.onPlayerStateChanged.listen((
+      state,
+    ) {
+      if (mounted) {
+        setState(() {
+          _isPlaying = state == PlayerState.playing;
+        });
+      }
+    });
   }
 
   @override
@@ -490,8 +465,7 @@ class _CharacterBottomSheetContentState
 
   @override
   Widget build(BuildContext context) {
-    final textColor =
-        widget.isDarkMode ? AppColors.darkText : AppColors.text;
+    final textColor = widget.isDarkMode ? AppColors.darkText : AppColors.text;
 
     final secondaryTextColor = widget.isDarkMode
         ? AppColors.darkTextGrey
@@ -532,18 +506,14 @@ class _CharacterBottomSheetContentState
             children: [
               Text(
                 widget.character["category"]!,
-                style: AppTextStyles.body.copyWith(
-                  color: textColor,
-                ),
+                style: AppTextStyles.body.copyWith(color: textColor),
               ),
               if (widget.character["audio"] != null)
                 IconButton(
                   onPressed: _toggleSound,
                   tooltip: _isPlaying ? "Stop sound" : "Play sound",
                   icon: Icon(
-                    _isPlaying
-                        ? Icons.stop
-                        : Icons.volume_up,
+                    _isPlaying ? Icons.stop : Icons.volume_up,
                     color: textColor,
                   ),
                 ),
@@ -555,18 +525,13 @@ class _CharacterBottomSheetContentState
             alignment: Alignment.centerLeft,
             child: Text(
               "Examples",
-              style: AppTextStyles.title.copyWith(
-                color: textColor,
-              ),
+              style: AppTextStyles.title.copyWith(color: textColor),
             ),
           ),
           const SizedBox(height: 16),
           Align(
             alignment: Alignment.centerLeft,
-            child: _buildExample(
-              textColor,
-              secondaryTextColor,
-            ),
+            child: _buildExample(textColor, secondaryTextColor),
           ),
           if (widget.character["category"] == "Consonants") ...[
             const SizedBox(height: 20),
@@ -576,16 +541,11 @@ class _CharacterBottomSheetContentState
               alignment: Alignment.centerLeft,
               child: Text(
                 "With Marks",
-                style: AppTextStyles.title.copyWith(
-                  color: textColor,
-                ),
+                style: AppTextStyles.title.copyWith(color: textColor),
               ),
             ),
             const SizedBox(height: 16),
-            _buildKudlitForms(
-              textColor,
-              secondaryTextColor,
-            ),
+            _buildKudlitForms(textColor, secondaryTextColor),
             const SizedBox(height: 42),
           ],
         ],
@@ -593,35 +553,20 @@ class _CharacterBottomSheetContentState
     );
   }
 
-  Widget _buildExample(
-    Color textColor,
-    Color secondaryTextColor,
-  ) {
-    final example =
-        _exampleParts[widget.character["example"]!] ?? [];
+  Widget _buildExample(Color textColor, Color secondaryTextColor) {
+    final example = _exampleParts[widget.character["example"]!] ?? [];
 
     final additionalExample =
-        _exampleParts[
-              widget.character["additionalExample"]!
-            ] ??
-            [];
+        _exampleParts[widget.character["additionalExample"]!] ?? [];
 
     final selectedSymbol = widget.character["symbol"]!;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildExampleWord(
-          example,
-          selectedSymbol,
-          textColor,
-        ),
+        _buildExampleWord(example, selectedSymbol, textColor),
         const SizedBox(height: 16),
-        _buildExampleWord(
-          additionalExample,
-          selectedSymbol,
-          textColor,
-        ),
+        _buildExampleWord(additionalExample, selectedSymbol, textColor),
       ],
     );
   }
@@ -636,23 +581,19 @@ class _CharacterBottomSheetContentState
     }
 
     final meaning = example.first.$3;
-    final isKudlitMark =
-        widget.character["category"] == "Kudlit Marks";
+    final isKudlitMark = widget.character["category"] == "Kudlit Marks";
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           meaning,
-          style: AppTextStyles.body.copyWith(
-            color: AppColors.textGrey,
-          ),
+          style: AppTextStyles.body.copyWith(color: AppColors.textGrey),
         ),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: example.map((part) {
-            final isSelected =
-                part.$1.contains(selectedSymbol);
+            final isSelected = part.$1.contains(selectedSymbol);
 
             return Padding(
               padding: const EdgeInsets.only(right: 14),
@@ -700,9 +641,7 @@ class _CharacterBottomSheetContentState
       final current = String.fromCharCode(rune);
 
       final isKudlit =
-          current == "\u1712" ||
-          current == "\u1713" ||
-          current == "\u1714";
+          current == "\u1712" || current == "\u1713" || current == "\u1714";
 
       spans.add(
         TextSpan(
@@ -712,18 +651,14 @@ class _CharacterBottomSheetContentState
             color: isKudlit
                 ? textColor
                 : current == selectedSymbol
-                    ? Colors.green
-                    : textColor,
+                ? Colors.green
+                : textColor,
           ),
         ),
       );
     }
 
-    return Text.rich(
-      TextSpan(
-        children: spans,
-      ),
-    );
+    return Text.rich(TextSpan(children: spans));
   }
 
   Widget _buildKudlitExampleCharacter(
@@ -741,23 +676,16 @@ class _CharacterBottomSheetContentState
           text: current,
           style: AppTextStyles.heading.copyWith(
             fontSize: 42,
-            color: current == selectedSymbol
-                ? AppColors.primary
-                : textColor,
+            color: current == selectedSymbol ? AppColors.primary : textColor,
           ),
         ),
       );
     }
 
-    return Text.rich(
-      TextSpan(
-        children: spans,
-      ),
-    );
+    return Text.rich(TextSpan(children: spans));
   }
 
-  static const Map<String, List<(String, String, String)>>
-      _exampleParts = {
+  static const Map<String, List<(String, String, String)>> _exampleParts = {
     "araw": [
       ("\u1700", "a", "Day"),
       ("\u1707", "ra", "Day"),
@@ -788,10 +716,7 @@ class _CharacterBottomSheetContentState
       ("\u170A", "ba", "Grape"),
       ("\u1710\u1714", "s", "Grape"),
     ],
-    "bata": [
-      ("\u170A", "ba", "Child"),
-      ("\u1706", "ta", "Child"),
-    ],
+    "bata": [("\u170A", "ba", "Child"), ("\u1706", "ta", "Child")],
     "bahay": [
       ("\u170A", "ba", "House"),
       ("\u1711", "ha", "House"),
@@ -807,31 +732,19 @@ class _CharacterBottomSheetContentState
       ("\u1711", "ho", "Tree"),
       ("\u170C\u1714", "y", "Tree"),
     ],
-    "gabi": [
-      ("\u1704", "ga", "Night"),
-      ("\u170A\u1712", "bi", "Night"),
-    ],
+    "gabi": [("\u1704", "ga", "Night"), ("\u170A\u1712", "bi", "Night")],
     "gatas": [
       ("\u1704", "ga", "Milk"),
       ("\u1706", "ta", "Milk"),
       ("\u1710\u1714", "s", "Milk"),
     ],
-    "halo": [
-      ("\u1711", "ha", "Mix"),
-      ("\u170E\u1713", "lo", "Mix"),
-    ],
-    "laki": [
-      ("\u170E", "la", "Big"),
-      ("\u1703\u1712", "ki", "Big"),
-    ],
+    "halo": [("\u1711", "ha", "Mix"), ("\u170E\u1713", "lo", "Mix")],
+    "laki": [("\u170E", "la", "Big"), ("\u1703\u1712", "ki", "Big")],
     "lola": [
       ("\u170E\u1713", "lo", "Grandmother"),
       ("\u170E", "la", "Grandmother"),
     ],
-    "mata": [
-      ("\u170B", "ma", "Eye"),
-      ("\u1706", "ta", "Eye"),
-    ],
+    "mata": [("\u170B", "ma", "Eye"), ("\u1706", "ta", "Eye")],
     "nanay": [
       ("\u1708", "na", "Mother"),
       ("\u1700", "na", "Mother"),
@@ -846,60 +759,25 @@ class _CharacterBottomSheetContentState
       ("\u1705\u1712", "ngi", "Smile"),
       ("\u1706\u1712", "ti", "Smile"),
     ],
-    "paa": [
-      ("\u1709", "pa", "Foot"),
-      ("\u1700", "a", "Foot"),
-    ],
-    "puno": [
-      ("\u1709\u1713", "pu", "Tree"),
-      ("\u1708\u1713", "no", "Tree"),
-    ],
-    "sama": [
-      ("\u1710", "sa", "Join"),
-      ("\u170B", "ma", "Join"),
-    ],
-    "tao": [
-      ("\u1706", "ta", "Person"),
-      ("\u1702", "o", "Person"),
-    ],
-    "daga": [
-      ("\u1707", "da", "Rat"),
-      ("\u1704", "ga", "Rat"),
-    ],
+    "paa": [("\u1709", "pa", "Foot"), ("\u1700", "a", "Foot")],
+    "puno": [("\u1709\u1713", "pu", "Tree"), ("\u1708\u1713", "no", "Tree")],
+    "sama": [("\u1710", "sa", "Join"), ("\u170B", "ma", "Join")],
+    "tao": [("\u1706", "ta", "Person"), ("\u1702", "o", "Person")],
+    "daga": [("\u1707", "da", "Rat"), ("\u1704", "ga", "Rat")],
     "walis": [
       ("\u170F", "wa", "Broom"),
       ("\u170E\u1712", "li", "Broom"),
       ("\u1710\u1714", "s", "Broom"),
     ],
-    "yata": [
-      ("\u170C", "ya", "Perhaps"),
-      ("\u1706", "ta", "Perhaps"),
-    ],
-    "bibe": [
-      ("\u170A\u1712", "bi", "Duck"),
-      ("\u170A\u1712", "be", "Duck"),
-    ],
-    "bibi": [
-      ("\u170A\u1712", "bi", "Duck"),
-      ("\u170A\u1712", "bi", "Duck"),
-    ],
-    "buto": [
-      ("\u170A\u1713", "bu", "Seed"),
-      ("\u1706\u1713", "to", "Seed"),
-    ],
-    "boto": [
-      ("\u170A\u1713", "bo", "Vote"),
-      ("\u1706\u1713", "to", "Vote"),
-    ],
-    "Removes the vowel": [
-      ("\u170A\u1714", "b", "Removes the vowel"),
-    ],
+    "yata": [("\u170C", "ya", "Perhaps"), ("\u1706", "ta", "Perhaps")],
+    "bibe": [("\u170A\u1712", "bi", "Duck"), ("\u170A\u1712", "be", "Duck")],
+    "bibi": [("\u170A\u1712", "bi", "Duck"), ("\u170A\u1712", "bi", "Duck")],
+    "buto": [("\u170A\u1713", "bu", "Seed"), ("\u1706\u1713", "to", "Seed")],
+    "boto": [("\u170A\u1713", "bo", "Vote"), ("\u1706\u1713", "to", "Vote")],
+    "Removes the vowel": [("\u170A\u1714", "b", "Removes the vowel")],
   };
 
-  Widget _buildKudlitForms(
-    Color textColor,
-    Color secondaryTextColor,
-  ) {
+  Widget _buildKudlitForms(Color textColor, Color secondaryTextColor) {
     final symbol = widget.character["symbol"]!;
     final label = widget.character["label"]!;
 
@@ -998,9 +876,7 @@ class _CharacterBottomSheetContentState
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.visible,
-            style: AppTextStyles.body.copyWith(
-              color: textColor,
-            ),
+            style: AppTextStyles.body.copyWith(color: textColor),
           ),
         ],
       ),

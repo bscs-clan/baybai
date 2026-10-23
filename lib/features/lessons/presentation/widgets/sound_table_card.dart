@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
 import "package:baybai/features/lessons/domain/entities/lesson_content.dart";
@@ -18,10 +19,8 @@ class SoundTableCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final borderColor = isDarkMode
-        ? AppColors.darkListSeparator
-        : AppColors.listSeparator;
-    final textColor = isDarkMode ? AppColors.darkText : AppColors.text;
+    final borderColor = isDarkMode ? AppColors.gray80 : AppColors.gray20;
+    final textColor = isDarkMode ? AppColors.gray10 : AppColors.gray100;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -32,7 +31,7 @@ class SoundTableCard extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 12),
             child: Text(
               title!,
-              style: AppTextStyles.body.copyWith(
+              style: AppTextStyles.regularSm.copyWith(
                 color: textColor,
                 fontWeight: FontWeight.w600,
               ),
@@ -41,7 +40,7 @@ class SoundTableCard extends StatelessWidget {
         if (mappings.isNotEmpty) ...[
           Container(
             decoration: BoxDecoration(
-              color: isDarkMode ? AppColors.darkCompBg : AppColors.white,
+              color: isDarkMode ? AppColors.gray80 : AppColors.bg,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(color: borderColor, width: 1.5),
             ),
@@ -65,9 +64,9 @@ class SoundTableCard extends StatelessWidget {
                           _buildMappingText(example.spelling, textColor),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 24),
-                            child: Icon(
-                              Icons.arrow_forward_rounded,
-                              color: AppColors.grey3,
+                            child: HugeIcon(
+                              icon: HugeIcons.strokeRoundedArrowRight01,
+                              color: AppColors.gray20,
                               size: 24,
                             ),
                           ),
@@ -89,7 +88,7 @@ class SoundTableCard extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 12),
             child: Text(
               "Examples",
-              style: AppTextStyles.body.copyWith(
+              style: AppTextStyles.regularSm.copyWith(
                 color: textColor,
                 fontWeight: FontWeight.w600,
               ),
@@ -97,7 +96,7 @@ class SoundTableCard extends StatelessWidget {
           ),
           Container(
             decoration: BoxDecoration(
-              color: isDarkMode ? AppColors.darkCompBg : AppColors.white,
+              color: isDarkMode ? AppColors.gray80 : AppColors.bg,
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: borderColor, width: 1.5),
             ),
@@ -121,9 +120,9 @@ class SoundTableCard extends StatelessWidget {
                           _buildMappingText(example.spelling, textColor),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 24),
-                            child: Icon(
-                              Icons.arrow_forward_rounded,
-                              color: AppColors.grey3,
+                            child: HugeIcon(
+                              icon: HugeIcons.strokeRoundedArrowRight01,
+                              color: AppColors.gray20,
                               size: 24,
                             ),
                           ),
@@ -147,7 +146,9 @@ class SoundTableCard extends StatelessWidget {
     return SizedBox(
       width: 64,
       height: 28,
-      child: Center(child: Text(value, style: AppTextStyles.body.copyWith())),
+      child: Center(
+        child: Text(value, style: AppTextStyles.regularSm.copyWith()),
+      ),
     );
   }
 }

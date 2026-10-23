@@ -39,7 +39,6 @@ class SettingsScreen extends StatelessWidget {
           ),
           body: ListView(
             children: [
-              _buildAccountTile(context, isDarkMode),
               _buildThemeTile(context, isDarkMode),
               _buildDeveloperTile(context, isDarkMode),
               _buildCrashlyticsTile(context, isDarkMode),
@@ -89,10 +88,7 @@ class SettingsScreen extends StatelessWidget {
 
   Widget _buildThemeTile(BuildContext context, bool isDarkMode) {
     return ListTile(
-      leading: Icon(
-        Icons.dark_mode,
-        color: _iconColor(context, isDarkMode),
-      ),
+      leading: Icon(Icons.dark_mode, color: _iconColor(context, isDarkMode)),
       title: Text(
         "Dark Mode",
         style: TextStyle(
@@ -115,34 +111,6 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAccountTile(BuildContext context, bool isDarkMode) {
-    return ListTile(
-      leading: Icon(
-        Icons.account_circle,
-        color: _iconColor(context, isDarkMode),
-      ),
-      title: Text(
-        "Account Settings",
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: _textColor(context, isDarkMode),
-        ),
-      ),
-      subtitle: Text(
-        "Manage your account",
-        style: TextStyle(color: _subtitleColor(context, isDarkMode)),
-      ),
-      trailing: Icon(
-        Icons.chevron_right,
-        color: _iconColor(context, isDarkMode),
-        size: 20,
-      ),
-      onTap: () {
-        Navigator.pushNamed(context, "/account-settings");
-      },
-    );
-  }
-
   Widget _buildDeveloperTile(BuildContext context, bool isDarkMode) {
     final developerMode = context
         .watch<ScanSettingsCubit>()
@@ -150,10 +118,7 @@ class SettingsScreen extends StatelessWidget {
         .developerModeEnabled;
 
     return ListTile(
-      leading: Icon(
-        Icons.code,
-        color: _iconColor(context, isDarkMode),
-      ),
+      leading: Icon(Icons.code, color: _iconColor(context, isDarkMode)),
       title: Text(
         'Developers Mode',
         style: TextStyle(
@@ -177,10 +142,7 @@ class SettingsScreen extends StatelessWidget {
 
   Widget _buildCrashlyticsTile(BuildContext context, bool isDarkMode) {
     return ListTile(
-      leading: Icon(
-        Icons.bug_report,
-        color: _iconColor(context, isDarkMode),
-      ),
+      leading: Icon(Icons.bug_report, color: _iconColor(context, isDarkMode)),
       title: Text(
         "Send Crashlytics",
         style: TextStyle(

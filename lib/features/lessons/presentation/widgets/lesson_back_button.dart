@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:baybai/core/theme/colors.dart";
 
 class CustomBackButton extends StatelessWidget {
@@ -16,10 +17,10 @@ class CustomBackButton extends StatelessWidget {
         height: 48,
         child: Align(
           alignment: Alignment.centerLeft,
-          child: Icon(
-            Icons.arrow_back,
+          child: HugeIcon(
+            icon: HugeIcons.strokeRoundedArrowLeft02,
             size: 24,
-            color: isDarkMode ? AppColors.compLight : AppColors.grey12,
+            color: isDarkMode ? AppColors.primary10 : AppColors.gray100,
           ),
         ),
       ),

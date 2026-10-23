@@ -16,7 +16,7 @@ class LearnHeader extends StatelessWidget {
         Text(
           "Let's Begin!",
           style: AppTextStyles.boldXl.copyWith(
-            color: isDarkMode ? AppColors.darkText : AppColors.grey10,
+            color: isDarkMode ? AppColors.gray10 : AppColors.gray100,
           ),
         ),
         SizedBox(height: 24),

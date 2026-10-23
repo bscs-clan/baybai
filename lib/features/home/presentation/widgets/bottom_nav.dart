@@ -2,25 +2,24 @@ import "package:flutter/material.dart";
 import "package:flutter_bloc/flutter_bloc.dart";
 import "package:hugeicons/hugeicons.dart";
 import "package:baybai/core/theme/colors.dart";
-import "package:baybai/core/theme/text.dart";
 import "package:baybai/features/settings/presentation/view_models/scan_settings_cubit.dart";
 
 final List<_NavItem> items = [
   _NavItem(
-    activeIcon: HugeIcons.strokeRoundedHome01,
-    inactiveIcon: HugeIcons.strokeRoundedHome01,
+    activeIcon: HugeIcons.strokeRoundedHome03,
+    inactiveIcon: HugeIcons.strokeRoundedHome03,
     label: "Learn",
     index: 0,
   ),
   _NavItem(
-    activeIcon: HugeIcons.strokeRoundedAiScan,
-    inactiveIcon: HugeIcons.strokeRoundedAiScan,
+    activeIcon: HugeIcons.strokeRounded3DView,
+    inactiveIcon: HugeIcons.strokeRounded3DView,
     label: "Scan",
     index: 1,
   ),
   _NavItem(
-    activeIcon: HugeIcons.strokeRoundedArrowLeftRight,
-    inactiveIcon: HugeIcons.strokeRoundedArrowLeftRight,
+    activeIcon: HugeIcons.strokeRoundedArrowDataTransferHorizontal,
+    inactiveIcon: HugeIcons.strokeRoundedArrowDataTransferHorizontal,
     label: "Convert",
     index: 2,
   ),
@@ -34,8 +33,8 @@ final List<_NavItem> items = [
 ];
 
 class _NavItem {
-  final IconData activeIcon;
-  final IconData inactiveIcon;
+  final List<List<dynamic>> activeIcon;
+  final List<List<dynamic>> inactiveIcon;
   final String label;
   final int index;
   final bool requiresDeveloperMode;
@@ -76,16 +75,20 @@ class Navbar extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
           decoration: BoxDecoration(
-            color: AppColors.background,
-            border: const Border(top: BorderSide(color: AppColors.grey1)),
+            color: isDarkMode ? AppColors.gray100 : AppColors.bg,
+            border: Border(
+              top: BorderSide(
+                color: isDarkMode ? AppColors.gray80 : AppColors.gray10,
+              ),
+            ),
           ),
           child: Row(
             children: visibleItems.map((item) {
               final bool isSelected = selectedIndex == item.index;
 
               final Color iconColor = isSelected
-                  ? AppColors.blue6
-                  : (isDarkMode ? AppColors.white : AppColors.grey5);
+                  ? AppColors.primary60
+                  : (isDarkMode ? AppColors.gray40 : AppColors.gray60);
 
               return Expanded(
                 child: GestureDetector(

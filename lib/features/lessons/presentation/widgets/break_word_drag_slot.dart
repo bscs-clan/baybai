@@ -3,12 +3,6 @@ import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
 import "package:baybai/features/lessons/presentation/widgets/empty_slot.dart";
 import "package:baybai/shared/components/buttons/button.dart";
-
-/// A drag target slot used in the "break word" exercise.
-///
-/// Shows an [EmptySlot] when empty, and a filled draggable button
-/// when a syllable has been dropped into it. Supports checked/result state
-/// for correct/incorrect visual feedback.
 class BreakWordDragSlot extends StatelessWidget {
   final String? droppedItem;
   final bool hasChecked;
@@ -43,27 +37,23 @@ class BreakWordDragSlot extends StatelessWidget {
         if (droppedItem != null) {
           return _buildFilledSlot(context);
         }
-        return SizedBox(
-          height: optionButtonHeight,
-          child: const EmptySlot(),
-        );
+        return SizedBox(height: optionButtonHeight, child: const EmptySlot());
       },
     );
   }
 
   Widget _buildFilledSlot(BuildContext context) {
-    Color? customBg = isDarkMode ? AppColors.darkBox : AppColors.grey1;
-    Color? customFg = isDarkMode ? AppColors.darkText : AppColors.text;
+    Color? customBg = isDarkMode ? AppColors.gray90 : AppColors.primary20;
+    Color? customFg = AppColors.primary100;
 
     final droppedButton = Button(
       label: droppedItem!,
-      size: ButtonSize.md,
-      type: ButtonType.outline,
+      size: ButtonSize.sm,
+      type: ButtonType.secondary,
       height: optionButtonHeight,
       iconSize: 24.0,
       borderRadius: BorderRadius.circular(16),
-      customBorderColor: AppColors.grey6,
-      textStyle: AppTextStyles.body.copyWith(
+      textStyle: AppTextStyles.boldSm.copyWith(
         fontFamily: optionFontFamily,
         fontSize: optionFontSize,
       ),
@@ -90,29 +80,36 @@ class BreakWordDragSlot extends StatelessWidget {
           children: [
             AbsorbPointer(child: droppedButton),
             Positioned(
-              left: 12,
+              left: 0,
               child: IgnorePointer(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 4,
-                      height: 4,
-                      decoration: const BoxDecoration(
-                        color: AppColors.grey8,
-                        shape: BoxShape.circle,
+                child: Container(
+                  width: 12,
+                  height: optionButtonHeight,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary30,
+                    borderRadius: const BorderRadius.horizontal(
+                      left: Radius.circular(16),
+                    ),
+                  ),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: List.generate(
+                        5,
+                        (row) => Padding(
+                          padding: EdgeInsets.only(bottom: row == 4 ? 0 : 2),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildGripDot(),
+                              const SizedBox(width: 3),
+                              _buildGripDot(),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 3),
-                    Container(
-                      width: 4,
-                      height: 4,
-                      decoration: const BoxDecoration(
-                        color: AppColors.grey8,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -133,10 +130,7 @@ class BreakWordDragSlot extends StatelessWidget {
           onDraggableCanceled: (velocity, offset) {},
           feedback: Material(
             color: Colors.transparent,
-            child: SizedBox(
-              width: constraints.maxWidth,
-              child: slotWidget,
-            ),
+            child: SizedBox(width: constraints.maxWidth, child: slotWidget),
           ),
           childWhenDragging: SizedBox(
             height: optionButtonHeight,
@@ -147,4 +141,13 @@ class BreakWordDragSlot extends StatelessWidget {
       },
     );
   }
+
+  Widget _buildGripDot() => Container(
+    width: 2.5,
+    height: 2.5,
+    decoration: const BoxDecoration(
+      color: AppColors.primary50,
+      shape: BoxShape.circle,
+    ),
+  );
 }

@@ -12,10 +12,7 @@ class BaybyainSymbol {
 class BaybyainSymbolCard extends StatelessWidget {
   final List<BaybyainSymbol> symbols;
 
-  const BaybyainSymbolCard({
-    super.key,
-    required this.symbols,
-  });
+  const BaybyainSymbolCard({super.key, required this.symbols});
 
   @override
   Widget build(BuildContext context) {
@@ -44,10 +41,7 @@ class _SymbolTile extends StatefulWidget {
   final String unicode;
   final String romanization;
 
-  const _SymbolTile({
-    required this.unicode,
-    required this.romanization,
-  });
+  const _SymbolTile({required this.unicode, required this.romanization});
 
   @override
   State<_SymbolTile> createState() => _SymbolTileState();
@@ -89,7 +83,7 @@ class _SymbolTileState extends State<_SymbolTile>
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(ComponentRadius.md),
-            color: isDarkMode ? AppColors.darkCompBg : AppColors.white,
+            color: isDarkMode ? AppColors.gray80 : AppColors.bg,
           ),
           child: Center(
             child: Text(

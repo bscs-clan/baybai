@@ -914,7 +914,7 @@ class _TranslationCard extends StatelessWidget {
       height: 224,
       padding: const EdgeInsets.all(24),
       decoration: ShapeDecoration(
-        color: isDarkMode ? AppColors.darkBox : AppColors.box,
+        color: isDarkMode ? AppColors.darkBox : AppColors.grey3,
         shape: RoundedSuperellipseBorder(
           borderRadius: BorderRadius.circular(34),
         ),

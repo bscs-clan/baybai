@@ -721,10 +721,10 @@ packages:
     dependency: "direct main"
     description:
       name: hugeicons
-      sha256: cf172bae0c3ff2e2114324d05e79872081f4cd3c009f5979285fec73a693096a
+      sha256: a5953782b6065e16b56ea832229135a548fd46022d7df56b985c7b1be2883ca9
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.11"
+    version: "1.2.0"
   hydrated_bloc:
     dependency: "direct main"
     description:

@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
 
@@ -32,17 +33,15 @@ class KudlitPracticeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final borderColor = isDarkMode
-        ? AppColors.darkListSeparator
-        : AppColors.listSeparator;
-    final cardBg = isDarkMode ? AppColors.darkCompBg : AppColors.white;
-    final textColor = isDarkMode ? AppColors.darkText : AppColors.text;
-    final mutedColor = isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey;
-    final pillColor = isDarkMode ? AppColors.darkCompLight : AppColors.compLight;
+    final borderColor = isDarkMode ? AppColors.gray80 : AppColors.gray20;
+    final cardBg = isDarkMode ? AppColors.gray80 : AppColors.bg;
+    final textColor = isDarkMode ? AppColors.gray10 : AppColors.gray100;
+    final mutedColor = isDarkMode ? AppColors.gray40 : AppColors.gray40;
+    final pillColor = isDarkMode ? AppColors.gray80 : AppColors.gray10;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(24),
@@ -62,13 +61,17 @@ class KudlitPracticeCard extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Icon(Icons.arrow_forward_rounded, color: mutedColor, size: 22),
+                child: HugeIcon(
+                  icon: HugeIcons.strokeRoundedArrowBigRightDash,
+                  color: mutedColor,
+                  size: 24,
+                ),
               ),
               Expanded(
                 child: _SoundTile(
                   label: "Target",
                   sound: targetSound,
-                  color: AppColors.primary.withValues(alpha: 0.12),
+                  color: pillColor,
                 ),
               ),
             ],
@@ -78,7 +81,7 @@ class KudlitPracticeCard extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
             decoration: BoxDecoration(
-              color: isDarkMode ? AppColors.darkCompLight : AppColors.compLight,
+              color: isDarkMode ? AppColors.gray80 : pillColor,
               borderRadius: BorderRadius.circular(18),
             ),
             child: Column(
@@ -86,11 +89,9 @@ class KudlitPracticeCard extends StatelessWidget {
               children: [
                 Text(
                   "Preview",
-                  style: AppTextStyles.body.copyWith(
-                    color: mutedColor,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                  ),
+                  style: AppTextStyles.regularXs.copyWith(
+                    color: AppColors.gray60,
+                ),
                 ),
                 const SizedBox(height: 12),
                 SizedBox(
@@ -98,11 +99,10 @@ class KudlitPracticeCard extends StatelessWidget {
                   child: Center(
                     child: Text(
                       _previewSymbol,
-                      style: AppTextStyles.heading.copyWith(
+                      style: AppTextStyles.boldXl.copyWith(
                         fontFamily: "Baybayin",
-                        fontSize: 58,
+                        fontSize: 48,
                         color: textColor,
-                        height: 1.0,
                       ),
                     ),
                   ),
@@ -130,8 +130,7 @@ class _SoundTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDarkMode ? AppColors.darkText : AppColors.text;
-    final mutedColor = isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey;
+    final textColor = isDarkMode ? AppColors.gray10 : AppColors.gray100;
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
@@ -144,19 +143,15 @@ class _SoundTile extends StatelessWidget {
         children: [
           Text(
             label,
-            style: AppTextStyles.body.copyWith(
-              color: mutedColor,
-              fontWeight: FontWeight.w600,
-              fontSize: 12,
+            style: AppTextStyles.regularXs.copyWith(
+              color: AppColors.gray60,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Text(
             sound,
-            style: AppTextStyles.bigbody.copyWith(
+            style: AppTextStyles.boldLg.copyWith(
               color: textColor,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
             ),
           ),
         ],

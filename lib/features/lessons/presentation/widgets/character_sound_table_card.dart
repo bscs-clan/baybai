@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
 import "package:baybai/features/lessons/domain/entities/lesson_content.dart";
@@ -26,14 +27,12 @@ class CharacterSoundTableCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final borderColor = isDarkMode
-        ? AppColors.darkListSeparator
-        : AppColors.listSeparator;
-    final textColor = isDarkMode ? AppColors.darkText : AppColors.text;
+    final borderColor = isDarkMode ? AppColors.gray80 : AppColors.gray20;
+    final textColor = isDarkMode ? AppColors.gray10 : AppColors.gray100;
 
     return Container(
       decoration: BoxDecoration(
-        color: isDarkMode ? AppColors.darkCompBg : AppColors.white,
+        color: isDarkMode ? AppColors.gray80 : AppColors.bg,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: borderColor, width: 1.5),
       ),
@@ -56,41 +55,37 @@ class CharacterSoundTableCard extends StatelessWidget {
                   children: [
                     Container(
                       width: 64,
-                      height: 56,
+                      height: 48,
                       alignment: Alignment.center,
                       child: Text(
                         example.baybayinSymbol,
                         style: _isBaybayinGlyph(example.baybayinSymbol)
-                            ? AppTextStyles.heading.copyWith(
+                            ? AppTextStyles.boldXl.copyWith(
                                 fontFamily: "Baybayin",
                                 fontSize: 30,
                                 color: textColor,
                                 height: 1.0,
                               )
-                            : AppTextStyles.body.copyWith(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w400,
+                            : AppTextStyles.regularSm.copyWith(
                                 color: textColor,
                               ),
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Icon(
-                        Icons.arrow_forward_rounded,
-                        color: AppColors.grey3,
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedArrowBigRightDash,
+                        color: AppColors.gray30,
                         size: 24,
                       ),
                     ),
                     Container(
                       width: 64,
-                      height: 56,
+                      height: 48,
                       alignment: Alignment.center,
                       child: Text(
                         example.text,
-                        style: AppTextStyles.body.copyWith(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
+                        style: AppTextStyles.boldLg.copyWith(
                           color: textColor,
                         ),
                       ),

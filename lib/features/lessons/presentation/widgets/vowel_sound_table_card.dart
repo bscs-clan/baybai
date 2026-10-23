@@ -18,18 +18,14 @@ class VowelSoundTableCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final borderColor = isDarkMode
-        ? AppColors.darkListSeparator
-        : AppColors.listSeparator;
-    final textColor = isDarkMode ? AppColors.darkText : AppColors.text;
-    final glyphColor = isDarkMode ? AppColors.white : AppColors.dark;
-    final pillColor = isDarkMode
-        ? AppColors.darkCompLight
-        : AppColors.compLight;
+    final borderColor = isDarkMode ? AppColors.gray80 : AppColors.gray20;
+    final textColor = isDarkMode ? AppColors.gray10 : AppColors.gray100;
+    final glyphColor = isDarkMode ? AppColors.bg : AppColors.gray100;
+    final pillColor = isDarkMode ? AppColors.gray80 : AppColors.primary10;
 
     return Container(
       decoration: BoxDecoration(
-        color: isDarkMode ? AppColors.darkCompBg : AppColors.white,
+        color: isDarkMode ? AppColors.gray80 : AppColors.bg,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: borderColor, width: 1.5),
       ),
@@ -62,7 +58,7 @@ class VowelSoundTableCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           child: Text(
                             example.baybayinSymbol,
-                            style: AppTextStyles.heading.copyWith(
+                            style: AppTextStyles.boldXl.copyWith(
                               fontFamily: "Baybayin",
                               fontSize: 32,
                               color: glyphColor,
@@ -79,14 +75,9 @@ class VowelSoundTableCard extends StatelessWidget {
                           child: Container(
                             height: 40,
                             alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: pillColor,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
                             child: Text(
                               example.text,
-                              style: AppTextStyles.body.copyWith(
-                                fontWeight: FontWeight.bold,
+                              style: AppTextStyles.boldLg.copyWith(
                                 color: textColor,
                               ),
                               textAlign: TextAlign.center,
@@ -121,7 +112,7 @@ class _HeaderCell extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16),
         child: Text(
           label,
-          style: AppTextStyles.body.copyWith(
+          style: AppTextStyles.regularSm.copyWith(
             color: color,
             fontWeight: FontWeight.bold,
           ),

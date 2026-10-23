@@ -28,11 +28,9 @@ class KudlitTableCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final borderColor = isDarkMode
-        ? AppColors.darkListSeparator
-        : AppColors.listSeparator;
-    final cardBg = isDarkMode ? AppColors.darkCompBg : AppColors.white;
-    final pillColor = isDarkMode ? AppColors.darkCompLight : AppColors.compLight;
+    final borderColor = isDarkMode ? AppColors.gray80 : AppColors.gray20;
+    final cardBg = isDarkMode ? AppColors.gray80 : AppColors.bg;
+    final pillColor = isDarkMode ? AppColors.gray80 : AppColors.gray10;
 
     return Container(
       decoration: BoxDecoration(
@@ -117,11 +115,11 @@ class _HighlightedKudlitGlyph extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final glyphColor = isDarkMode ? AppColors.white : AppColors.dark;
+    final glyphColor = isDarkMode ? AppColors.bg : AppColors.gray100;
 
-    final baseStyle = AppTextStyles.heading.copyWith(
+    final baseStyle = AppTextStyles.boldXl.copyWith(
       fontFamily: "Baybayin",
-      fontSize: 44,
+      fontSize: 32,
       color: glyphColor,
       height: 1.0,
     );
@@ -137,10 +135,7 @@ class _HighlightedKudlitGlyph extends StatelessWidget {
           TextSpan(
             text: kudlit,
             style: TextStyle(
-              color: AppColors.primary,
-              background: Paint()
-                ..color = AppColors.primary.withValues(alpha: 0.18)
-                ..style = PaintingStyle.fill,
+              color: AppColors.bgSuccessContrast,
             ),
           ),
         ],
@@ -158,17 +153,15 @@ class _HeaderCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDarkMode ? AppColors.darkText : AppColors.text;
+    final textColor = isDarkMode ? AppColors.gray10 : AppColors.gray100;
 
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
         child: Text(
           label,
-          style: AppTextStyles.body.copyWith(
+          style: AppTextStyles.boldSm.copyWith(
             color: textColor,
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
           ),
           textAlign: TextAlign.center,
         ),
@@ -186,8 +179,8 @@ class _Pill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textColor = Theme.of(context).brightness == Brightness.dark
-        ? AppColors.darkText
-        : AppColors.text;
+        ? AppColors.gray10
+        : AppColors.gray100;
 
     return Container(
       constraints: const BoxConstraints(minHeight: 40),
@@ -199,10 +192,8 @@ class _Pill extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: AppTextStyles.body.copyWith(
+        style: AppTextStyles.regularSm.copyWith(
           color: textColor,
-          fontWeight: FontWeight.bold,
-          fontSize: 12,
         ),
         textAlign: TextAlign.center,
       ),

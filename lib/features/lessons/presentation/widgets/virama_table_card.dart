@@ -25,14 +25,12 @@ class ViramaTableCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final borderColor = isDarkMode
-        ? AppColors.darkListSeparator
-        : AppColors.listSeparator;
-    final textColor = isDarkMode ? AppColors.darkText : AppColors.text;
+    final borderColor = isDarkMode ? AppColors.gray80 : AppColors.gray20;
+    final textColor = isDarkMode ? AppColors.gray10 : AppColors.gray100;
 
     return Container(
       decoration: BoxDecoration(
-        color: isDarkMode ? AppColors.darkCompBg : AppColors.white,
+        color: isDarkMode ? AppColors.gray80 : AppColors.bg,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: borderColor, width: 1.5),
       ),
@@ -59,7 +57,7 @@ class ViramaTableCard extends StatelessWidget {
                       child: Center(
                         child: Text(
                           example.symbol,
-                          style: AppTextStyles.heading.copyWith(
+                          style: AppTextStyles.boldXl.copyWith(
                             fontFamily: "Baybayin",
                             fontSize: 40,
                             color: textColor,
@@ -76,7 +74,7 @@ class ViramaTableCard extends StatelessWidget {
                         children: [
                           Text(
                             example.sound,
-                            style: AppTextStyles.bigbody.copyWith(
+                            style: AppTextStyles.boldLg.copyWith(
                               color: textColor,
                               fontSize: 18,
                             ),
@@ -85,7 +83,7 @@ class ViramaTableCard extends StatelessWidget {
                             showExplanations
                                 ? example.description
                                 : example.label,
-                            style: AppTextStyles.body.copyWith(
+                            style: AppTextStyles.regularSm.copyWith(
                               color: textColor,
                             ),
                           ),

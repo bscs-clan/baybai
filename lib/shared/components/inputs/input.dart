@@ -8,8 +8,8 @@ import "package:shadcn_flutter/shadcn_flutter.dart" as shadcn;
 enum InputSize { sm, md, lg }
 
 class Input extends StatefulWidget {
-  final IconData? leftIcon;
-  final IconData? rightIcon;
+  final Object? leftIcon;
+  final Object? rightIcon;
   final String hintText;
   final TextEditingController? controller;
   final VoidCallback? onRightIconTap;
@@ -63,25 +63,28 @@ class _InputState extends State<Input> {
   @override
   Widget build(BuildContext context) {
     final metrics = _InputMetrics.fromSize(widget.size);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    final borderColor = _isFocused ? AppColors.blue6 : AppColors.grey2;
+    final borderColor = _isFocused
+        ? AppColors.primary60
+        : (isDarkMode ? AppColors.gray80 : AppColors.gray20);
 
-    final iconColor = AppColors.grey5;
+    final iconColor = isDarkMode ? AppColors.gray30 : AppColors.gray60;
     final inputTextStyle = AppTextStyles.regularSm.copyWith(
-      color: AppColors.grey10,
+      color: isDarkMode ? AppColors.gray10 : AppColors.gray100,
     );
 
     return AnimatedContainer(
       duration: ComponentMotion.fast,
       height: metrics.height,
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: isDarkMode ? AppColors.gray90 : AppColors.bg,
         borderRadius: BorderRadius.circular(metrics.borderRadius),
         border: Border.all(color: borderColor, width: _isFocused ? 1.5 : 1),
         boxShadow: _isFocused
             ? [
                 BoxShadow(
-                  color: AppColors.blue6.withValues(alpha: 0.3),
+                  color: AppColors.primary60.withValues(alpha: 0.3),
                   spreadRadius: 3,
                   blurRadius: 0,
                 ),
@@ -93,10 +96,10 @@ class _InputState extends State<Input> {
           if (widget.leftIcon != null)
             Padding(
               padding: EdgeInsets.only(left: metrics.horizontalPadding),
-              child: HugeIcon(
-                icon: widget.leftIcon!,
-                size: metrics.iconSize,
-                color: iconColor,
+              child: _buildInputIcon(
+                widget.leftIcon!,
+                metrics.iconSize,
+                iconColor,
               ),
             ),
 
@@ -114,11 +117,13 @@ class _InputState extends State<Input> {
                 keyboardType: widget.keyboardType,
                 textInputAction: widget.textInputAction,
                 onChanged: widget.onChanged,
-                cursorColor: AppColors.grey10,
+                cursorColor: AppColors.primary60,
                 style: inputTextStyle,
                 decoration: InputDecoration(
                   hintText: widget.hintText,
-                  hintStyle: inputTextStyle.copyWith(color: AppColors.grey5),
+                  hintStyle: inputTextStyle.copyWith(
+                    color: isDarkMode ? AppColors.gray50 : AppColors.gray60,
+                  ),
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
@@ -139,10 +144,10 @@ class _InputState extends State<Input> {
                 style: shadcn.ButtonStyle.ghostIcon(
                   size: shadcn.ButtonSize.small,
                 ).withPadding(padding: EdgeInsets.zero),
-                child: HugeIcon(
-                  icon: widget.rightIcon!,
-                  size: metrics.iconSize,
-                  color: iconColor,
+                child: _buildInputIcon(
+                  widget.rightIcon!,
+                  metrics.iconSize,
+                  iconColor,
                 ),
               ),
             ),
@@ -150,6 +155,16 @@ class _InputState extends State<Input> {
       ),
     );
   }
+}
+
+Widget _buildInputIcon(Object icon, double size, Color color) {
+  if (icon is IconData) {
+    return Icon(icon, size: size, color: color);
+  }
+  if (icon is List<List<dynamic>>) {
+    return HugeIcon(icon: icon, size: size, color: color);
+  }
+  throw ArgumentError.value(icon, 'icon', 'Unsupported input icon type');
 }
 
 class _InputMetrics {
@@ -170,7 +185,7 @@ class _InputMetrics {
       InputSize.sm => const _InputMetrics(
         height: 40,
         horizontalPadding: 12,
-        iconSize: 18,
+        iconSize: 24,
         borderRadius: ComponentRadius.sm,
       ),
       InputSize.md => const _InputMetrics(
