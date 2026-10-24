@@ -21,6 +21,15 @@ subprojects {
 subprojects {
     project.evaluationDependsOn(":app")
 
+    if (project.name == "camera_android_camerax") {
+        project.afterEvaluate {
+            dependencies.add(
+                "implementation",
+                "androidx.concurrent:concurrent-futures:1.2.0",
+            )
+        }
+    }
+
     if (project.name == "tflite_flutter") {
         tasks.withType<KotlinCompile>().configureEach {
             compilerOptions.jvmTarget.set(JvmTarget.JVM_11)

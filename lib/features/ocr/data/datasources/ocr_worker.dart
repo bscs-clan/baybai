@@ -1,7 +1,6 @@
 part of 'ocr_service.dart';
 
-// Detection model constants (PPOCR style)
-const int _detInputSize = 640;
+// Detection model constants.
 const double _detConfThreshold = 0.3;
 const double _detNmsThreshold = 0.3;
 const int _detMinArea = 24;
@@ -11,52 +10,30 @@ const double _detMinInlinePaddingPx = 36;
 const double _detMaxInlinePaddingPx = 180;
 const double _detMinCrossPaddingPx = 24;
 const double _detMaxCrossPaddingPx = 110;
-const double _detRotationDeadZoneRadians = 0.05235987755982989; // 3 deg
+const double _detRotationDeadZoneRadians = 0.05235987755982989;
 const double _detMinElongationForRotation = 1.25;
+
 const List<double> _detMean = [0.485, 0.456, 0.406];
 const List<double> _detStd = [0.229, 0.224, 0.225];
 
-// Recognition model constants
-const int _recInputHeight = 64;
-const int _recInputWidth = 512;
+// Recognition model constants.
 const int _recMinChars = 1;
 const int _liveFrameMaxLongSide = 1280;
 const int _photoMaxLongSide = 1600;
+
+// These are retained for optional future segmentation experiments.
 const int _recMaxWordSegments = 8;
 const int _recMinWordSegmentWidthPx = 8;
 const double _recWordGapHeightRatio = 0.22;
 const double _recWordGapMedianRatio = 2.4;
 
-// Vocabulary for recognition (from training script)
-const List<String> _vocabulary = [
-  '<blank>',
-  '\u1700',
-  '\u1701',
-  '\u1702',
-  '\u1703',
-  '\u1704',
-  '\u1705',
-  '\u1706',
-  '\u1707',
-  '\u1708',
-  '\u1709',
-  '\u170A',
-  '\u170B',
-  '\u170C',
-  '\u170D',
-  '\u170E',
-  '\u170F',
-  '\u1710',
-  '\u1711',
-  '\u1712',
-  '\u1714',
-  '\u1713',
-  ' ',
-];
+// Vocabulary from the matching recognition model export.
+const String _vocabAssetPath = 'assets/docs/baybai_recog_vocab.json';
 
 void ocrWorkerEntry(SendPort sendPort) {
   final receivePort = ReceivePort();
   final worker = _OcrWorker(sendPort);
+
   sendPort.send(receivePort.sendPort);
 
   receivePort.listen((message) async {
@@ -75,6 +52,7 @@ void ocrWorkerEntry(SendPort sendPort) {
       }
     } catch (e, stackTrace) {
       final requestId = message is _OcrRequest ? message.requestId : null;
+
       sendPort.send(
         _OcrWorkerError(requestId: requestId, message: '$e\n$stackTrace'),
       );
@@ -92,6 +70,7 @@ class _OcrInitMessage {
   final String recModelPath;
   final double recConfidenceThreshold;
   final bool debugEnabled;
+  final List<String> vocabulary;
 
   const _OcrInitMessage({
     required this.detModelBytes,
@@ -99,6 +78,7 @@ class _OcrInitMessage {
     required this.recModelPath,
     required this.recConfidenceThreshold,
     required this.debugEnabled,
+    required this.vocabulary,
   });
 }
 
@@ -123,6 +103,7 @@ class _OcrInitDoneMessage {
 class _OcrFrameRequest implements _OcrRequest {
   @override
   final int requestId;
+
   final List<_OcrPlaneData> planes;
   final int width;
   final int height;
@@ -140,6 +121,7 @@ class _OcrFrameRequest implements _OcrRequest {
 class _OcrPhotoRequest implements _OcrRequest {
   @override
   final int requestId;
+
   final String imagePath;
 
   const _OcrPhotoRequest({required this.requestId, required this.imagePath});
@@ -148,6 +130,7 @@ class _OcrPhotoRequest implements _OcrRequest {
 class _OcrRecognitionRequest implements _OcrRequest {
   @override
   final int requestId;
+
   final Uint8List encodedImageBytes;
 
   const _OcrRecognitionRequest({
@@ -229,18 +212,56 @@ class _OcrResult {
 
 class _OcrWorker {
   final SendPort sendPort;
+
   Interpreter? _detInterpreter;
   Interpreter? _recInterpreter;
+
   double _recConfidenceThreshold = OCRService._defaultRecConfidenceThreshold;
+
   bool _debugEnabled = false;
+  List<String> _vocabulary = const [];
 
   _OcrWorker(this.sendPort);
 
   void initialize(_OcrInitMessage message) {
     _detInterpreter = Interpreter.fromBuffer(message.detModelBytes);
     _recInterpreter = Interpreter.fromBuffer(message.recModelBytes);
+
     _recConfidenceThreshold = message.recConfidenceThreshold;
     _debugEnabled = message.debugEnabled;
+    _vocabulary = message.vocabulary;
+
+    final recInputShape = _recInterpreter!.getInputTensor(0).shape;
+
+    final recOutputShape = _recInterpreter!.getOutputTensor(0).shape;
+
+    final isNchw =
+        recInputShape.length == 4 &&
+        recInputShape[0] == 1 &&
+        recInputShape[1] == 1;
+
+    final isNhwc =
+        recInputShape.length == 4 &&
+        recInputShape[0] == 1 &&
+        recInputShape[3] == 1;
+
+    if (!isNchw && !isNhwc) {
+      throw StateError(
+        'Expected a single-channel recognition input, '
+        'got $recInputShape',
+      );
+    }
+
+    if (recOutputShape.length != 3 ||
+        recOutputShape[0] != 1 ||
+        recOutputShape[2] != _vocabulary.length) {
+      throw StateError(
+        'Recognition model/vocabulary mismatch. '
+        'Input: $recInputShape, '
+        'output: $recOutputShape, '
+        'vocabulary entries: ${_vocabulary.length}',
+      );
+    }
 
     sendPort.send(
       _OcrInitDoneMessage(
@@ -248,18 +269,20 @@ class _OcrWorker {
         recConfidenceThreshold: _recConfidenceThreshold,
         detInputShape: _detInterpreter!.getInputTensor(0).shape,
         detOutputShape: _detInterpreter!.getOutputTensor(0).shape,
-        recInputShape: _recInterpreter!.getInputTensor(0).shape,
-        recOutputShape: _recInterpreter!.getOutputTensor(0).shape,
+        recInputShape: recInputShape,
+        recOutputShape: recOutputShape,
       ),
     );
   }
 
   _OcrResponse processFrame(_OcrFrameRequest request) {
     final stopwatch = Stopwatch()..start();
+
     final image = _resizeIfNeeded(
       _convertCameraImageToImage(request),
       _liveFrameMaxLongSide,
     );
+
     return _processImage(
       requestId: request.requestId,
       image: image,
@@ -269,8 +292,10 @@ class _OcrWorker {
 
   Future<_OcrResponse> processPhoto(_OcrPhotoRequest request) async {
     final stopwatch = Stopwatch()..start();
+
     final bytes = await File(request.imagePath).readAsBytes();
     final decoded = img.decodeImage(bytes);
+
     if (decoded == null) {
       return _emptyResponse(request.requestId, stopwatch);
     }
@@ -279,6 +304,7 @@ class _OcrWorker {
       img.bakeOrientation(decoded),
       _photoMaxLongSide,
     );
+
     return _processImage(
       requestId: request.requestId,
       image: image,
@@ -288,12 +314,15 @@ class _OcrWorker {
 
   _OcrResponse processRecognitionImage(_OcrRecognitionRequest request) {
     final stopwatch = Stopwatch()..start();
+
     final decoded = img.decodeImage(request.encodedImageBytes);
+
     if (decoded == null) {
       return _emptyResponse(request.requestId, stopwatch);
     }
 
     final recognition = _runRecognition(img.bakeOrientation(decoded));
+
     return _recognitionResponse(
       requestId: request.requestId,
       recognition: recognition,
@@ -307,10 +336,13 @@ class _OcrWorker {
     required Stopwatch elapsed,
   }) {
     final regions = _runDetection(image);
+
     final results = <_OcrResult>[];
+
     var rejectedLowConfidence = 0;
     var rejectedNonBaybayin = 0;
     var rejectedEmpty = 0;
+
     String? bestRejectedText;
     double? bestRejectedConfidence;
 
@@ -325,23 +357,28 @@ class _OcrWorker {
 
       if (!_isBaybayinText(recognition.text)) {
         rejectedNonBaybayin++;
+
         _rememberBestRejected(recognition, (text, confidence) {
           bestRejectedText = text;
           bestRejectedConfidence = confidence;
         }, bestRejectedConfidence);
+
         continue;
       }
 
       if (recognition.confidence < _recConfidenceThreshold) {
         rejectedLowConfidence++;
+
         _rememberBestRejected(recognition, (text, confidence) {
           bestRejectedText = text;
           bestRejectedConfidence = confidence;
         }, bestRejectedConfidence);
+
         continue;
       }
 
       final box = _normalizeRegionBox(region, image.width, image.height);
+
       results.add(
         _OcrResult(
           left: box.left,
@@ -356,6 +393,7 @@ class _OcrWorker {
     }
 
     elapsed.stop();
+
     return _OcrResponse(
       requestId: requestId,
       results: results,
@@ -389,8 +427,10 @@ class _OcrWorker {
     var rejectedLowConfidence = 0;
     var rejectedNonBaybayin = 0;
     var rejectedEmpty = 0;
+
     String? bestRejectedText;
     double? bestRejectedConfidence;
+
     final results = <_OcrResult>[];
 
     if (!_hasMinimumRecognizedText(recognition.text)) {
@@ -418,6 +458,7 @@ class _OcrWorker {
     }
 
     elapsed.stop();
+
     return _OcrResponse(
       requestId: requestId,
       results: results,
@@ -435,6 +476,7 @@ class _OcrWorker {
 
   _OcrResponse _emptyResponse(int requestId, Stopwatch elapsed) {
     elapsed.stop();
+
     return _OcrResponse(
       requestId: requestId,
       results: const [],
@@ -453,12 +495,15 @@ class _OcrWorker {
   img.Image _convertCameraImageToImage(_OcrFrameRequest request) {
     final width = request.width;
     final height = request.height;
+
     final rgbBytes = Uint8List(width * height * 3);
 
     if (request.formatGroup == ImageFormatGroup.yuv420 ||
         request.formatGroup == ImageFormatGroup.nv21) {
       final yPlane = request.planes[0];
+
       final uPlane = request.planes.length > 1 ? request.planes[1] : null;
+
       final vPlane = request.planes.length > 2 ? request.planes[2] : null;
 
       for (int y = 0; y < height; y++) {
@@ -473,10 +518,14 @@ class _OcrWorker {
           if (uPlane != null && vPlane != null) {
             final uvX = x ~/ 2;
             final uvY = y ~/ 2;
+
             final uvPixelStride = uPlane.bytesPerPixel ?? 1;
+
             final uIndex = uvY * uPlane.bytesPerRow + uvX * uvPixelStride;
+
             final vIndex =
                 uvY * vPlane.bytesPerRow + uvX * (vPlane.bytesPerPixel ?? 1);
+
             final u = uPlane.bytes[uIndex] - 128;
             final v = vPlane.bytes[vIndex] - 128;
 
@@ -486,6 +535,7 @@ class _OcrWorker {
           }
 
           final out = (y * width + x) * 3;
+
           rgbBytes[out] = r;
           rgbBytes[out + 1] = g;
           rgbBytes[out + 2] = b;
@@ -493,10 +543,12 @@ class _OcrWorker {
       }
     } else if (request.formatGroup == ImageFormatGroup.bgra8888) {
       final plane = request.planes[0];
+
       for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
           final src = y * plane.bytesPerRow + x * 4;
           final out = (y * width + x) * 3;
+
           rgbBytes[out] = plane.bytes[src + 2];
           rgbBytes[out + 1] = plane.bytes[src + 1];
           rgbBytes[out + 2] = plane.bytes[src];
@@ -504,6 +556,7 @@ class _OcrWorker {
       }
     } else {
       final bytes = request.planes[0].bytes;
+
       for (int i = 0; i < width * height && i < bytes.length; i++) {
         rgbBytes[i * 3] = bytes[i];
         rgbBytes[i * 3 + 1] = bytes[i];
@@ -517,24 +570,29 @@ class _OcrWorker {
       bytes: rgbBytes.buffer,
       numChannels: 3,
     );
+
     return _rotateImage90Clockwise(image);
   }
 
   img.Image _rotateImage90Clockwise(img.Image source) {
     final rotated = img.Image(width: source.height, height: source.width);
+
     for (int y = 0; y < rotated.height; y++) {
       for (int x = 0; x < rotated.width; x++) {
         rotated.setPixel(x, y, source.getPixel(y, source.height - 1 - x));
       }
     }
+
     return rotated;
   }
 
   img.Image _resizeIfNeeded(img.Image source, int maxLongSide) {
     final longSide = math.max(source.width, source.height);
+
     if (longSide <= maxLongSide) return source;
 
     final scale = maxLongSide / longSide;
+
     return img.copyResize(
       source,
       width: math.max(1, (source.width * scale).round()),
@@ -544,27 +602,90 @@ class _OcrWorker {
   }
 
   List<_TextRegion> _runDetection(img.Image image) {
-    final resized = img.copyResize(
-      image,
-      width: _detInputSize,
-      height: _detInputSize,
-    );
-
     final inputShape = _detInterpreter!.getInputTensor(0).shape;
-    final input = Float32List(inputShape.reduce((a, b) => a * b));
 
-    int idx = 0;
-    for (int y = 0; y < _detInputSize; y++) {
-      for (int x = 0; x < _detInputSize; x++) {
-        final pixel = resized.getPixel(x, y);
-        input[idx++] = ((pixel.r / 255.0) - _detMean[0]) / _detStd[0];
-        input[idx++] = ((pixel.g / 255.0) - _detMean[1]) / _detStd[1];
-        input[idx++] = ((pixel.b / 255.0) - _detMean[2]) / _detStd[2];
+    // Supported input layouts:
+    // NHWC: [1, H, W, C]
+    // NCHW: [1, C, H, W]
+    // NHW:  [1, H, W]
+    int detH;
+    int detW;
+    int detC;
+
+    var isNCHW = false;
+
+    if (inputShape.length == 4) {
+      if (inputShape[3] <= 4) {
+        detH = inputShape[1];
+        detW = inputShape[2];
+        detC = inputShape[3];
+      } else {
+        detC = inputShape[1];
+        detH = inputShape[2];
+        detW = inputShape[3];
+        isNCHW = true;
+      }
+    } else if (inputShape.length == 3) {
+      detH = inputShape[1];
+      detW = inputShape[2];
+      detC = 1;
+    } else {
+      throw StateError('Unsupported detection input shape: $inputShape');
+    }
+
+    final resized = img.copyResize(image, width: detW, height: detH);
+
+    final inputLength = inputShape.reduce((a, b) => a * b);
+
+    final input = Float32List(inputLength);
+
+    if (isNCHW) {
+      for (int c = 0; c < detC; c++) {
+        final planeOffset = c * detH * detW;
+
+        for (int y = 0; y < detH; y++) {
+          for (int x = 0; x < detW; x++) {
+            final pixel = resized.getPixel(x, y);
+
+            final double raw = c == 0
+                ? pixel.r / 255.0
+                : c == 1
+                ? pixel.g / 255.0
+                : pixel.b / 255.0;
+
+            input[planeOffset + y * detW + x] =
+                (raw - _detMean[c % _detMean.length]) /
+                _detStd[c % _detStd.length];
+          }
+        }
+      }
+    } else {
+      var idx = 0;
+
+      for (int y = 0; y < detH; y++) {
+        for (int x = 0; x < detW; x++) {
+          final pixel = resized.getPixel(x, y);
+
+          if (detC == 1) {
+            final gray = (pixel.r + pixel.g + pixel.b) / 3.0;
+
+            input[idx++] = (gray / 127.5) - 1.0;
+          } else {
+            input[idx++] = ((pixel.r / 255.0) - _detMean[0]) / _detStd[0];
+
+            input[idx++] = ((pixel.g / 255.0) - _detMean[1]) / _detStd[1];
+
+            input[idx++] = ((pixel.b / 255.0) - _detMean[2]) / _detStd[2];
+          }
+        }
       }
     }
 
     final outputShape = _detInterpreter!.getOutputTensor(0).shape;
-    final outputBytes = Uint8List(outputShape.reduce((a, b) => a * b) * 4);
+
+    final outputLength = outputShape.reduce((a, b) => a * b);
+
+    final outputBytes = Uint8List(outputLength * 4);
 
     _detInterpreter!.runForMultipleInputs(
       [input.buffer.asUint8List(input.offsetInBytes, input.lengthInBytes)],
@@ -572,6 +693,7 @@ class _OcrWorker {
     );
 
     final output = outputBytes.buffer.asFloat32List();
+
     return _parseDetectionMap(output, outputShape, image.width, image.height);
   }
 
@@ -581,27 +703,71 @@ class _OcrWorker {
     int sourceWidth,
     int sourceHeight,
   ) {
-    final mapHeight = outputShape.length >= 3 ? outputShape[1] : _detInputSize;
-    final mapWidth = outputShape.length >= 3 ? outputShape[2] : _detInputSize;
+    late final int mapHeight;
+    late final int mapWidth;
+
+    if (outputShape.length == 4 && outputShape[0] == 1 && outputShape[3] == 1) {
+      // NHWC probability map: [1, H, W, 1].
+      mapHeight = outputShape[1];
+      mapWidth = outputShape[2];
+    } else if (outputShape.length == 4 &&
+        outputShape[0] == 1 &&
+        outputShape[1] == 1) {
+      // NCHW probability map: [1, 1, H, W].
+      mapHeight = outputShape[2];
+      mapWidth = outputShape[3];
+    } else if (outputShape.length == 3 && outputShape[0] == 1) {
+      // Batched map: [1, H, W].
+      mapHeight = outputShape[1];
+      mapWidth = outputShape[2];
+    } else if (outputShape.length == 2) {
+      // FIX: support an unbatched 2D spatial map [H, W].
+      //
+      // Your model returns [128, 25], so this branch interprets
+      // that tensor as 128 rows and 25 columns.
+      mapHeight = outputShape[0];
+      mapWidth = outputShape[1];
+    } else {
+      throw StateError('Unsupported detection output shape: $outputShape');
+    }
+
+    final expectedLength = mapHeight * mapWidth;
+
+    if (output.length < expectedLength) {
+      throw StateError(
+        'Detection output is too small. '
+        'Shape: $outputShape; '
+        'expected at least $expectedLength values, '
+        'received ${output.length}.',
+      );
+    }
+
     final sourceScaleX = sourceWidth / mapWidth;
     final sourceScaleY = sourceHeight / mapHeight;
-    final visited = Uint8List(mapWidth * mapHeight);
+
+    final visited = Uint8List(expectedLength);
     final regions = <_TextRegion>[];
-    final queue = Int32List(mapWidth * mapHeight);
+    final queue = Int32List(expectedLength);
 
     for (int y = 0; y < mapHeight; y++) {
       for (int x = 0; x < mapWidth; x++) {
         final start = y * mapWidth + x;
-        if (visited[start] == 1 || output[start] < _detConfThreshold) continue;
+
+        if (visited[start] == 1 || output[start] < _detConfThreshold) {
+          continue;
+        }
 
         var head = 0;
         var tail = 0;
+
         var minX = x;
         var maxX = x;
         var minY = y;
         var maxY = y;
+
         var area = 0;
         var confidenceSum = 0.0;
+
         var sumX = 0.0;
         var sumY = 0.0;
         var sumXX = 0.0;
@@ -613,12 +779,16 @@ class _OcrWorker {
 
         while (head < tail) {
           final index = queue[head++];
+
           final cx = index % mapWidth;
           final cy = index ~/ mapWidth;
+
           area++;
           confidenceSum += output[index];
+
           final sourceX = (cx + 0.5) * sourceScaleX;
           final sourceY = (cy + 0.5) * sourceScaleY;
+
           sumX += sourceX;
           sumY += sourceY;
           sumXX += sourceX * sourceX;
@@ -632,12 +802,18 @@ class _OcrWorker {
 
           for (int dy = -1; dy <= 1; dy++) {
             final ny = cy + dy;
+
             if (ny < 0 || ny >= mapHeight) continue;
+
             for (int dx = -1; dx <= 1; dx++) {
               if (dx == 0 && dy == 0) continue;
+
               final nx = cx + dx;
+
               if (nx < 0 || nx >= mapWidth) continue;
+
               final nIndex = ny * mapWidth + nx;
+
               if (visited[nIndex] == 0 && output[nIndex] >= _detConfThreshold) {
                 visited[nIndex] = 1;
                 queue[tail++] = nIndex;
@@ -648,8 +824,13 @@ class _OcrWorker {
 
         final boxWidth = maxX - minX + 1;
         final boxHeight = maxY - minY + 1;
+
         final meanConfidence = confidenceSum / math.max(area, 1);
-        if (area < _detMinArea || meanConfidence < _detConfThreshold) continue;
+
+        if (area < _detMinArea || meanConfidence < _detConfThreshold) {
+          continue;
+        }
+
         if (boxWidth < 4 || boxHeight < 4) continue;
 
         final region = _buildTextRegion(
@@ -666,11 +847,15 @@ class _OcrWorker {
           sumYY: sumYY,
           sumXY: sumXY,
         );
-        if (region != null) regions.add(region);
+
+        if (region != null) {
+          regions.add(region);
+        }
       }
     }
 
     regions.sort((a, b) => b.area.compareTo(a.area));
+
     return _nonMaxSuppression(regions).take(12).toList();
   }
 
@@ -692,6 +877,7 @@ class _OcrWorker {
 
     final meanX = sumX / area;
     final meanY = sumY / area;
+
     final covXX = (sumXX / area) - (meanX * meanX);
     final covYY = (sumYY / area) - (meanY * meanY);
     final covXY = (sumXY / area) - (meanX * meanY);
@@ -699,18 +885,23 @@ class _OcrWorker {
     var angle = _normalizeTextAngle(0.5 * math.atan2(2 * covXY, covXX - covYY));
 
     final trace = covXX + covYY;
+
     final delta = math.sqrt(
       math.max(0.0, (covXX - covYY) * (covXX - covYY) + 4 * covXY * covXY),
     );
+
     final major = math.max((trace + delta) / 2, 0.000001);
     final minor = math.max((trace - delta) / 2, 0.000001);
+
     final elongation = math.sqrt(major / minor);
+
     if (elongation < _detMinElongationForRotation) {
       angle = 0;
     }
 
     final cosA = math.cos(angle);
     final sinA = math.sin(angle);
+
     var minU = double.infinity;
     var maxU = -double.infinity;
     var minV = double.infinity;
@@ -718,10 +909,13 @@ class _OcrWorker {
 
     for (int i = 0; i < length; i++) {
       final index = queue[i];
+
       final cx = index % mapWidth;
       final cy = index ~/ mapWidth;
+
       final sourceX = (cx + 0.5) * sourceScaleX;
       final sourceY = (cy + 0.5) * sourceScaleY;
+
       final u = sourceX * cosA + sourceY * sinA;
       final v = -sourceX * sinA + sourceY * cosA;
 
@@ -733,17 +927,18 @@ class _OcrWorker {
 
     final rawWidth = maxU - minU;
     final rawHeight = maxV - minV;
+
     if (rawWidth <= 0 || rawHeight <= 0) return null;
 
     final lineHeight = math.max(rawHeight, 1.0);
-    final inlinePadding =
-        (lineHeight * _detInlinePaddingRatio)
-            .clamp(_detMinInlinePaddingPx, _detMaxInlinePaddingPx)
-            .toDouble();
-    final crossPadding =
-        (lineHeight * _detCrossPaddingRatio)
-            .clamp(_detMinCrossPaddingPx, _detMaxCrossPaddingPx)
-            .toDouble();
+
+    final inlinePadding = (lineHeight * _detInlinePaddingRatio)
+        .clamp(_detMinInlinePaddingPx, _detMaxInlinePaddingPx)
+        .toDouble();
+
+    final crossPadding = (lineHeight * _detCrossPaddingRatio)
+        .clamp(_detMinCrossPaddingPx, _detMaxCrossPaddingPx)
+        .toDouble();
 
     final centerU = (minU + maxU) / 2;
     final centerV = (minV + maxV) / 2;
@@ -762,17 +957,22 @@ class _OcrWorker {
     while (angle <= -math.pi / 2) {
       angle += math.pi;
     }
+
     while (angle > math.pi / 2) {
       angle -= math.pi;
     }
+
     return angle.abs() < _detRotationDeadZoneRadians ? 0 : angle;
   }
 
   List<_TextRegion> _nonMaxSuppression(List<_TextRegion> regions) {
     final kept = <_TextRegion>[];
+
     for (final region in regions) {
       var overlaps = false;
+
       final bounds = region.axisAlignedBounds;
+
       for (final other in kept) {
         if (_intersectionOverUnion(bounds, other.axisAlignedBounds) >
             _detNmsThreshold) {
@@ -780,8 +980,10 @@ class _OcrWorker {
           break;
         }
       }
+
       if (!overlaps) kept.add(region);
     }
+
     return kept;
   }
 
@@ -790,9 +992,12 @@ class _OcrWorker {
     final top = math.max(a.top, b.top);
     final right = math.min(a.right, b.right);
     final bottom = math.min(a.bottom, b.bottom);
+
     final intersection =
         math.max(0.0, right - left) * math.max(0.0, bottom - top);
+
     final union = a.width * a.height + b.width * b.height - intersection;
+
     return union <= 0 ? 0 : intersection / union;
   }
 
@@ -801,22 +1006,21 @@ class _OcrWorker {
     int imageWidth,
     int imageHeight,
   ) {
-    final left =
-        ((region.centerX - region.width / 2) / imageWidth)
-            .clamp(0.0, 1.0)
-            .toDouble();
-    final top =
-        ((region.centerY - region.height / 2) / imageHeight)
-            .clamp(0.0, 1.0)
-            .toDouble();
-    final right =
-        ((region.centerX + region.width / 2) / imageWidth)
-            .clamp(0.0, 1.0)
-            .toDouble();
-    final bottom =
-        ((region.centerY + region.height / 2) / imageHeight)
-            .clamp(0.0, 1.0)
-            .toDouble();
+    final left = ((region.centerX - region.width / 2) / imageWidth)
+        .clamp(0.0, 1.0)
+        .toDouble();
+
+    final top = ((region.centerY - region.height / 2) / imageHeight)
+        .clamp(0.0, 1.0)
+        .toDouble();
+
+    final right = ((region.centerX + region.width / 2) / imageWidth)
+        .clamp(0.0, 1.0)
+        .toDouble();
+
+    final bottom = ((region.centerY + region.height / 2) / imageHeight)
+        .clamp(0.0, 1.0)
+        .toDouble();
 
     return Rect.fromLTRB(
       left,
@@ -829,6 +1033,7 @@ class _OcrWorker {
   img.Image _cropTextRegion(img.Image image, _TextRegion region) {
     final outputWidth = math.max(1, region.width.round());
     final outputHeight = math.max(1, region.height.round());
+
     final output = img.Image(
       width: outputWidth,
       height: outputHeight,
@@ -837,22 +1042,29 @@ class _OcrWorker {
 
     final cosA = math.cos(region.angleRadians);
     final sinA = math.sin(region.angleRadians);
+
     final halfWidth = (outputWidth - 1) / 2;
     final halfHeight = (outputHeight - 1) / 2;
+
     final maxSourceX = (image.width - 1).toDouble();
     final maxSourceY = (image.height - 1).toDouble();
 
     for (int y = 0; y < outputHeight; y++) {
       final localY = y - halfHeight;
+
       for (int x = 0; x < outputWidth; x++) {
         final localX = x - halfWidth;
+
         final sourceX = region.centerX + localX * cosA - localY * sinA;
+
         final sourceY = region.centerY + localX * sinA + localY * cosA;
+
         final pixel = image.getPixelInterpolate(
           sourceX.clamp(0.0, maxSourceX).toDouble(),
           sourceY.clamp(0.0, maxSourceY).toDouble(),
           interpolation: img.Interpolation.linear,
         );
+
         output.setPixel(x, y, pixel);
       }
     }
@@ -862,7 +1074,10 @@ class _OcrWorker {
 
   bool _isBaybayinText(String text) {
     return text.runes.every((codePoint) {
-      return codePoint == 0x20 || (codePoint >= 0x1700 && codePoint <= 0x1714);
+      return codePoint == 0x20 ||
+          (codePoint >= 0x1700 && codePoint <= 0x1714) ||
+          codePoint == 0x1735 || // Philippine single punctuation mark.
+          codePoint == 0x1736; // Philippine double punctuation mark.
     });
   }
 
@@ -871,30 +1086,12 @@ class _OcrWorker {
   }
 
   _RecognitionResult _runLineRecognition(img.Image image) {
-    final wordSegments = _segmentWordImages(image);
-    if (wordSegments.length <= 1) {
-      return _runRecognition(image);
-    }
-
-    final recognizedWords = <_RecognitionResult>[];
-    for (final segment in wordSegments) {
-      final recognition = _runRecognition(segment);
-      if (!_hasMinimumRecognizedText(recognition.text)) continue;
-      if (!_isBaybayinText(recognition.text)) continue;
-      recognizedWords.add(recognition);
-    }
-
-    if (recognizedWords.length <= 1) {
-      return _runRecognition(image);
-    }
-
-    final text = recognizedWords.map((word) => word.text).join(' ');
-    final confidence =
-        recognizedWords.fold<double>(0, (sum, word) => sum + word.confidence) /
-        recognizedWords.length;
-
-    return _RecognitionResult(text: text, confidence: confidence);
+    // The exported model expects one cropped text line per inference.
+    return _runRecognition(image);
   }
+
+  // Optional word segmentation helpers retained for future experiments.
+  // The active recognition pipeline above deliberately does not use them.
 
   List<img.Image> _segmentWordImages(img.Image image) {
     if (image.width < _recMinWordSegmentWidthPx * 3 || image.height < 8) {
@@ -903,48 +1100,56 @@ class _OcrWorker {
 
     final projection = _buildForegroundColumnProjection(image);
     final spans = _findInkSpans(projection, image.height);
+
     if (spans.length < 2) return const [];
 
     final gaps = <int>[];
+
     for (var i = 1; i < spans.length; i++) {
       gaps.add(spans[i].start - spans[i - 1].end - 1);
     }
 
     final positiveGaps = gaps.where((gap) => gap > 0).toList()..sort();
+
     if (positiveGaps.isEmpty) return const [];
 
     final medianGap = positiveGaps[positiveGaps.length ~/ 2].toDouble();
-    final wordGapThreshold =
-        math
-            .max(
-              image.height * _recWordGapHeightRatio,
-              medianGap * _recWordGapMedianRatio,
-            )
-            .round();
+
+    final wordGapThreshold = math
+        .max(
+          image.height * _recWordGapHeightRatio,
+          medianGap * _recWordGapMedianRatio,
+        )
+        .round();
 
     final wordRanges = <_ColumnRange>[];
+
     var wordStart = spans.first.start;
     var previousEnd = spans.first.end;
 
     for (var i = 1; i < spans.length; i++) {
       final gap = spans[i].start - previousEnd - 1;
+
       if (gap >= wordGapThreshold) {
         wordRanges.add(_ColumnRange(wordStart, previousEnd));
         wordStart = spans[i].start;
       }
+
       previousEnd = spans[i].end;
     }
+
     wordRanges.add(_ColumnRange(wordStart, previousEnd));
 
-    final filtered =
-        wordRanges
-            .where((range) => range.width >= _recMinWordSegmentWidthPx)
-            .toList();
+    final filtered = wordRanges
+        .where((range) => range.width >= _recMinWordSegmentWidthPx)
+        .toList();
+
     if (filtered.length <= 1 || filtered.length > _recMaxWordSegments) {
       return const [];
     }
 
     final padding = math.max(2, (image.height * 0.06).round());
+
     return [
       for (final range in filtered)
         img.copyCrop(
@@ -962,37 +1167,48 @@ class _OcrWorker {
   Int32List _buildForegroundColumnProjection(img.Image image) {
     final histogram = List<int>.filled(256, 0);
     final gray = Uint8List(image.width * image.height);
+
     var index = 0;
 
     for (var y = 0; y < image.height; y++) {
       for (var x = 0; x < image.width; x++) {
         final pixel = image.getPixel(x, y);
-        final value =
-            (0.299 * pixel.r + 0.587 * pixel.g + 0.114 * pixel.b)
-                .round()
-                .clamp(0, 255)
-                .toInt();
+
+        final value = (0.299 * pixel.r + 0.587 * pixel.g + 0.114 * pixel.b)
+            .round()
+            .clamp(0, 255)
+            .toInt();
+
         gray[index++] = value;
         histogram[value]++;
       }
     }
 
     final threshold = _otsuThreshold(histogram, gray.length);
+
     var darkerCount = 0;
+
     for (final value in gray) {
       if (value <= threshold) darkerCount++;
     }
 
     final foregroundIsDark = darkerCount <= gray.length - darkerCount;
+
     final projection = Int32List(image.width);
 
     index = 0;
+
     for (var y = 0; y < image.height; y++) {
       for (var x = 0; x < image.width; x++) {
         final value = gray[index++];
-        final isForeground =
-            foregroundIsDark ? value <= threshold : value > threshold;
-        if (isForeground) projection[x]++;
+
+        final isForeground = foregroundIsDark
+            ? value <= threshold
+            : value > threshold;
+
+        if (isForeground) {
+          projection[x]++;
+        }
       }
     }
 
@@ -1001,6 +1217,7 @@ class _OcrWorker {
 
   int _otsuThreshold(List<int> histogram, int total) {
     var sum = 0.0;
+
     for (var i = 0; i < histogram.length; i++) {
       sum += i * histogram[i];
     }
@@ -1012,14 +1229,19 @@ class _OcrWorker {
 
     for (var i = 0; i < histogram.length; i++) {
       backgroundWeight += histogram[i];
+
       if (backgroundWeight == 0) continue;
 
       final foregroundWeight = total - backgroundWeight;
+
       if (foregroundWeight == 0) break;
 
       backgroundSum += i * histogram[i];
+
       final backgroundMean = backgroundSum / backgroundWeight;
+
       final foregroundMean = (sum - backgroundSum) / foregroundWeight;
+
       final variance =
           backgroundWeight *
           foregroundWeight *
@@ -1037,15 +1259,21 @@ class _OcrWorker {
 
   List<_ColumnRange> _findInkSpans(Int32List projection, int imageHeight) {
     final minInkPixels = math.max(1, (imageHeight * 0.025).ceil());
+
     final spans = <_ColumnRange>[];
+
     var start = -1;
 
     for (var x = 0; x < projection.length; x++) {
       final hasInk = projection[x] >= minInkPixels;
+
       if (hasInk && start == -1) {
         start = x;
       } else if (!hasInk && start != -1) {
-        if (x - start >= 2) spans.add(_ColumnRange(start, x - 1));
+        if (x - start >= 2) {
+          spans.add(_ColumnRange(start, x - 1));
+        }
+
         start = -1;
       }
     }
@@ -1059,34 +1287,83 @@ class _OcrWorker {
 
   _RecognitionResult _runRecognition(img.Image image) {
     final inputShape = _recInterpreter!.getInputTensor(0).shape;
-    final inputHeight =
-        inputShape.length >= 3 ? inputShape[1] : _recInputHeight;
-    final inputWidth = inputShape.length >= 3 ? inputShape[2] : _recInputWidth;
-    final input = Float32List(inputShape.reduce((a, b) => a * b));
-    input.fillRange(0, input.length, 1.0);
 
-    final scale = inputHeight / image.height;
-    final resizedWidth = math.max(
-      1,
-      math.min(inputWidth, (image.width * scale).round()),
+    late final int inputHeight;
+    late final int inputWidth;
+
+    // NCHW: [1, 1, H, W].
+    // Also support NHWC: [1, H, W, 1].
+    if (inputShape.length == 4 && inputShape[0] == 1 && inputShape[1] == 1) {
+      inputHeight = inputShape[2];
+      inputWidth = inputShape[3];
+    } else if (inputShape.length == 4 &&
+        inputShape[0] == 1 &&
+        inputShape[3] == 1) {
+      inputHeight = inputShape[1];
+      inputWidth = inputShape[2];
+    } else {
+      throw StateError('Unsupported recognition input shape: $inputShape');
+    }
+
+    // Preserve aspect ratio and fit the line inside the input canvas.
+    final scale = math.min(
+      inputHeight / image.height,
+      inputWidth / image.width,
     );
+
+    final resizedWidth = math
+        .min(inputWidth, math.max(1, (image.width * scale).round()))
+        .toInt();
+
+    final resizedHeight = math
+        .min(inputHeight, math.max(1, (image.height * scale).round()))
+        .toInt();
+
+    final interpolation = scale < 1.0
+        ? img.Interpolation.average
+        : img.Interpolation.cubic;
+
     final resized = img.copyResize(
       image,
       width: resizedWidth,
-      height: inputHeight,
-      interpolation: img.Interpolation.linear,
+      height: resizedHeight,
+      interpolation: interpolation,
     );
 
-    for (int h = 0; h < inputHeight; h++) {
-      for (int w = 0; w < resizedWidth; w++) {
-        final pixel = resized.getPixel(w, h);
-        final gray = (pixel.r + pixel.g + pixel.b) / 3.0;
-        input[h * inputWidth + w] = (gray / 127.5) - 1.0;
+    // White background is +1 after model normalization.
+    final inputLength = inputShape.reduce((a, b) => a * b);
+
+    final input = Float32List(inputLength)..fillRange(0, inputLength, 1.0);
+
+    // Align left and center vertically.
+    final top = (inputHeight - resizedHeight) ~/ 2;
+
+    for (int y = 0; y < resizedHeight; y++) {
+      for (int x = 0; x < resizedWidth; x++) {
+        final pixel = resized.getPixel(x, y);
+
+        final gray =
+            (0.299 * pixel.r.toDouble() +
+                    0.587 * pixel.g.toDouble() +
+                    0.114 * pixel.b.toDouble())
+                .clamp(0.0, 255.0)
+                .toDouble();
+
+        final normalized = (gray / 255.0 - 0.5) / 0.5;
+
+        input[(top + y) * inputWidth + x] = normalized;
       }
     }
 
     final outputShape = _recInterpreter!.getOutputTensor(0).shape;
-    final outputBytes = Uint8List(outputShape.reduce((a, b) => a * b) * 4);
+
+    if (outputShape.length != 3 || outputShape[0] != 1) {
+      throw StateError('Unsupported recognition output shape: $outputShape');
+    }
+
+    final outputLength = outputShape.reduce((a, b) => a * b);
+
+    final outputBytes = Uint8List(outputLength * 4);
 
     _recInterpreter!.runForMultipleInputs(
       [input.buffer.asUint8List(input.offsetInBytes, input.lengthInBytes)],
@@ -1094,18 +1371,45 @@ class _OcrWorker {
     );
 
     final output = outputBytes.buffer.asFloat32List();
-    return _decodeCTC(output, outputShape);
+
+    // Restrict decoding to the actual line width before padding.
+    final calculatedSteps = (resizedWidth + 1) ~/ 2;
+
+    final validSteps = math.min(calculatedSteps, outputShape[1]).toInt();
+
+    return _decodeCTC(output, outputShape, validSteps: validSteps);
   }
 
-  _RecognitionResult _decodeCTC(Float32List output, List<int> shape) {
-    final seqLen = shape.length == 3 ? shape[1] : shape[0];
-    final numClasses = shape.length == 3 ? shape[2] : shape[1];
+  _RecognitionResult _decodeCTC(
+    Float32List output,
+    List<int> shape, {
+    required int validSteps,
+  }) {
+    if (shape.length != 3 || shape[0] != 1) {
+      throw StateError('Unsupported recognition output shape: $shape');
+    }
+
+    final seqLen = shape[1];
+    final numClasses = shape[2];
+
+    if (numClasses != _vocabulary.length) {
+      throw StateError(
+        'Vocabulary/model mismatch: '
+        'model has $numClasses classes, '
+        'but vocabulary has ${_vocabulary.length} entries.',
+      );
+    }
+
+    final stepsToDecode = math.min(validSteps, seqLen).toInt();
+
     final decoded = <int>[];
     final confidences = <double>[];
+
     var previousIdx = 0;
 
-    for (int t = 0; t < seqLen; t++) {
+    for (int t = 0; t < stepsToDecode; t++) {
       final offset = t * numClasses;
+
       final useProbabilities = _looksLikeProbabilityRow(
         output,
         offset,
@@ -1117,51 +1421,59 @@ class _OcrWorker {
 
       if (useProbabilities) {
         maxVal = output[offset];
+
         for (int c = 1; c < numClasses; c++) {
-          final val = output[offset + c];
-          if (val > maxVal) {
-            maxVal = val;
+          final value = output[offset + c];
+
+          if (value > maxVal) {
+            maxVal = value;
             maxIdx = c;
           }
         }
       } else {
         var maxLogit = output[offset];
+
         for (int c = 1; c < numClasses; c++) {
           maxLogit = math.max(maxLogit, output[offset + c]);
         }
 
         var sumExp = 0.0;
+
         for (int c = 0; c < numClasses; c++) {
           sumExp += math.exp(output[offset + c] - maxLogit);
         }
 
         maxVal = math.exp(output[offset] - maxLogit) / sumExp;
+
         for (int c = 1; c < numClasses; c++) {
-          final val = math.exp(output[offset + c] - maxLogit) / sumExp;
-          if (val > maxVal) {
-            maxVal = val;
+          final value = math.exp(output[offset + c] - maxLogit) / sumExp;
+
+          if (value > maxVal) {
+            maxVal = value;
             maxIdx = c;
           }
         }
       }
 
+      // Greedy CTC: collapse repeated labels and remove blank class 0.
       if (maxIdx != 0 && maxIdx != previousIdx) {
         decoded.add(maxIdx);
         confidences.add(maxVal);
       }
+
       previousIdx = maxIdx;
     }
 
-    final rawText =
-        decoded
-            .where((idx) => idx > 0 && idx < _vocabulary.length)
-            .map((idx) => _vocabulary[idx])
-            .join();
+    final rawText = decoded
+        .where((idx) => idx > 0 && idx < _vocabulary.length)
+        .map((idx) => _vocabulary[idx])
+        .join();
+
     final text = Transliterator.normalizeBaybayinText(rawText);
-    final confidence =
-        confidences.isEmpty
-            ? 0.0
-            : confidences.reduce((a, b) => a + b) / confidences.length;
+
+    final confidence = confidences.isEmpty
+        ? 0.0
+        : confidences.reduce((a, b) => a + b) / confidences.length;
 
     return _RecognitionResult(text: text, confidence: confidence);
   }
@@ -1172,17 +1484,24 @@ class _OcrWorker {
     int numClasses,
   ) {
     var sum = 0.0;
+
     for (int c = 0; c < numClasses; c++) {
       final value = output[offset + c];
-      if (value < 0.0 || value > 1.0) return false;
+
+      if (value < 0.0 || value > 1.0) {
+        return false;
+      }
+
       sum += value;
     }
+
     return sum > 0.98 && sum < 1.02;
   }
 
   void dispose() {
     _detInterpreter?.close();
     _recInterpreter?.close();
+
     _detInterpreter = null;
     _recInterpreter = null;
   }
@@ -1226,8 +1545,10 @@ class _TextRegion {
   Rect get axisAlignedBounds {
     final cosA = math.cos(angleRadians);
     final sinA = math.sin(angleRadians);
+
     final halfWidth = width / 2;
     final halfHeight = height / 2;
+
     var minX = double.infinity;
     var maxX = -double.infinity;
     var minY = double.infinity;
@@ -1235,7 +1556,9 @@ class _TextRegion {
 
     void include(double localX, double localY) {
       final x = centerX + localX * cosA - localY * sinA;
+
       final y = centerY + localX * sinA + localY * cosA;
+
       if (x < minX) minX = x;
       if (x > maxX) maxX = x;
       if (y < minY) minY = y;
