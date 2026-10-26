@@ -1,6 +1,5 @@
 import "dart:io";
 import "dart:math" as math;
-import "dart:typed_data";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:camera/camera.dart";
@@ -52,8 +51,8 @@ class MlKitService {
       // Bounding-box coordinates returned by ML Kit for a file-backed
       // InputImage are in the *upright* (post-rotation) image space, so we
       // normalise against the upright dimensions.
-      final bool isLandscape = (sensorOrientation == 90 ||
-          sensorOrientation == 270);
+      final bool isLandscape =
+          (sensorOrientation == 90 || sensorOrientation == 270);
       final double uprightWidth = isLandscape
           ? cameraImage.height.toDouble()
           : cameraImage.width.toDouble();
@@ -102,6 +101,43 @@ class MlKitService {
     required int deviceOrientationDegrees,
     required bool isFrontCamera,
   }) async {
+    // ML Kit accepts the native Android NV21 and iOS BGRA camera buffers
+    // directly. This avoids per-frame RGB conversion, JPEG encoding, disk
+    // writes, and decoding on the UI isolate.
+    final nativeFormat = Platform.isAndroid
+        ? InputImageFormat.nv21
+        : Platform.isIOS
+        ? InputImageFormat.bgra8888
+        : null;
+    if (nativeFormat != null &&
+        ((Platform.isAndroid &&
+                cameraImage.format.group == ImageFormatGroup.nv21) ||
+            (Platform.isIOS &&
+                cameraImage.format.group == ImageFormatGroup.bgra8888)) &&
+        cameraImage.planes.length == 1) {
+      final rotationDegrees = _getRotationDegrees(
+        sensorOrientation: sensorOrientation,
+        deviceOrientationDegrees: deviceOrientationDegrees,
+        isFrontCamera: isFrontCamera,
+      );
+      final rotation = InputImageRotationValue.fromRawValue(rotationDegrees);
+      if (rotation == null) return null;
+
+      final plane = cameraImage.planes.first;
+      return InputImage.fromBytes(
+        bytes: plane.bytes,
+        metadata: InputImageMetadata(
+          size: Size(
+            cameraImage.width.toDouble(),
+            cameraImage.height.toDouble(),
+          ),
+          rotation: rotation,
+          format: nativeFormat,
+          bytesPerRow: plane.bytesPerRow,
+        ),
+      );
+    }
+
     img.Image? decoded;
 
     final planes = cameraImage.planes;
@@ -155,8 +191,7 @@ class MlKitService {
       for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
           final int yIndex = y * yPlane.bytesPerRow + x;
-          final int uvIndex =
-              (y ~/ 2) * uvRowStride + (x ~/ 2) * uvPixelStride;
+          final int uvIndex = (y ~/ 2) * uvRowStride + (x ~/ 2) * uvPixelStride;
 
           final int yVal = yPlane.bytes[yIndex];
           final int uVal = uPlane.bytes[uvIndex];
@@ -206,8 +241,9 @@ class MlKitService {
             label: transliterated,
             transliteratedText: rawText,
             confidence: line.confidence ?? 0.9,
-            rotation:
-                (line.angle != null) ? (line.angle! * math.pi / 180) : 0.0,
+            rotation: (line.angle != null)
+                ? (line.angle! * math.pi / 180)
+                : 0.0,
           ),
         );
       }

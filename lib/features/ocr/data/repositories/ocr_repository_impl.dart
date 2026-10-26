@@ -15,8 +15,10 @@ class OcrRepositoryImpl implements OcrRepository {
 
   @override
   Future<Either<Failure, void>> initialize() async {
-    final ocrInit =
-        await _guard("Unable to initialize OCR", _ocrService.initialize);
+    final ocrInit = await _guard(
+      "Unable to initialize OCR",
+      _ocrService.initialize,
+    );
     return ocrInit.fold(
       (failure) => Left<Failure, void>(failure),
       (_) => _guard("Unable to initialize ML Kit", _mlKitService.initialize),
@@ -44,7 +46,12 @@ class OcrRepositoryImpl implements OcrRepository {
     }
     return _guard(
       "Unable to process camera frame",
-      () => _ocrService.processFrame(cameraImage),
+      () => _ocrService.processFrame(
+        cameraImage: cameraImage,
+        sensorOrientation: sensorOrientation,
+        deviceOrientationDegrees: deviceOrientationDegrees,
+        isFrontCamera: isFrontCamera,
+      ),
     );
   }
 

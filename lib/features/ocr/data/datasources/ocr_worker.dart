@@ -1,31 +1,9 @@
 part of 'ocr_service.dart';
 
-// Detection model constants.
-const double _detConfThreshold = 0.3;
-const double _detNmsThreshold = 0.3;
-const int _detMinArea = 24;
-const double _detInlinePaddingRatio = 0.9;
-const double _detCrossPaddingRatio = 0.65;
-const double _detMinInlinePaddingPx = 36;
-const double _detMaxInlinePaddingPx = 180;
-const double _detMinCrossPaddingPx = 24;
-const double _detMaxCrossPaddingPx = 110;
-const double _detRotationDeadZoneRadians = 0.05235987755982989;
-const double _detMinElongationForRotation = 1.25;
-
-const List<double> _detMean = [0.485, 0.456, 0.406];
-const List<double> _detStd = [0.229, 0.224, 0.225];
-
 // Recognition model constants.
 const int _recMinChars = 1;
 const int _liveFrameMaxLongSide = 1280;
 const int _photoMaxLongSide = 1600;
-
-// These are retained for optional future segmentation experiments.
-const int _recMaxWordSegments = 8;
-const int _recMinWordSegmentWidthPx = 8;
-const double _recWordGapHeightRatio = 0.22;
-const double _recWordGapMedianRatio = 2.4;
 
 // Vocabulary from the matching recognition model export.
 const String _vocabAssetPath = 'assets/docs/baybai_recog_vocab.json';
@@ -65,7 +43,6 @@ abstract class _OcrRequest {
 }
 
 class _OcrInitMessage {
-  final Uint8List detModelBytes;
   final Uint8List recModelBytes;
   final String recModelPath;
   final double recConfidenceThreshold;
@@ -73,7 +50,6 @@ class _OcrInitMessage {
   final List<String> vocabulary;
 
   const _OcrInitMessage({
-    required this.detModelBytes,
     required this.recModelBytes,
     required this.recModelPath,
     required this.recConfidenceThreshold,
@@ -85,16 +61,12 @@ class _OcrInitMessage {
 class _OcrInitDoneMessage {
   final String recModelPath;
   final double recConfidenceThreshold;
-  final List<int> detInputShape;
-  final List<int> detOutputShape;
   final List<int> recInputShape;
   final List<int> recOutputShape;
 
   const _OcrInitDoneMessage({
     required this.recModelPath,
     required this.recConfidenceThreshold,
-    required this.detInputShape,
-    required this.detOutputShape,
     required this.recInputShape,
     required this.recOutputShape,
   });
@@ -108,6 +80,7 @@ class _OcrFrameRequest implements _OcrRequest {
   final int width;
   final int height;
   final ImageFormatGroup formatGroup;
+  final int rotationDegrees;
 
   const _OcrFrameRequest({
     required this.requestId,
@@ -115,6 +88,7 @@ class _OcrFrameRequest implements _OcrRequest {
     required this.width,
     required this.height,
     required this.formatGroup,
+    required this.rotationDegrees,
   });
 }
 
@@ -213,7 +187,6 @@ class _OcrResult {
 class _OcrWorker {
   final SendPort sendPort;
 
-  Interpreter? _detInterpreter;
   Interpreter? _recInterpreter;
 
   double _recConfidenceThreshold = OCRService._defaultRecConfidenceThreshold;
@@ -224,7 +197,6 @@ class _OcrWorker {
   _OcrWorker(this.sendPort);
 
   void initialize(_OcrInitMessage message) {
-    _detInterpreter = Interpreter.fromBuffer(message.detModelBytes);
     _recInterpreter = Interpreter.fromBuffer(message.recModelBytes);
 
     _recConfidenceThreshold = message.recConfidenceThreshold;
@@ -267,8 +239,6 @@ class _OcrWorker {
       _OcrInitDoneMessage(
         recModelPath: message.recModelPath,
         recConfidenceThreshold: _recConfidenceThreshold,
-        detInputShape: _detInterpreter!.getInputTensor(0).shape,
-        detOutputShape: _detInterpreter!.getOutputTensor(0).shape,
         recInputShape: recInputShape,
         recOutputShape: recOutputShape,
       ),
@@ -498,13 +468,29 @@ class _OcrWorker {
 
     final rgbBytes = Uint8List(width * height * 3);
 
-    if (request.formatGroup == ImageFormatGroup.yuv420 ||
-        request.formatGroup == ImageFormatGroup.nv21) {
+    if (request.formatGroup == ImageFormatGroup.nv21 &&
+        request.planes.length == 1) {
+      final plane = request.planes[0];
+
+      for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+          final yValue = plane.bytes[y * plane.bytesPerRow + x];
+          final uvIndex =
+              plane.bytesPerRow * height +
+              (y ~/ 2) * plane.bytesPerRow +
+              (x ~/ 2) * 2;
+          final v = plane.bytes[uvIndex] - 128;
+          final u = plane.bytes[uvIndex + 1] - 128;
+          final out = (y * width + x) * 3;
+          rgbBytes[out] = (yValue + 1.402 * v).round().clamp(0, 255);
+          rgbBytes[out + 1] = (yValue - 0.344136 * u - 0.714136 * v)
+              .round()
+              .clamp(0, 255);
+          rgbBytes[out + 2] = (yValue + 1.772 * u).round().clamp(0, 255);
+        }
+      }
+    } else if (request.formatGroup == ImageFormatGroup.yuv420) {
       final yPlane = request.planes[0];
-
-      final uPlane = request.planes.length > 1 ? request.planes[1] : null;
-
-      final vPlane = request.planes.length > 2 ? request.planes[2] : null;
 
       for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
@@ -514,28 +500,22 @@ class _OcrWorker {
           int r = yValue;
           int g = yValue;
           int b = yValue;
-
-          if (uPlane != null && vPlane != null) {
+          if (request.planes.length > 2) {
             final uvX = x ~/ 2;
             final uvY = y ~/ 2;
-
-            final uvPixelStride = uPlane.bytesPerPixel ?? 1;
-
-            final uIndex = uvY * uPlane.bytesPerRow + uvX * uvPixelStride;
-
+            final uPlane = request.planes[1];
+            final vPlane = request.planes[2];
+            final uIndex =
+                uvY * uPlane.bytesPerRow + uvX * (uPlane.bytesPerPixel ?? 1);
             final vIndex =
                 uvY * vPlane.bytesPerRow + uvX * (vPlane.bytesPerPixel ?? 1);
-
             final u = uPlane.bytes[uIndex] - 128;
             final v = vPlane.bytes[vIndex] - 128;
-
             r = (yValue + 1.402 * v).round().clamp(0, 255);
             g = (yValue - 0.344136 * u - 0.714136 * v).round().clamp(0, 255);
             b = (yValue + 1.772 * u).round().clamp(0, 255);
           }
-
           final out = (y * width + x) * 3;
-
           rgbBytes[out] = r;
           rgbBytes[out + 1] = g;
           rgbBytes[out + 2] = b;
@@ -548,7 +528,6 @@ class _OcrWorker {
         for (int x = 0; x < width; x++) {
           final src = y * plane.bytesPerRow + x * 4;
           final out = (y * width + x) * 3;
-
           rgbBytes[out] = plane.bytes[src + 2];
           rgbBytes[out + 1] = plane.bytes[src + 1];
           rgbBytes[out + 2] = plane.bytes[src];
@@ -571,19 +550,11 @@ class _OcrWorker {
       numChannels: 3,
     );
 
-    return _rotateImage90Clockwise(image);
-  }
-
-  img.Image _rotateImage90Clockwise(img.Image source) {
-    final rotated = img.Image(width: source.height, height: source.width);
-
-    for (int y = 0; y < rotated.height; y++) {
-      for (int x = 0; x < rotated.width; x++) {
-        rotated.setPixel(x, y, source.getPixel(y, source.height - 1 - x));
-      }
-    }
-
-    return rotated;
+    final rotation = request.rotationDegrees % 360;
+    if (rotation == 90) return img.copyRotate(image, angle: 90);
+    if (rotation == 180) return img.copyRotate(image, angle: 180);
+    if (rotation == 270) return img.copyRotate(image, angle: 270);
+    return image;
   }
 
   img.Image _resizeIfNeeded(img.Image source, int maxLongSide) {
@@ -602,403 +573,190 @@ class _OcrWorker {
   }
 
   List<_TextRegion> _runDetection(img.Image image) {
-    final inputShape = _detInterpreter!.getInputTensor(0).shape;
+    // The asset previously loaded as a detector outputs CTC scores with 25
+    // classes, so it cannot provide text coordinates. Detect line candidates
+    // from image ink projections, then send each crop to the recognizer.
+    final histogram = List<int>.filled(256, 0);
+    final gray = Uint8List(image.width * image.height);
+    var index = 0;
 
-    // Supported input layouts:
-    // NHWC: [1, H, W, C]
-    // NCHW: [1, C, H, W]
-    // NHW:  [1, H, W]
-    int detH;
-    int detW;
-    int detC;
-
-    var isNCHW = false;
-
-    if (inputShape.length == 4) {
-      if (inputShape[3] <= 4) {
-        detH = inputShape[1];
-        detW = inputShape[2];
-        detC = inputShape[3];
-      } else {
-        detC = inputShape[1];
-        detH = inputShape[2];
-        detW = inputShape[3];
-        isNCHW = true;
+    for (var y = 0; y < image.height; y++) {
+      for (var x = 0; x < image.width; x++) {
+        final pixel = image.getPixel(x, y);
+        final value = (0.299 * pixel.r + 0.587 * pixel.g + 0.114 * pixel.b)
+            .round()
+            .clamp(0, 255)
+            .toInt();
+        gray[index++] = value;
+        histogram[value]++;
       }
-    } else if (inputShape.length == 3) {
-      detH = inputShape[1];
-      detW = inputShape[2];
-      detC = 1;
-    } else {
-      throw StateError('Unsupported detection input shape: $inputShape');
     }
 
-    final resized = img.copyResize(image, width: detW, height: detH);
+    final threshold = _otsuThreshold(histogram, gray.length);
+    var darkerPixels = 0;
+    for (final value in gray) {
+      if (value <= threshold) darkerPixels++;
+    }
 
-    final inputLength = inputShape.reduce((a, b) => a * b);
+    final foregroundIsDark = darkerPixels <= gray.length - darkerPixels;
+    // A single global threshold loses strokes when the frame has shadows,
+    // glare, or a gradient in illumination. Use a local mean for the actual
+    // foreground mask while retaining Otsu only to choose text polarity.
+    final integralWidth = image.width + 1;
+    final integral = Int32List(integralWidth * (image.height + 1));
+    for (var y = 0; y < image.height; y++) {
+      var rowSum = 0;
+      for (var x = 0; x < image.width; x++) {
+        rowSum += gray[y * image.width + x];
+        integral[(y + 1) * integralWidth + x + 1] =
+            integral[y * integralWidth + x + 1] + rowSum;
+      }
+    }
 
-    final input = Float32List(inputLength);
+    const localRadius = 15;
+    const localContrast = 10;
+    final foreground = Uint8List(gray.length);
+    for (var y = 0; y < image.height; y++) {
+      final top = math.max(0, y - localRadius);
+      final bottom = math.min(image.height, y + localRadius + 1);
+      for (var x = 0; x < image.width; x++) {
+        final left = math.max(0, x - localRadius);
+        final right = math.min(image.width, x + localRadius + 1);
+        final sum =
+            integral[bottom * integralWidth + right] -
+            integral[top * integralWidth + right] -
+            integral[bottom * integralWidth + left] +
+            integral[top * integralWidth + left];
+        final localMean = sum / ((bottom - top) * (right - left));
+        final value = gray[y * image.width + x];
+        final isForeground = foregroundIsDark
+            ? value < localMean - localContrast
+            : value > localMean + localContrast;
+        if (isForeground) foreground[y * image.width + x] = 1;
+      }
+    }
 
-    if (isNCHW) {
-      for (int c = 0; c < detC; c++) {
-        final planeOffset = c * detH * detW;
+    final minPixelsPerRow = math.max(2, (image.width * 0.0015).round());
+    final rowGapTolerance = math.max(3, math.min(18, image.height ~/ 40));
+    final rowInk = List<int>.filled(image.height, 0);
 
-        for (int y = 0; y < detH; y++) {
-          for (int x = 0; x < detW; x++) {
-            final pixel = resized.getPixel(x, y);
+    for (var y = 0; y < image.height; y++) {
+      var count = 0;
+      for (var x = 0; x < image.width; x++) {
+        if (foreground[y * image.width + x] != 0) count++;
+      }
+      rowInk[y] = count;
+    }
 
-            final double raw = c == 0
-                ? pixel.r / 255.0
-                : c == 1
-                ? pixel.g / 255.0
-                : pixel.b / 255.0;
+    final rowRanges = <_ColumnRange>[];
+    var runStart = -1;
+    var lastInkRow = -1;
 
-            input[planeOffset + y * detW + x] =
-                (raw - _detMean[c % _detMean.length]) /
-                _detStd[c % _detStd.length];
-          }
+    for (var y = 0; y < image.height; y++) {
+      if (rowInk[y] >= minPixelsPerRow) {
+        if (runStart < 0) runStart = y;
+        lastInkRow = y;
+      } else if (runStart >= 0 && y - lastInkRow > rowGapTolerance) {
+        rowRanges.add(_ColumnRange(runStart, lastInkRow));
+        runStart = -1;
+      }
+    }
+    if (runStart >= 0) rowRanges.add(_ColumnRange(runStart, lastInkRow));
+
+    final regions = <_TextRegion>[];
+    for (final rows in rowRanges) {
+      var minX = image.width;
+      var maxX = -1;
+      var inkPixels = 0;
+      var sumX = 0.0;
+      var sumY = 0.0;
+      var sumXX = 0.0;
+      var sumYY = 0.0;
+      var sumXY = 0.0;
+
+      for (var y = rows.start; y <= rows.end; y++) {
+        for (var x = 0; x < image.width; x++) {
+          if (foreground[y * image.width + x] == 0) continue;
+          inkPixels++;
+          minX = math.min(minX, x);
+          maxX = math.max(maxX, x);
+          sumX += x;
+          sumY += y;
+          sumXX += x * x;
+          sumYY += y * y;
+          sumXY += x * y;
         }
       }
-    } else {
-      var idx = 0;
 
-      for (int y = 0; y < detH; y++) {
-        for (int x = 0; x < detW; x++) {
-          final pixel = resized.getPixel(x, y);
+      final inkWidth = maxX - minX + 1;
+      final inkHeight = rows.width;
+      if (inkPixels < 24 || inkWidth < math.max(12, inkHeight * 0.35)) {
+        continue;
+      }
 
-          if (detC == 1) {
-            final gray = (pixel.r + pixel.g + pixel.b) / 3.0;
+      final meanX = sumX / inkPixels;
+      final meanY = sumY / inkPixels;
+      final covarianceXX = sumXX / inkPixels - meanX * meanX;
+      final covarianceYY = sumYY / inkPixels - meanY * meanY;
+      final covarianceXY = sumXY / inkPixels - meanX * meanY;
+      var angle =
+          0.5 * math.atan2(2 * covarianceXY, covarianceXX - covarianceYY);
+      if (angle > math.pi / 2) angle -= math.pi;
+      if (angle < -math.pi / 2) angle += math.pi;
 
-            input[idx++] = (gray / 127.5) - 1.0;
-          } else {
-            input[idx++] = ((pixel.r / 255.0) - _detMean[0]) / _detStd[0];
-
-            input[idx++] = ((pixel.g / 255.0) - _detMean[1]) / _detStd[1];
-
-            input[idx++] = ((pixel.b / 255.0) - _detMean[2]) / _detStd[2];
-          }
+      var minAlong = double.infinity;
+      var maxAlong = double.negativeInfinity;
+      var minAcross = double.infinity;
+      var maxAcross = double.negativeInfinity;
+      final cosAngle = math.cos(angle);
+      final sinAngle = math.sin(angle);
+      for (var y = rows.start; y <= rows.end; y++) {
+        for (var x = minX; x <= maxX; x++) {
+          if (foreground[y * image.width + x] == 0) continue;
+          final dx = x - meanX;
+          final dy = y - meanY;
+          final along = dx * cosAngle + dy * sinAngle;
+          final across = -dx * sinAngle + dy * cosAngle;
+          minAlong = math.min(minAlong, along);
+          maxAlong = math.max(maxAlong, along);
+          minAcross = math.min(minAcross, across);
+          maxAcross = math.max(maxAcross, across);
         }
       }
-    }
 
-    final outputShape = _detInterpreter!.getOutputTensor(0).shape;
-
-    final outputLength = outputShape.reduce((a, b) => a * b);
-
-    final outputBytes = Uint8List(outputLength * 4);
-
-    _detInterpreter!.runForMultipleInputs(
-      [input.buffer.asUint8List(input.offsetInBytes, input.lengthInBytes)],
-      {0: outputBytes},
-    );
-
-    final output = outputBytes.buffer.asFloat32List();
-
-    return _parseDetectionMap(output, outputShape, image.width, image.height);
-  }
-
-  List<_TextRegion> _parseDetectionMap(
-    Float32List output,
-    List<int> outputShape,
-    int sourceWidth,
-    int sourceHeight,
-  ) {
-    late final int mapHeight;
-    late final int mapWidth;
-
-    if (outputShape.length == 4 && outputShape[0] == 1 && outputShape[3] == 1) {
-      // NHWC probability map: [1, H, W, 1].
-      mapHeight = outputShape[1];
-      mapWidth = outputShape[2];
-    } else if (outputShape.length == 4 &&
-        outputShape[0] == 1 &&
-        outputShape[1] == 1) {
-      // NCHW probability map: [1, 1, H, W].
-      mapHeight = outputShape[2];
-      mapWidth = outputShape[3];
-    } else if (outputShape.length == 3 && outputShape[0] == 1) {
-      // Batched map: [1, H, W].
-      mapHeight = outputShape[1];
-      mapWidth = outputShape[2];
-    } else if (outputShape.length == 2) {
-      // FIX: support an unbatched 2D spatial map [H, W].
-      //
-      // Your model returns [128, 25], so this branch interprets
-      // that tensor as 128 rows and 25 columns.
-      mapHeight = outputShape[0];
-      mapWidth = outputShape[1];
-    } else {
-      throw StateError('Unsupported detection output shape: $outputShape');
-    }
-
-    final expectedLength = mapHeight * mapWidth;
-
-    if (output.length < expectedLength) {
-      throw StateError(
-        'Detection output is too small. '
-        'Shape: $outputShape; '
-        'expected at least $expectedLength values, '
-        'received ${output.length}.',
+      final lineHeight = math.max(1.0, maxAcross - minAcross + 1);
+      final inlinePadding = math.max(3.0, lineHeight * 0.12);
+      final crossPadding = math.max(2.0, lineHeight * 0.08);
+      final centerAlong = (minAlong + maxAlong) / 2;
+      final centerAcross = (minAcross + maxAcross) / 2;
+      final centerX = meanX + centerAlong * cosAngle - centerAcross * sinAngle;
+      final centerY = meanY + centerAlong * sinAngle + centerAcross * cosAngle;
+      regions.add(
+        _TextRegion(
+          centerX: centerX,
+          centerY: centerY,
+          width: maxAlong - minAlong + 1 + inlinePadding * 2,
+          height: maxAcross - minAcross + 1 + crossPadding * 2,
+          angleRadians: angle,
+          cropCenterX: centerX,
+          cropCenterY: centerY,
+          cropWidth: maxAlong - minAlong + 1 + inlinePadding * 2,
+          cropHeight: maxAcross - minAcross + 1 + crossPadding * 2,
+        ),
       );
     }
 
-    final sourceScaleX = sourceWidth / mapWidth;
-    final sourceScaleY = sourceHeight / mapHeight;
+    regions.sort((a, b) => a.centerY.compareTo(b.centerY));
 
-    final visited = Uint8List(expectedLength);
-    final regions = <_TextRegion>[];
-    final queue = Int32List(expectedLength);
-
-    for (int y = 0; y < mapHeight; y++) {
-      for (int x = 0; x < mapWidth; x++) {
-        final start = y * mapWidth + x;
-
-        if (visited[start] == 1 || output[start] < _detConfThreshold) {
-          continue;
-        }
-
-        var head = 0;
-        var tail = 0;
-
-        var minX = x;
-        var maxX = x;
-        var minY = y;
-        var maxY = y;
-
-        var area = 0;
-        var confidenceSum = 0.0;
-
-        var sumX = 0.0;
-        var sumY = 0.0;
-        var sumXX = 0.0;
-        var sumYY = 0.0;
-        var sumXY = 0.0;
-
-        queue[tail++] = start;
-        visited[start] = 1;
-
-        while (head < tail) {
-          final index = queue[head++];
-
-          final cx = index % mapWidth;
-          final cy = index ~/ mapWidth;
-
-          area++;
-          confidenceSum += output[index];
-
-          final sourceX = (cx + 0.5) * sourceScaleX;
-          final sourceY = (cy + 0.5) * sourceScaleY;
-
-          sumX += sourceX;
-          sumY += sourceY;
-          sumXX += sourceX * sourceX;
-          sumYY += sourceY * sourceY;
-          sumXY += sourceX * sourceY;
-
-          if (cx < minX) minX = cx;
-          if (cx > maxX) maxX = cx;
-          if (cy < minY) minY = cy;
-          if (cy > maxY) maxY = cy;
-
-          for (int dy = -1; dy <= 1; dy++) {
-            final ny = cy + dy;
-
-            if (ny < 0 || ny >= mapHeight) continue;
-
-            for (int dx = -1; dx <= 1; dx++) {
-              if (dx == 0 && dy == 0) continue;
-
-              final nx = cx + dx;
-
-              if (nx < 0 || nx >= mapWidth) continue;
-
-              final nIndex = ny * mapWidth + nx;
-
-              if (visited[nIndex] == 0 && output[nIndex] >= _detConfThreshold) {
-                visited[nIndex] = 1;
-                queue[tail++] = nIndex;
-              }
-            }
-          }
-        }
-
-        final boxWidth = maxX - minX + 1;
-        final boxHeight = maxY - minY + 1;
-
-        final meanConfidence = confidenceSum / math.max(area, 1);
-
-        if (area < _detMinArea || meanConfidence < _detConfThreshold) {
-          continue;
-        }
-
-        if (boxWidth < 4 || boxHeight < 4) continue;
-
-        final region = _buildTextRegion(
-          queue: queue,
-          length: tail,
-          mapWidth: mapWidth,
-          sourceScaleX: sourceScaleX,
-          sourceScaleY: sourceScaleY,
-          area: area,
-          meanConfidence: meanConfidence,
-          sumX: sumX,
-          sumY: sumY,
-          sumXX: sumXX,
-          sumYY: sumYY,
-          sumXY: sumXY,
-        );
-
-        if (region != null) {
-          regions.add(region);
-        }
-      }
+    if (_debugEnabled && regions.isEmpty) {
+      debugPrint(
+        '[OCRService][detector] no text lines; '
+        'image=${image.width}x${image.height} otsu=$threshold '
+        'foregroundDark=$foregroundIsDark minPixelsPerRow=$minPixelsPerRow',
+      );
     }
 
-    regions.sort((a, b) => b.area.compareTo(a.area));
-
-    return _nonMaxSuppression(regions).take(12).toList();
-  }
-
-  _TextRegion? _buildTextRegion({
-    required Int32List queue,
-    required int length,
-    required int mapWidth,
-    required double sourceScaleX,
-    required double sourceScaleY,
-    required int area,
-    required double meanConfidence,
-    required double sumX,
-    required double sumY,
-    required double sumXX,
-    required double sumYY,
-    required double sumXY,
-  }) {
-    if (area <= 0 || length <= 0) return null;
-
-    final meanX = sumX / area;
-    final meanY = sumY / area;
-
-    final covXX = (sumXX / area) - (meanX * meanX);
-    final covYY = (sumYY / area) - (meanY * meanY);
-    final covXY = (sumXY / area) - (meanX * meanY);
-
-    var angle = _normalizeTextAngle(0.5 * math.atan2(2 * covXY, covXX - covYY));
-
-    final trace = covXX + covYY;
-
-    final delta = math.sqrt(
-      math.max(0.0, (covXX - covYY) * (covXX - covYY) + 4 * covXY * covXY),
-    );
-
-    final major = math.max((trace + delta) / 2, 0.000001);
-    final minor = math.max((trace - delta) / 2, 0.000001);
-
-    final elongation = math.sqrt(major / minor);
-
-    if (elongation < _detMinElongationForRotation) {
-      angle = 0;
-    }
-
-    final cosA = math.cos(angle);
-    final sinA = math.sin(angle);
-
-    var minU = double.infinity;
-    var maxU = -double.infinity;
-    var minV = double.infinity;
-    var maxV = -double.infinity;
-
-    for (int i = 0; i < length; i++) {
-      final index = queue[i];
-
-      final cx = index % mapWidth;
-      final cy = index ~/ mapWidth;
-
-      final sourceX = (cx + 0.5) * sourceScaleX;
-      final sourceY = (cy + 0.5) * sourceScaleY;
-
-      final u = sourceX * cosA + sourceY * sinA;
-      final v = -sourceX * sinA + sourceY * cosA;
-
-      if (u < minU) minU = u;
-      if (u > maxU) maxU = u;
-      if (v < minV) minV = v;
-      if (v > maxV) maxV = v;
-    }
-
-    final rawWidth = maxU - minU;
-    final rawHeight = maxV - minV;
-
-    if (rawWidth <= 0 || rawHeight <= 0) return null;
-
-    final lineHeight = math.max(rawHeight, 1.0);
-
-    final inlinePadding = (lineHeight * _detInlinePaddingRatio)
-        .clamp(_detMinInlinePaddingPx, _detMaxInlinePaddingPx)
-        .toDouble();
-
-    final crossPadding = (lineHeight * _detCrossPaddingRatio)
-        .clamp(_detMinCrossPaddingPx, _detMaxCrossPaddingPx)
-        .toDouble();
-
-    final centerU = (minU + maxU) / 2;
-    final centerV = (minV + maxV) / 2;
-
-    return _TextRegion(
-      centerX: centerU * cosA - centerV * sinA,
-      centerY: centerU * sinA + centerV * cosA,
-      width: rawWidth + inlinePadding * 2,
-      height: rawHeight + crossPadding * 2,
-      angleRadians: angle,
-      confidence: meanConfidence,
-    );
-  }
-
-  double _normalizeTextAngle(double angle) {
-    while (angle <= -math.pi / 2) {
-      angle += math.pi;
-    }
-
-    while (angle > math.pi / 2) {
-      angle -= math.pi;
-    }
-
-    return angle.abs() < _detRotationDeadZoneRadians ? 0 : angle;
-  }
-
-  List<_TextRegion> _nonMaxSuppression(List<_TextRegion> regions) {
-    final kept = <_TextRegion>[];
-
-    for (final region in regions) {
-      var overlaps = false;
-
-      final bounds = region.axisAlignedBounds;
-
-      for (final other in kept) {
-        if (_intersectionOverUnion(bounds, other.axisAlignedBounds) >
-            _detNmsThreshold) {
-          overlaps = true;
-          break;
-        }
-      }
-
-      if (!overlaps) kept.add(region);
-    }
-
-    return kept;
-  }
-
-  double _intersectionOverUnion(Rect a, Rect b) {
-    final left = math.max(a.left, b.left);
-    final top = math.max(a.top, b.top);
-    final right = math.min(a.right, b.right);
-    final bottom = math.min(a.bottom, b.bottom);
-
-    final intersection =
-        math.max(0.0, right - left) * math.max(0.0, bottom - top);
-
-    final union = a.width * a.height + b.width * b.height - intersection;
-
-    return union <= 0 ? 0 : intersection / union;
+    return regions.take(12).toList();
   }
 
   Rect _normalizeRegionBox(
@@ -1031,8 +789,9 @@ class _OcrWorker {
   }
 
   img.Image _cropTextRegion(img.Image image, _TextRegion region) {
-    final outputWidth = math.max(1, region.width.round());
-    final outputHeight = math.max(1, region.height.round());
+    // Rectify the line so the recognizer always sees a horizontal text line.
+    final outputWidth = math.max(1, region.cropWidth.round());
+    final outputHeight = math.max(1, region.cropHeight.round());
 
     final output = img.Image(
       width: outputWidth,
@@ -1055,9 +814,9 @@ class _OcrWorker {
       for (int x = 0; x < outputWidth; x++) {
         final localX = x - halfWidth;
 
-        final sourceX = region.centerX + localX * cosA - localY * sinA;
+        final sourceX = region.cropCenterX + localX * cosA - localY * sinA;
 
-        final sourceY = region.centerY + localX * sinA + localY * cosA;
+        final sourceY = region.cropCenterY + localX * sinA + localY * cosA;
 
         final pixel = image.getPixelInterpolate(
           sourceX.clamp(0.0, maxSourceX).toDouble(),
@@ -1088,131 +847,6 @@ class _OcrWorker {
   _RecognitionResult _runLineRecognition(img.Image image) {
     // The exported model expects one cropped text line per inference.
     return _runRecognition(image);
-  }
-
-  // Optional word segmentation helpers retained for future experiments.
-  // The active recognition pipeline above deliberately does not use them.
-
-  List<img.Image> _segmentWordImages(img.Image image) {
-    if (image.width < _recMinWordSegmentWidthPx * 3 || image.height < 8) {
-      return const [];
-    }
-
-    final projection = _buildForegroundColumnProjection(image);
-    final spans = _findInkSpans(projection, image.height);
-
-    if (spans.length < 2) return const [];
-
-    final gaps = <int>[];
-
-    for (var i = 1; i < spans.length; i++) {
-      gaps.add(spans[i].start - spans[i - 1].end - 1);
-    }
-
-    final positiveGaps = gaps.where((gap) => gap > 0).toList()..sort();
-
-    if (positiveGaps.isEmpty) return const [];
-
-    final medianGap = positiveGaps[positiveGaps.length ~/ 2].toDouble();
-
-    final wordGapThreshold = math
-        .max(
-          image.height * _recWordGapHeightRatio,
-          medianGap * _recWordGapMedianRatio,
-        )
-        .round();
-
-    final wordRanges = <_ColumnRange>[];
-
-    var wordStart = spans.first.start;
-    var previousEnd = spans.first.end;
-
-    for (var i = 1; i < spans.length; i++) {
-      final gap = spans[i].start - previousEnd - 1;
-
-      if (gap >= wordGapThreshold) {
-        wordRanges.add(_ColumnRange(wordStart, previousEnd));
-        wordStart = spans[i].start;
-      }
-
-      previousEnd = spans[i].end;
-    }
-
-    wordRanges.add(_ColumnRange(wordStart, previousEnd));
-
-    final filtered = wordRanges
-        .where((range) => range.width >= _recMinWordSegmentWidthPx)
-        .toList();
-
-    if (filtered.length <= 1 || filtered.length > _recMaxWordSegments) {
-      return const [];
-    }
-
-    final padding = math.max(2, (image.height * 0.06).round());
-
-    return [
-      for (final range in filtered)
-        img.copyCrop(
-          image,
-          x: math.max(0, range.start - padding),
-          y: 0,
-          width:
-              math.min(image.width, range.end + padding + 1) -
-              math.max(0, range.start - padding),
-          height: image.height,
-        ),
-    ];
-  }
-
-  Int32List _buildForegroundColumnProjection(img.Image image) {
-    final histogram = List<int>.filled(256, 0);
-    final gray = Uint8List(image.width * image.height);
-
-    var index = 0;
-
-    for (var y = 0; y < image.height; y++) {
-      for (var x = 0; x < image.width; x++) {
-        final pixel = image.getPixel(x, y);
-
-        final value = (0.299 * pixel.r + 0.587 * pixel.g + 0.114 * pixel.b)
-            .round()
-            .clamp(0, 255)
-            .toInt();
-
-        gray[index++] = value;
-        histogram[value]++;
-      }
-    }
-
-    final threshold = _otsuThreshold(histogram, gray.length);
-
-    var darkerCount = 0;
-
-    for (final value in gray) {
-      if (value <= threshold) darkerCount++;
-    }
-
-    final foregroundIsDark = darkerCount <= gray.length - darkerCount;
-
-    final projection = Int32List(image.width);
-
-    index = 0;
-
-    for (var y = 0; y < image.height; y++) {
-      for (var x = 0; x < image.width; x++) {
-        final value = gray[index++];
-
-        final isForeground = foregroundIsDark
-            ? value <= threshold
-            : value > threshold;
-
-        if (isForeground) {
-          projection[x]++;
-        }
-      }
-    }
-
-    return projection;
   }
 
   int _otsuThreshold(List<int> histogram, int total) {
@@ -1255,34 +889,6 @@ class _OcrWorker {
     }
 
     return threshold;
-  }
-
-  List<_ColumnRange> _findInkSpans(Int32List projection, int imageHeight) {
-    final minInkPixels = math.max(1, (imageHeight * 0.025).ceil());
-
-    final spans = <_ColumnRange>[];
-
-    var start = -1;
-
-    for (var x = 0; x < projection.length; x++) {
-      final hasInk = projection[x] >= minInkPixels;
-
-      if (hasInk && start == -1) {
-        start = x;
-      } else if (!hasInk && start != -1) {
-        if (x - start >= 2) {
-          spans.add(_ColumnRange(start, x - 1));
-        }
-
-        start = -1;
-      }
-    }
-
-    if (start != -1 && projection.length - start >= 2) {
-      spans.add(_ColumnRange(start, projection.length - 1));
-    }
-
-    return spans;
   }
 
   _RecognitionResult _runRecognition(img.Image image) {
@@ -1499,10 +1105,8 @@ class _OcrWorker {
   }
 
   void dispose() {
-    _detInterpreter?.close();
     _recInterpreter?.close();
 
-    _detInterpreter = null;
     _recInterpreter = null;
   }
 }
@@ -1529,7 +1133,10 @@ class _TextRegion {
   final double width;
   final double height;
   final double angleRadians;
-  final double confidence;
+  final double cropCenterX;
+  final double cropCenterY;
+  final double cropWidth;
+  final double cropHeight;
 
   const _TextRegion({
     required this.centerX,
@@ -1537,39 +1144,11 @@ class _TextRegion {
     required this.width,
     required this.height,
     required this.angleRadians,
-    required this.confidence,
+    required this.cropCenterX,
+    required this.cropCenterY,
+    required this.cropWidth,
+    required this.cropHeight,
   });
 
   double get area => width * height;
-
-  Rect get axisAlignedBounds {
-    final cosA = math.cos(angleRadians);
-    final sinA = math.sin(angleRadians);
-
-    final halfWidth = width / 2;
-    final halfHeight = height / 2;
-
-    var minX = double.infinity;
-    var maxX = -double.infinity;
-    var minY = double.infinity;
-    var maxY = -double.infinity;
-
-    void include(double localX, double localY) {
-      final x = centerX + localX * cosA - localY * sinA;
-
-      final y = centerY + localX * sinA + localY * cosA;
-
-      if (x < minX) minX = x;
-      if (x > maxX) maxX = x;
-      if (y < minY) minY = y;
-      if (y > maxY) maxY = y;
-    }
-
-    include(-halfWidth, -halfHeight);
-    include(halfWidth, -halfHeight);
-    include(halfWidth, halfHeight);
-    include(-halfWidth, halfHeight);
-
-    return Rect.fromLTRB(minX, minY, maxX, maxY);
-  }
 }

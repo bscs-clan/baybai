@@ -80,16 +80,19 @@ class _OCRPageState extends State<OCRPage> with WidgetsBindingObserver {
       final sensorOrientation = controller.description.sensorOrientation;
       final isFrontCamera =
           controller.description.lensDirection == CameraLensDirection.front;
-      final deviceOrientationDegrees =
-          _getDeviceOrientationDegrees(controller.value.deviceOrientation);
+      final deviceOrientationDegrees = _getDeviceOrientationDegrees(
+        controller.value.deviceOrientation,
+      );
 
-      final result = await _processOcrFrame(ProcessOcrFrameParams(
-        cameraImage: image,
-        direction: _direction,
-        sensorOrientation: sensorOrientation,
-        deviceOrientationDegrees: deviceOrientationDegrees,
-        isFrontCamera: isFrontCamera,
-      ));
+      final result = await _processOcrFrame(
+        ProcessOcrFrameParams(
+          cameraImage: image,
+          direction: _direction,
+          sensorOrientation: sensorOrientation,
+          deviceOrientationDegrees: deviceOrientationDegrees,
+          isFrontCamera: isFrontCamera,
+        ),
+      );
       result.fold(
         (failure) => debugPrint('OCR processing error: ${failure.message}'),
         (detections) {
@@ -122,10 +125,9 @@ class _OCRPageState extends State<OCRPage> with WidgetsBindingObserver {
   void _toggleDirection() {
     HapticFeedback.selectionClick();
     setState(() {
-      _direction =
-          _direction == ScanTranslationDirection.baybayinToFilipino
-              ? ScanTranslationDirection.filipinoToBaybayin
-              : ScanTranslationDirection.baybayinToFilipino;
+      _direction = _direction == ScanTranslationDirection.baybayinToFilipino
+          ? ScanTranslationDirection.filipinoToBaybayin
+          : ScanTranslationDirection.baybayinToFilipino;
       _detections = [];
     });
   }
@@ -163,36 +165,52 @@ class _OCRPageState extends State<OCRPage> with WidgetsBindingObserver {
                 backgroundColor: Colors.white.withValues(alpha: 0.15),
                 foregroundColor: Colors.white,
                 shape: const StadiumBorder(),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
               ),
               icon: const Icon(Icons.swap_horiz, size: 18),
               label: Text(
-                isBaybayinToFilipino ? 'Baybayin → Filipino' : 'Filipino → ᜊᜌ᜔ᜊᜌᜒᜈ᜔',
+                isBaybayinToFilipino
+                    ? 'Baybayin → Filipino'
+                    : 'Filipino → ᜊᜌ᜔ᜊᜌᜒᜈ᜔',
                 style: const TextStyle(fontSize: 12),
               ),
             ),
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          CameraPreview(_controller!),
-          ..._detections.map((detection) => _buildDetectionOverlay(detection)),
-        ],
+      body: LayoutBuilder(
+        builder: (context, constraints) => Stack(
+          children: [
+            CameraPreview(_controller!),
+            ..._detections.map(
+              (detection) => _buildDetectionOverlay(
+                detection,
+                constraints.maxWidth,
+                constraints.maxHeight,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildDetectionOverlay(Detection detection) {
+  Widget _buildDetectionOverlay(
+    Detection detection,
+    double previewWidth,
+    double previewHeight,
+  ) {
     final isBaybayinToFilipino =
         _direction == ScanTranslationDirection.baybayinToFilipino;
 
     return Positioned(
-      left: detection.box.left * MediaQuery.of(context).size.width,
-      top: detection.box.top * MediaQuery.of(context).size.height,
-      width: detection.box.width * MediaQuery.of(context).size.width,
-      height: detection.box.height * MediaQuery.of(context).size.height,
+      left: detection.box.left * previewWidth,
+      top: detection.box.top * previewHeight,
+      width: detection.box.width * previewWidth,
+      height: detection.box.height * previewHeight,
       child: Transform.rotate(
         angle: detection.rotation,
         child: Container(
@@ -214,8 +232,7 @@ class _OCRPageState extends State<OCRPage> with WidgetsBindingObserver {
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 12,
-                  fontFamily:
-                      isBaybayinToFilipino ? null : 'Baybayin',
+                  fontFamily: isBaybayinToFilipino ? null : 'Baybayin',
                 ),
               ),
             ),

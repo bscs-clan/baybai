@@ -52,6 +52,7 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
 
   bool _isProcessingFrame = false;
   bool _isStreaming = false;
+  int _directionGeneration = 0;
   DateTime? _lastProcessTime;
   String? _capturedPhotoPath;
   Size? _capturedPhotoSize;
@@ -151,22 +152,31 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
     final sensorOrientation = controller.description.sensorOrientation;
     final isFrontCamera =
         controller.description.lensDirection == CameraLensDirection.front;
-    final deviceOrientationDegrees =
-        _getDeviceOrientationDegrees(controller.value.deviceOrientation);
+    final deviceOrientationDegrees = _getDeviceOrientationDegrees(
+      controller.value.deviceOrientation,
+    );
+    final direction = widget.translationDirection;
+    final directionGeneration = _directionGeneration;
 
-    _processOcrFrame(ProcessOcrFrameParams(
-      cameraImage: image,
-      direction: widget.translationDirection,
-      sensorOrientation: sensorOrientation,
-      deviceOrientationDegrees: deviceOrientationDegrees,
-      isFrontCamera: isFrontCamera,
-    ))
+    _processOcrFrame(
+          ProcessOcrFrameParams(
+            cameraImage: image,
+            direction: direction,
+            sensorOrientation: sensorOrientation,
+            deviceOrientationDegrees: deviceOrientationDegrees,
+            isFrontCamera: isFrontCamera,
+          ),
+        )
         .then((result) {
           result.fold(
             (failure) =>
                 debugPrint('[Camera] Inference error: ${failure.message}'),
             (detections) {
-              if (mounted && widget.liveEnabled && _capturedPhotoPath == null) {
+              if (mounted &&
+                  directionGeneration == _directionGeneration &&
+                  direction == widget.translationDirection &&
+                  widget.liveEnabled &&
+                  _capturedPhotoPath == null) {
                 widget.detectionNotifier.value = detections;
 
                 // Cache source image bytes when interactive overlay is enabled so
@@ -347,6 +357,11 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
   @override
   void didUpdateWidget(covariant CameraPreviewWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.translationDirection != widget.translationDirection) {
+      _directionGeneration++;
+      _lastProcessTime = null;
+      widget.detectionNotifier.value = [];
+    }
     if (oldWidget.liveEnabled != widget.liveEnabled) {
       unawaited(_setLiveMode(widget.liveEnabled));
     }
