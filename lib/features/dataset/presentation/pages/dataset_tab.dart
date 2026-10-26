@@ -1,7 +1,4 @@
-import "dart:io";
 import "package:flutter/material.dart";
-import "package:path_provider/path_provider.dart";
-import "package:permission_handler/permission_handler.dart";
 import "package:flutter_bloc/flutter_bloc.dart";
 import "package:loading_animation_widget/loading_animation_widget.dart";
 import "package:baybai/core/theme/colors.dart";
@@ -83,93 +80,7 @@ class _DatasetTabState extends State<DatasetTab> with WidgetsBindingObserver {
   }
 
   Future<void> _initializeFolder() async {
-    final shouldProceed = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
-        return Dialog(
-          backgroundColor: isDark ? AppColors.darkBox : AppColors.box,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Storage Permission Required",
-                  style: AppTextStyles.bigbody.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? AppColors.darkText : AppColors.text,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'We need storage permission to read the datasets. Do you want to grant access?',
-                  style: TextStyle(
-                    color: isDark ? AppColors.darkTextGrey : AppColors.textGrey,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: Text(
-                        "Cancel",
-                        style: TextStyle(
-                          color: isDark ? AppColors.darkText : AppColors.text,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: Text(
-                        "Grant Access",
-                        style: TextStyle(
-                          color: isDark
-                              ? AppColors.darkPrimary
-                              : AppColors.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-
-    if (shouldProceed != true) return;
-
-    if (Platform.isAndroid) {
-      await Permission.manageExternalStorage.request();
-      await Permission.storage.request();
-
-      final extDir = await getExternalStorageDirectory();
-      if (extDir != null) {
-        final parts = extDir.path.split('/Android');
-        final root = parts.isNotEmpty ? parts.first : extDir.path;
-        final dir = Directory('$root/.datasets');
-        if (!dir.existsSync()) {
-          try {
-            dir.createSync(recursive: true);
-          } catch (_) {}
-        }
-      }
-    }
-
-    if (mounted) {
-      context.read<DatasetBloc>().add(const DatasetLoadRequested());
-    }
+    if (mounted) context.read<DatasetBloc>().add(const DatasetLoadRequested());
   }
 
   Future<void> _saveEntry(

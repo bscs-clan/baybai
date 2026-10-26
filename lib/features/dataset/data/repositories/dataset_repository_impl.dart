@@ -14,23 +14,15 @@ class DatasetRepositoryImpl implements DatasetRepository {
   const DatasetRepositoryImpl({
     required DatasetLocalDataSource localDataSource,
     required DatasetCaptureDataSource captureDataSource,
-  })  : _localDataSource = localDataSource,
-        _captureDataSource = captureDataSource;
+  }) : _localDataSource = localDataSource,
+       _captureDataSource = captureDataSource;
 
   @override
   Future<Either<Failure, List<DatasetEntry>>> loadEntries() async {
     try {
-      final candidates = await _localDataSource.candidateDatasetDirs();
-
-      for (final dir in candidates) {
-        final entries = await _localDataSource.scanDatasetDir(dir);
-
-        if (entries.isNotEmpty) {
-          return Right<Failure, List<DatasetEntry>>(entries);
-        }
-      }
-
-      return const Right<Failure, List<DatasetEntry>>(<DatasetEntry>[]);
+      return Right<Failure, List<DatasetEntry>>(
+        await _localDataSource.loadEntries(),
+      );
     } on CacheException catch (error) {
       return Left(CacheFailure(error.message));
     } catch (error) {
@@ -45,16 +37,11 @@ class DatasetRepositoryImpl implements DatasetRepository {
     required String description,
   }) async {
     try {
-      await _localDataSource.writeLabel(
-        labelPath: entry.labelPath,
-        title: title,
-        description: description,
-      );
-
       return Right<Failure, DatasetEntry>(
-        entry.copyWith(
-          titleBaybayin: title,
-          descNormal: description.isEmpty ? null : description,
+        await _localDataSource.updateEntry(
+          entry: entry,
+          title: title,
+          description: description,
         ),
       );
     } on CacheException catch (error) {
@@ -67,10 +54,7 @@ class DatasetRepositoryImpl implements DatasetRepository {
   @override
   Future<Either<Failure, void>> deleteEntry(DatasetEntry entry) async {
     try {
-      await _localDataSource.deleteFiles(
-        imagePath: entry.imagePath,
-        labelPath: entry.labelPath,
-      );
+      await _localDataSource.deleteEntry(entry);
       return const Right<Failure, void>(null);
     } on CacheException catch (error) {
       return Left(CacheFailure(error.message));

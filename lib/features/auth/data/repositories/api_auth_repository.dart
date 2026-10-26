@@ -3,6 +3,7 @@ import "dart:convert";
 import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:http/http.dart" as http;
 import "package:shared_preferences/shared_preferences.dart";
+import "package:baybai/core/utils/api_uri.dart";
 import "package:baybai/features/auth/domain/entities/account_profile.dart";
 import "package:baybai/features/auth/domain/exceptions/auth_exception.dart";
 import "package:baybai/features/auth/domain/repositories/auth_repository.dart";
@@ -17,7 +18,7 @@ class ApiAuthRepository implements AuthRepository {
     if (baseUrl == null || baseUrl.isEmpty) {
       throw const AuthException("The API server is not configured.");
     }
-    return Uri.parse(baseUrl).resolve(path);
+    return apiUri(baseUrl, path);
   }
 
   @override

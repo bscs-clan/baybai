@@ -28,4 +28,14 @@ class DatasetEntryModel extends DatasetEntry {
       descNormal: parsedDesc.isEmpty ? null : parsedDesc,
     );
   }
+
+  factory DatasetEntryModel.fromApi(Map<String, dynamic> record) {
+    return DatasetEntryModel(
+      id: record["id"] as String,
+      imagePath: record["image_url"] as String? ?? "",
+      labelPath: record["id"] as String,
+      titleBaybayin: record["original_baybayin_text"] as String? ?? "Untitled",
+      descNormal: record["readable_text"] as String?,
+    );
+  }
 }

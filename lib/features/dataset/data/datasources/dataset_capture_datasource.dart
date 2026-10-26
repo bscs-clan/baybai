@@ -1,66 +1,18 @@
-import "dart:io";
+import "dart:convert";
 import "dart:typed_data";
+
+import "package:flutter_dotenv/flutter_dotenv.dart";
+import "package:http/http.dart" as http;
 import "package:image/image.dart" as img;
-import "package:path_provider/path_provider.dart";
-import "package:permission_handler/permission_handler.dart";
+import "package:shared_preferences/shared_preferences.dart";
 import "package:baybai/core/error/exceptions.dart";
+import "package:baybai/core/utils/api_uri.dart";
 import "package:baybai/features/dataset/domain/entities/dataset_capture.dart";
 
 class DatasetCaptureDataSource {
-  Future<bool> _requestPermission() async {
-    if (!Platform.isAndroid) return true;
-
-    // For Android 11+ (API 30+)
-    if (await Permission.manageExternalStorage.isRestricted) {
-      final status = await Permission.manageExternalStorage.request();
-      return status.isGranted;
-    }
-
-    // For Android 10 and below
-    final status = await Permission.storage.request();
-    if (status.isGranted) return true;
-
-    // Try specifically for manageExternalStorage if storage was denied (Android 11+)
-    final manageStatus = await Permission.manageExternalStorage.request();
-    return manageStatus.isGranted;
-  }
-
-  Future<Directory> _datasetDir() async {
-    String? basePath;
-
-    try {
-      if (Platform.isAndroid) {
-        final extDir = await getExternalStorageDirectory();
-        if (extDir != null) {
-          // Try to get the root storage path (/storage/emulated/0)
-          final parts = extDir.path.split('/Android');
-          basePath = parts.first;
-        }
-      }
-    } catch (_) {}
-
-    // Fallback 1: App internal documents
-    basePath ??= (await getApplicationDocumentsDirectory()).path;
-
-    try {
-      final dir = Directory('$basePath/.datasets');
-      if (!dir.existsSync()) {
-        dir.createSync(recursive: true);
-      }
-      return dir;
-    } catch (_) {
-      try {
-        final internalDir = await getApplicationDocumentsDirectory();
-        final fallbackDir = Directory('${internalDir.path}/.datasets');
-        if (!fallbackDir.existsSync()) {
-          fallbackDir.createSync(recursive: true);
-        }
-        return fallbackDir;
-      } catch (error) {
-        throw CacheException('Could not access dataset storage path: $error');
-      }
-    }
-  }
+  DatasetCaptureDataSource({http.Client? client})
+    : _client = client ?? http.Client();
+  final http.Client _client;
 
   Future<DatasetSaveResult> save({
     required Uint8List imageBytes,
@@ -68,71 +20,81 @@ class DatasetCaptureDataSource {
     required String label,
     String? transliteration,
   }) async {
-    try {
-      // 1. Check/Request Permissions
-      final hasPermission = await _requestPermission();
-      if (!hasPermission) {
-        return const DatasetSaveResult(
-          status: DatasetSaveStatus.error,
-          message: 'Storage permission denied',
-        );
-      }
-
-      // 2. Decode Image
-      final source = img.decodeImage(imageBytes);
-      if (source == null) {
-        return const DatasetSaveResult(
-          status: DatasetSaveStatus.error,
-          message: 'Could not decode image',
-        );
-      }
-
-      final srcW = source.width;
-      final srcH = source.height;
-
-      // 3. Calculate Crop
-      final x = (box.left * srcW).round().clamp(0, srcW - 1).toInt();
-      final y = (box.top * srcH).round().clamp(0, srcH - 1).toInt();
-      final w = (box.width * srcW).round().clamp(1, srcW - x).toInt();
-      final h = (box.height * srcH).round().clamp(1, srcH - y).toInt();
-
-      if (w < DatasetCaptureConstraints.minPx ||
-          h < DatasetCaptureConstraints.minPx) {
-        return DatasetSaveResult(
-          status: DatasetSaveStatus.tooSmall,
-          message:
-              'Crop is ${w}×${h}px — minimum is '
-              '${DatasetCaptureConstraints.minPx}×'
-              '${DatasetCaptureConstraints.minPx}px',
-        );
-      }
-
-      final dir = await _datasetDir();
-
-      final cropped = img.copyCrop(source, x: x, y: y, width: w, height: h);
-      final jpegBytes = Uint8List.fromList(img.encodeJpg(cropped, quality: 95));
-
-      final ts = DateTime.now().millisecondsSinceEpoch;
-      final imgFile = File('${dir.path}/$ts.jpg');
-      final lblFile = File('${dir.path}/$ts.txt');
-
-      await imgFile.writeAsBytes(jpegBytes);
-
-      final labelContent =
-          (transliteration != null && transliteration.isNotEmpty)
-              ? '$label\n$transliteration'
-              : label;
-      await lblFile.writeAsString(labelContent);
-
-      return DatasetSaveResult(
-        status: DatasetSaveStatus.success,
-        savedPath: imgFile.path,
-        message:
-            'Saved to '
-            '${dir.path.contains('.datasets') ? 'Internal Storage' : 'App Storage'}',
+    final source = img.decodeImage(imageBytes);
+    if (source == null) {
+      return const DatasetSaveResult(
+        status: DatasetSaveStatus.error,
+        message: "Could not decode image",
       );
-    } catch (e) {
-      throw CacheException('Unable to save dataset capture: $e');
     }
+    final x = (box.left * source.width)
+        .round()
+        .clamp(0, source.width - 1)
+        .toInt();
+    final y = (box.top * source.height)
+        .round()
+        .clamp(0, source.height - 1)
+        .toInt();
+    final width = (box.width * source.width)
+        .round()
+        .clamp(1, source.width - x)
+        .toInt();
+    final height = (box.height * source.height)
+        .round()
+        .clamp(1, source.height - y)
+        .toInt();
+    if (width < DatasetCaptureConstraints.minPx ||
+        height < DatasetCaptureConstraints.minPx) {
+      return DatasetSaveResult(
+        status: DatasetSaveStatus.tooSmall,
+        message: "Crop is ${width}×${height}px — minimum is 64×64px",
+      );
+    }
+
+    final baseUrl = dotenv.env["SERVER_HOST"];
+    final token = (await SharedPreferences.getInstance()).getString("token");
+    if (baseUrl == null || baseUrl.isEmpty || token == null || token.isEmpty) {
+      throw const CacheException(
+        "Sign in and configure the API to save datasets.",
+      );
+    }
+    final jpeg = Uint8List.fromList(
+      img.encodeJpg(
+        img.copyCrop(source, x: x, y: y, width: width, height: height),
+        quality: 95,
+      ),
+    );
+    final request =
+        http.MultipartRequest("POST", apiUri(baseUrl, "/v1/datasets/"))
+          ..headers["Authorization"] = "Bearer $token"
+          ..fields["original_baybayin_text"] = label
+          ..fields["readable_text"] = transliteration ?? ""
+          ..files.add(
+            http.MultipartFile.fromBytes(
+              "image",
+              jpeg,
+              filename: "dataset.jpg",
+            ),
+          );
+    final response = await http.Response.fromStream(
+      await _client.send(request),
+    );
+    if (response.statusCode != 201) {
+      String message = "Unable to save dataset. Please try again.";
+      try {
+        final detail =
+            (jsonDecode(response.body) as Map<String, dynamic>)["detail"];
+        if (detail is String) message = detail;
+      } catch (_) {}
+      throw CacheException(message);
+    }
+    final imageUrl =
+        (jsonDecode(response.body) as Map<String, dynamic>)["image_url"]
+            as String?;
+    return DatasetSaveResult(
+      status: DatasetSaveStatus.success,
+      savedPath: imageUrl,
+      message: "Saved to your online dataset.",
+    );
   }
 }

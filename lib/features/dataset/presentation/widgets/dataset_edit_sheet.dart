@@ -2,7 +2,6 @@ import "package:flutter/material.dart";
 import "package:baybai/features/dataset/domain/entities/dataset_entry.dart";
 import "package:baybai/shared/components/buttons/button.dart";
 import "package:baybai/shared/components/toast/toast.dart";
-import "dart:io";
 import "dart:ui";
 
 class DatasetEditSheet extends StatefulWidget {
@@ -144,8 +143,8 @@ class _DatasetEditSheetState extends State<DatasetEditSheet> {
                                     sigmaX: 20,
                                     sigmaY: 20,
                                   ),
-                                  child: Image.file(
-                                    File(widget.entry.imagePath),
+                                  child: Image.network(
+                                    widget.entry.imagePath,
                                     fit: BoxFit.cover,
                                   ),
                                 ),
@@ -153,8 +152,8 @@ class _DatasetEditSheetState extends State<DatasetEditSheet> {
                                   color: Colors.black.withValues(alpha: 0.1),
                                 ),
                                 Center(
-                                  child: Image.file(
-                                    File(widget.entry.imagePath),
+                                  child: Image.network(
+                                    widget.entry.imagePath,
                                     fit: BoxFit.contain,
                                   ),
                                 ),
