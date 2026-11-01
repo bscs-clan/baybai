@@ -1,7 +1,6 @@
 import "package:flutter/material.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/features/dataset/domain/entities/dataset_entry.dart";
-import "dart:io";
 
 class DatasetPreviewPane extends StatelessWidget {
   final DatasetEntry entry;
@@ -33,12 +32,14 @@ class DatasetPreviewPane extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             child: AspectRatio(
               aspectRatio: 16 / 9,
-              child: Image.file(
-                File(entry.imagePath),
+              child: Image.network(
+                entry.imagePath,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) {
                   return Container(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
                     child: const Center(
                       child: Icon(Icons.image_not_supported, size: 32),
                     ),

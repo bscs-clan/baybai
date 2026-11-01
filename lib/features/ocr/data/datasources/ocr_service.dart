@@ -23,7 +23,6 @@ class OCRService {
 
   OCRService._internal();
 
-  static const String _detModelAsset = 'assets/models/baybai_det.tflite';
   static const String _recModelEnvKey = 'OCR_REC_MODEL';
   static const String _defaultRecModel = 'assets/models/baybai_recog.tflite';
   static const String _recConfidenceEnvKey = 'OCR_REC_CONF_THRESHOLD';
@@ -54,8 +53,6 @@ class OCRService {
 
     try {
       await Transliterator.ensureInitialized();
-
-      final detModelData = await rootBundle.load(_detModelAsset);
 
       final recModelPath = _resolveModelAssetPath(
         dotenv.env[_recModelEnvKey],
@@ -108,12 +105,6 @@ class OCRService {
 
       _workerSendPort!.send(
         _OcrInitMessage(
-          detModelBytes: Uint8List.fromList(
-            detModelData.buffer.asUint8List(
-              detModelData.offsetInBytes,
-              detModelData.lengthInBytes,
-            ),
-          ),
           recModelBytes: Uint8List.fromList(
             recModelData.buffer.asUint8List(
               recModelData.offsetInBytes,
@@ -184,7 +175,6 @@ class OCRService {
 
       debugPrint(
         '[OCRService] Worker ready. '
-        'det ${message.detInputShape} -> ${message.detOutputShape}; '
         'rec ${message.recInputShape} -> ${message.recOutputShape}; '
         'recModel ${message.recModelPath}; '
         'recThreshold ${message.recConfidenceThreshold}',
@@ -224,7 +214,12 @@ class OCRService {
     }
   }
 
-  Future<List<Detection>> processFrame(CameraImage cameraImage) async {
+  Future<List<Detection>> processFrame({
+    required CameraImage cameraImage,
+    required int sensorOrientation,
+    required int deviceOrientationDegrees,
+    required bool isFrontCamera,
+  }) async {
     if (!_isInitialized || _workerSendPort == null) {
       throw Exception('OCR service not initialized');
     }
@@ -244,6 +239,11 @@ class OCRService {
         width: cameraImage.width,
         height: cameraImage.height,
         formatGroup: cameraImage.format.group,
+        rotationDegrees: Platform.isIOS
+            ? 0
+            : isFrontCamera
+            ? (sensorOrientation + deviceOrientationDegrees) % 360
+            : (sensorOrientation - deviceOrientationDegrees + 360) % 360,
       ),
     );
 
@@ -323,9 +323,7 @@ class OCRService {
   }
 
   void _logRecognitionDebug(_OcrResponse response, {required String source}) {
-    final shouldLog =
-        response.debugEnabled ||
-        (response.results.isEmpty && response.regionCount > 0);
+    final shouldLog = response.debugEnabled || response.results.isEmpty;
 
     if (!shouldLog) return;
 

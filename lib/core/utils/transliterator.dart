@@ -1,3 +1,4 @@
+import "dart:collection";
 import "package:flutter/foundation.dart";
 import "package:flutter/services.dart" show rootBundle;
 import "dart:convert";
@@ -15,7 +16,6 @@ class Transliterator {
   static const int _baybayinMarkEnd = 0x1714;
   static const int _tagalogPamudpod = 0x1715;
   static const int _hanunooPamudpod = 0x1734;
-  static const int _maxDictionaryAmbiguityTypes = 10;
 
   // Mapping tables (populated from data file)
   static final Map<String, String> toBaybayin = {};
@@ -33,6 +33,12 @@ class Transliterator {
 
   static bool _initialized = false;
   static Future<void>? _initializing;
+  static const int _maxLiveAmbiguitiesPerWord = 6;
+  static const int _maxFilipinoCacheEntries = 256;
+  static final RegExp _tokenPattern = RegExp(r"\s+|\S+");
+  static final RegExp _whitespacePattern = RegExp(r"^\s+$");
+  static final LinkedHashMap<String, String> _filipinoCache =
+      LinkedHashMap<String, String>();
 
   /// Ensures the transliterator is initialized before use.
   static Future<void> ensureInitialized() async {
@@ -431,100 +437,64 @@ class Transliterator {
   static String toFilipino(String text) {
     ensureInitialized();
     text = normalizeBaybayinText(text);
-
-    final ambigTypes = getAmbigTypes(text);
-
-    // No ambiguity → direct conversion
-    if (ambigTypes.isEmpty) {
-      final word = transliterateWithChoices(text, {});
-      printStemInfo(word);
-      return word;
+    final cached = _filipinoCache.remove(text);
+    if (cached != null) {
+      _filipinoCache[text] = cached;
+      return cached;
     }
 
-    if (ambigTypes.length > _maxDictionaryAmbiguityTypes) {
-      final word = transliterateWithChoices(text, {});
-      return preferredSpelling[word.toLowerCase()] ?? word;
+    final result = StringBuffer();
+    for (final match in _tokenPattern.allMatches(text)) {
+      final token = match.group(0)!;
+      result.write(
+        _whitespacePattern.hasMatch(token) ? token : _toFilipinoWord(token),
+      );
     }
 
-    // Generate all possible vowel combinations
-    final allWords = generateCombinations(
-      ambigTypes,
-    ).map((combo) => transliterateWithChoices(text, combo)).toSet().toList();
+    final transliterated = result.toString();
+    _filipinoCache[text] = transliterated;
+    if (_filipinoCache.length > _maxFilipinoCacheEntries) {
+      _filipinoCache.remove(_filipinoCache.keys.first);
+    }
+    return transliterated;
+  }
 
-    // Apply preferred spelling corrections
-    final normalized = <String>[];
-    for (final word in allWords) {
-      final preferred = preferredSpelling[word.toLowerCase()];
-      final finalWord = preferred ?? word;
-      if (!normalized.contains(finalWord)) {
-        normalized.add(finalWord);
-      }
+  static String _toFilipinoWord(String text) {
+    final ambiguities = getAmbigTypes(text);
+    if (ambiguities.isEmpty) return transliterateWithChoices(text, const {});
+
+    // Keep dictionary-aware choice resolution bounded on the live camera path.
+    if (ambiguities.length > _maxLiveAmbiguitiesPerWord) {
+      final direct = transliterateWithChoices(text, const {});
+      return preferredSpelling[direct.toLowerCase()] ?? direct;
     }
 
-    // Categorize by dictionary confidence
-    final directMatches = <String>[];
-    final stemMatches = <String>[];
-    final noMatches = <String>[];
+    final candidates = <String>{};
+    for (final choices in generateCombinations(ambiguities)) {
+      final candidate = transliterateWithChoices(text, choices);
+      candidates.add(preferredSpelling[candidate.toLowerCase()] ?? candidate);
+    }
 
-    for (final word in normalized) {
-      final lower = word.toLowerCase();
+    final knownWords = <String>[];
+    for (final candidate in candidates) {
+      final lower = candidate.toLowerCase();
       if (dictionary.contains(lower)) {
-        directMatches.add(word);
+        knownWords.add(candidate);
       } else if (getStemCandidates(
         lower,
       ).any((stem) => dictionary.contains(stem))) {
-        stemMatches.add(word);
-      } else {
-        noMatches.add(word);
+        knownWords.add(candidate);
       }
     }
 
-    final knownWords = [...directMatches, ...stemMatches];
-
-    // Auto-selection logic
-    if (knownWords.length == 1) {
-      final found = knownWords[0];
-      if (dictionary.contains(found.toLowerCase())) {
-        if (kDebugMode) {
-          print("\n  Dictionary match: \"$found\" — selected automatically.");
-        }
-      } else {
-        final stem = getStemCandidates(
-          found.toLowerCase(),
-        ).firstWhere((s) => dictionary.contains(s), orElse: () => "?");
-        if (kDebugMode) {
-          print(
-            "\n  Stem match: \"$found\" (root: $stem) — selected automatically.",
-          );
-        }
-      }
-      return found;
-    }
-
-    // Prefer built-in words when multiple known options exist
+    if (knownWords.length == 1) return knownWords.first;
     if (knownWords.length > 1) {
       for (final word in knownWords) {
-        if (builtInWords.contains(word.toLowerCase())) {
-          if (kDebugMode) {
-            print("\n  Best match: \"$word\" — selected automatically.");
-          }
-          return word;
-        }
+        if (builtInWords.contains(word.toLowerCase())) return word;
       }
+      return knownWords.first;
     }
-
-    // Fallback: show options and auto-select first
-    final options = knownWords.isNotEmpty ? knownWords : normalized;
-
-    if (options.isNotEmpty) {
-      final selected = options[0];
-      if (kDebugMode) {
-        print("  Auto-selected option 1: \"$selected\" (non-interactive mode)");
-      }
-      return selected;
-    }
-
-    return text; // fallback
+    return candidates.isEmpty ? text : candidates.first;
   }
 
   // Helper methods

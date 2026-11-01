@@ -1,5 +1,4 @@
 import "package:flutter/material.dart";
-import "dart:io";
 
 class DatasetThumbnail extends StatelessWidget {
   final String imagePath;
@@ -16,13 +15,11 @@ class DatasetThumbnail extends StatelessWidget {
       height: height,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(6),
-        child: Image.file(
-          File(imagePath),
+        child: Image.network(
+          imagePath,
           width: width,
           height: height,
           fit: BoxFit.cover,
-          cacheWidth: width.toInt() * 2,
-          cacheHeight: height.toInt() * 2,
           filterQuality: FilterQuality.low,
           gaplessPlayback: true,
           errorBuilder: (_, __, ___) {

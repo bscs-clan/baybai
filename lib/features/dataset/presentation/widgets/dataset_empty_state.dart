@@ -36,8 +36,8 @@ class DatasetEmptyState extends StatelessWidget {
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: onInitialize,
-              icon: Icon(Icons.folder_open),
-              label: const Text("Enable File Access"),
+              icon: Icon(Icons.cloud_download_outlined),
+              label: const Text("Load Datasets"),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
