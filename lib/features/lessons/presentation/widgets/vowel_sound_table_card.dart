@@ -33,7 +33,7 @@ class _VowelSoundTableCardState extends State<VowelSoundTableCard> {
   Future<void> _playSound(String sound) async {
     final asset = switch (sound.toLowerCase()) {
       "a" => "audio/a.mp3",
-      "e / i" => "audio/e_1.mp3",
+      "e / i" => "audio/e_i.mp3",
       "o / u" => "audio/o_u.mp3",
       _ => null,
     };

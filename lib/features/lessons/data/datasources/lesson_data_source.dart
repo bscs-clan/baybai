@@ -295,10 +295,10 @@ class LessonData {
     4: [
       LessonContent(
         title:
-            "How do we **remove the â€œaâ€ sound**? In Baybayin, consonants normally include the vowel sound **â€œa.â€** The **virama**, also called **pamudpod**, removes this vowel sound.",
+            "How do we **remove the BA sound**? In Baybayin, consonants normally include the vowel sound **BA** The **virama**, also called **pamudpod**, removes this vowel sound.",
         showViramaTableCard: true,
         description:
-            "Notice how the small mark changes the sound from **â€œbaâ€ to â€œb.â€**",
+            "Notice how the small mark changes the sound from **BA** to **B**",
       ),
       LessonContent(
         title: "What does virama do?",
@@ -314,7 +314,7 @@ class LessonData {
       LessonContent(
         title: "See the difference from KA to K",
         description:
-            "The virama (pamudpod) removes the default â€œaâ€ vowel, changing ka into k.",
+            "The virama (pamudpod) removes the default **KA** vowel, changing ka into k.",
         showViramaTableCard: true,
         viramaBaseSymbol: "\u1703",
         viramaBaseSound: "Ka",
@@ -615,12 +615,12 @@ class LessonData {
           SoundTableItem(
             spelling: "Cat",
             sound: "Kat",
-            audioAsset: "audio/ka.mp3",
+            audioAsset: "audio/kat.mp3",
           ),
           SoundTableItem(
             spelling: "City",
             sound: "Siti",
-            audioAsset: "audio/sa.mp3",
+            audioAsset: "audio/siti.mp3",
           ),
         ],
         description:
@@ -651,7 +651,7 @@ class LessonData {
         correctOption: "K Sound",
       ),
       LessonContent(
-        title: "Hard C makes a K sound when followed by A, O, or U.",
+        title: "**Hard C** makes a K sound when followed by A, O, or U.",
         showSoundTableCard: true,
         playSoundTableMappings: true,
         soundTableTitle: "Examples",
@@ -677,6 +677,7 @@ class LessonData {
         title: "Which Sound Matches.",
         showWordCard: true,
         wordCardText: "Ca",
+        audioAsset: "audio/ka.mp3",
         options: ["Ka", "Sa", "Ta", "Ba"],
         correctOption: "Ka",
       ),
@@ -684,6 +685,7 @@ class LessonData {
         title: "Which Sound Matches.",
         showWordCard: true,
         wordCardText: "Co",
+        audioAsset: "audio/ko.mp3",
         options: ["Ko", "So", "To", "Bo"],
         correctOption: "Ko",
       ),
@@ -691,6 +693,7 @@ class LessonData {
         title: "Which Sound Matches.",
         showWordCard: true,
         wordCardText: "Cu",
+        audioAsset: "audio/ku.mp3",
         options: ["Ku", "Su", "Tu", "Bu"],
         correctOption: "Ku",
       ),
@@ -698,6 +701,7 @@ class LessonData {
         title: "Adapt this word based on its sounds.",
         showWordCard: true,
         wordCardText: "Cat",
+        audioAsset: "audio/kat.mp3",
         showTextInput: true,
         correctOption: "Kat",
       ),
@@ -705,31 +709,50 @@ class LessonData {
         title: "Adapt this word based on its sounds.",
         showWordCard: true,
         wordCardText: "Corn",
+        audioAsset: "audio/korn.mp3",
         showTextInput: true,
         correctOption: "Korn",
       ),
       LessonContent(
-        title: "Soft C makes a S sound when followed by E or I.",
+        title: "**Soft C** makes a S sound when followed by E or I.",
         showSoundTableCard: true,
         playSoundTableMappings: true,
-        soundTableTitle: "Examples",
+        playSoundTableExamples: true,
         soundTableMappings: [
           SoundTableItem(
             spelling: "Ce",
             sound: "Se",
-            audioAsset: "audio/e_i.mp3",
+            audioAsset: "audio/se.mp3",
           ),
           SoundTableItem(
             spelling: "Ci",
             sound: "Si",
-            audioAsset: "audio/e_i.mp3",
+            audioAsset: "audio/si.mp3",
           ),
         ],
+     soundTableExamples: [
+        SoundTableItem(
+          spelling: "Cell",
+          sound: "Sel",
+          audioAsset: "audio/sel.mp3",
+        ),
+        SoundTableItem(
+          spelling: "City",
+          sound: "Siti",
+          audioAsset: "audio/siti.mp3",
+        ),
+        SoundTableItem(
+          spelling: "Cent",
+          sound: "Sent",
+          audioAsset: "audio/sent.mp3",
+        ),
+],
       ),
       LessonContent(
         title: "Which Sound Matches.",
         showWordCard: true,
         wordCardText: "Ce",
+        audioAsset: "audio/se.mp3",
         options: ["Se", "Si", "So", "Su"],
         correctOption: "Se",
       ),
@@ -737,6 +760,7 @@ class LessonData {
         title: "Which Sound Matches.",
         showWordCard: true,
         wordCardText: "Ci",
+        audioAsset: "audio/si.mp3",
         options: ["Si", "Se", "Sa", "Su"],
         correctOption: "Si",
       ),
@@ -744,6 +768,7 @@ class LessonData {
         title: "Adapt this word based on its sounds.",
         showWordCard: true,
         wordCardText: "City",
+        audioAsset: "audio/siti.mp3",
         showTextInput: true,
         correctOption: "Siti",
       ),
@@ -751,6 +776,7 @@ class LessonData {
         title: "Adapt this word based on its sounds.",
         showWordCard: true,
         wordCardText: "Cinema",
+        audioAsset: "audio/sinema.mp3",
         showTextInput: true,
         correctOption: "Sinema",
       ),
@@ -758,6 +784,7 @@ class LessonData {
         title: "Which sound does this make?",
         showWordCard: true,
         wordCardText: "Ca",
+        audioAsset: "audio/ka.mp3",
         options: ["K Sound", "S Sound"],
         correctOption: "K Sound",
       ),
@@ -765,6 +792,7 @@ class LessonData {
         title: "Which sound does this make?",
         showWordCard: true,
         wordCardText: "Ci",
+        audioAsset: "audio/si.mp3",
         options: ["K Sound", "S Sound"],
         correctOption: "S Sound",
       ),
@@ -772,6 +800,7 @@ class LessonData {
         title: "What sound does the letter C make at the beginning?",
         showWordCard: true,
         wordCardText: "Culture",
+        audioAsset: "audio/kulture.mp3",
         options: ["K", "S", "Z", "P"],
         correctOption: "K",
       ),
@@ -779,6 +808,7 @@ class LessonData {
         title: "which is correct?.",
         showWordCard: true,
         wordCardText: "Cinema",
+        audioAsset: "audio/sinema.mp3",
         options: ["Sinema", "Kinema", "Sinima", "Kinima"],
         correctOption: "Sinema",
       ),
@@ -786,6 +816,7 @@ class LessonData {
         title: "Adapt this word based on its sounds.",
         showWordCard: true,
         wordCardText: "Coffee",
+        audioAsset: "audio/kopi.mp3",
         showTextInput: true,
         correctOption: "Kopi",
       ),
@@ -793,6 +824,7 @@ class LessonData {
         title: "Adapt this word based on its sounds.",
         showWordCard: true,
         wordCardText: "Corn",
+        audioAsset: "audio/korn.mp3",
         showTextInput: true,
         correctOption: "Korn",
       ),
@@ -1388,14 +1420,17 @@ class LessonData {
     SoundTableItem(
       spelling: "Taxi",
       sound: "Taksi",
+      audioAsset: "audio/taksi.mp3",
     ),
     SoundTableItem(
       spelling: "Box",
       sound: "Boks",
+      audioAsset: "audio/boks.mp3",
     ),
     SoundTableItem(
       spelling: "Extra",
       sound: "Ekstra",
+      audioAsset: "audio/ekstra.mp3",
     ),
   ],
   description:
@@ -1412,6 +1447,7 @@ class LessonData {
       LessonContent(
         title: "Here is another examples.",
         showSoundTableCard: true,
+        boldSoundTableXKSExamples: true,
         soundTableMappings: [
           SoundTableItem(
             spelling: "Exist",

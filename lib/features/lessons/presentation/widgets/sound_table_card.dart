@@ -117,7 +117,6 @@ class _SoundTableCardState extends State<SoundTableCard> {
                             example.spelling,
                             textColor,
                             boldPrefixLength: widget.boldMappingPrefixLength,
-                            boldX: widget.boldXKSExamples,
                             boldAll: widget.boldMappings,
                             boldFP: widget.boldFP,
                             boldVB: widget.boldVBExamples,
@@ -140,6 +139,7 @@ class _SoundTableCardState extends State<SoundTableCard> {
                               boldP: widget.boldAudioP,
                               boldPrefixLength:
                                   widget.boldMappingSoundPrefixLength,
+                              boldKS: widget.boldXKSExamples,
                               boldNY: widget.boldNYExamples,
                             )
                           else
@@ -149,6 +149,7 @@ class _SoundTableCardState extends State<SoundTableCard> {
                               boldPrefixLength:
                                   widget.boldMappingSoundPrefixLength,
                               boldAll: widget.boldMappings,
+                              boldKS: widget.boldXKSExamples,
                               boldFP: widget.boldFP,
                               boldVB: widget.boldVBExamples,
                               boldNY: widget.boldNYExamples,
@@ -176,7 +177,7 @@ class _SoundTableCardState extends State<SoundTableCard> {
           Container(
             decoration: BoxDecoration(
               color: isDarkMode ? AppColors.gray80 : AppColors.bg,
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(24),
               border: Border.all(color: borderColor, width: 1.5),
             ),
             child: Column(
