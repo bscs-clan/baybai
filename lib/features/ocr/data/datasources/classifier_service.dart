@@ -1,10 +1,10 @@
+import "dart:io";
 import "package:camera/camera.dart";
 import "package:flutter/foundation.dart";
-import "package:flutter/services.dart";
 import "package:tflite_flutter/tflite_flutter.dart";
+import "package:baybai/features/ocr/data/datasources/ai_model_update_service.dart";
 import "package:baybai/core/models/detection.dart";
 import "dart:async";
-import "dart:convert";
 import "dart:isolate";
 import "dart:math" as math;
 import "dart:typed_data";
@@ -73,16 +73,23 @@ class ClassifierService {
     if (_isReady) return;
     debugPrint("[ClassifierService] Initializing models & isolate...");
 
-    final modelData = await rootBundle.load(
-      "assets/models/baybai_ai_model.tflite",
-    );
-    final modelBytes = modelData.buffer.asUint8List();
-
-    final jsonStr = await rootBundle.loadString(
-      "assets/models/class_names.json",
-    );
-    final raw = json.decode(jsonStr) as Map<String, dynamic>;
-    final classNames = raw.map((k, v) => MapEntry(k, v.toString()));
+    String? modelPath;
+    try {
+      final modelUpdate = await AiModelUpdateService.instance
+          .checkAndDownloadLatest();
+      modelPath = modelUpdate.filePath;
+    } catch (error) {
+      debugPrint('[ClassifierService] Model update check failed: $error');
+      modelPath = await AiModelUpdateService.instance.getDownloadedModelPath();
+    }
+    if (modelPath == null) {
+      throw StateError(
+        'No downloaded AI model is available. Connect to the internet '
+        'and try again.',
+      );
+    }
+    final modelBytes = await File(modelPath).readAsBytes();
+    final classNames = <String, String>{};
 
     await Isolate.spawn(_isolateEntry, _receivePort.sendPort);
 

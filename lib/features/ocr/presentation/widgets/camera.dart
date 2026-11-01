@@ -15,7 +15,8 @@ import "package:baybai/features/ocr/presentation/widgets/detection_overlay.dart"
 import "package:baybai/injection_container.dart";
 import "dart:async";
 import "dart:io";
-import "dart:typed_data";
+
+const int _liveOcrFrameIntervalMicros = 166667;
 
 class CameraPreviewWidget extends StatefulWidget {
   final VoidCallback? onInitialized;
@@ -88,11 +89,15 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
 
   Future<void> _initCamera() async {
     try {
-      await _cameraService.init();
+      await _cameraService.init(
+        resolutionPreset: widget.liveEnabled
+            ? ResolutionPreset.medium
+            : ResolutionPreset.high,
+      );
 
       if (!mounted) return;
 
-      await _startStream();
+      if (widget.liveEnabled) await _startStream();
 
       setState(() => _isInitialized = true);
       widget.onInitialized?.call();
@@ -137,7 +142,8 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
     final now = DateTime.now();
     if (_isProcessingFrame ||
         (_lastProcessTime != null &&
-            now.difference(_lastProcessTime!).inMilliseconds < 250)) {
+            now.difference(_lastProcessTime!).inMicroseconds <
+                _liveOcrFrameIntervalMicros)) {
       return;
     }
     _isProcessingFrame = true;
@@ -368,8 +374,25 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
   }
 
   Future<void> _setLiveMode(bool liveEnabled) async {
-    _isProcessingFrame = false;
+    _directionGeneration++;
+    _lastProcessTime = null;
     widget.detectionNotifier.value = [];
+
+    await _stopStream();
+    if (mounted) setState(() => _isInitialized = false);
+
+    try {
+      await _cameraService.init(
+        resolutionPreset: liveEnabled
+            ? ResolutionPreset.medium
+            : ResolutionPreset.high,
+      );
+    } on CameraException catch (error) {
+      debugPrint('[Camera] Could not change camera resolution: ${error.code}');
+      return;
+    }
+    if (!mounted) return;
+    setState(() => _isInitialized = true);
 
     if (liveEnabled) {
       if (mounted) {
@@ -382,8 +405,6 @@ class CameraPreviewWidgetState extends State<CameraPreviewWidget> {
       _sourceImageBytes = null;
       _sourceImageSize = null;
       await _startStream();
-    } else {
-      await _stopStream();
     }
   }
 

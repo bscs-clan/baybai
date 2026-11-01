@@ -14,9 +14,19 @@ class CameraService {
 
   late List<CameraDescription> cameras;
   CameraController? controller;
+  ResolutionPreset? _resolutionPreset;
 
-  Future<void> init() async {
-    if (controller?.value.isInitialized ?? false) return;
+  Future<void> init({
+    ResolutionPreset resolutionPreset = ResolutionPreset.high,
+  }) async {
+    if ((controller?.value.isInitialized ?? false) &&
+        _resolutionPreset == resolutionPreset) {
+      return;
+    }
+
+    final existingController = controller;
+    controller = null;
+    if (existingController != null) await existingController.dispose();
 
     cameras = await availableCameras();
     if (cameras.isEmpty) {
@@ -25,7 +35,7 @@ class CameraService {
 
     controller = CameraController(
       cameras[0],
-      ResolutionPreset.high,
+      resolutionPreset,
       enableAudio: false,
       imageFormatGroup: Platform.isAndroid
           ? ImageFormatGroup.nv21
@@ -33,6 +43,7 @@ class CameraService {
           ? ImageFormatGroup.bgra8888
           : ImageFormatGroup.yuv420,
     );
+    _resolutionPreset = resolutionPreset;
 
     await controller!.initialize();
   }
@@ -69,5 +80,6 @@ class CameraService {
   void dispose() {
     controller?.dispose();
     controller = null;
+    _resolutionPreset = null;
   }
 }

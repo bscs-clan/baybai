@@ -2,8 +2,10 @@ part of 'ocr_service.dart';
 
 // Recognition model constants.
 const int _recMinChars = 1;
-const int _liveFrameMaxLongSide = 1280;
+const int _liveFrameMaxLongSide = 720;
 const int _photoMaxLongSide = 1600;
+const int _maxLiveTextRegions = 4;
+const int _maxPhotoTextRegions = 12;
 
 // Vocabulary from the matching recognition model export.
 const String _vocabAssetPath = 'assets/docs/baybai_recog_vocab.json';
@@ -197,7 +199,15 @@ class _OcrWorker {
   _OcrWorker(this.sendPort);
 
   void initialize(_OcrInitMessage message) {
-    _recInterpreter = Interpreter.fromBuffer(message.recModelBytes);
+    final options = InterpreterOptions()..threads = 2;
+    try {
+      _recInterpreter = Interpreter.fromBuffer(
+        message.recModelBytes,
+        options: options,
+      );
+    } finally {
+      options.delete();
+    }
 
     _recConfidenceThreshold = message.recConfidenceThreshold;
     _debugEnabled = message.debugEnabled;
@@ -248,15 +258,17 @@ class _OcrWorker {
   _OcrResponse processFrame(_OcrFrameRequest request) {
     final stopwatch = Stopwatch()..start();
 
-    final image = _resizeIfNeeded(
-      _convertCameraImageToImage(request),
-      _liveFrameMaxLongSide,
+    final image = _convertCameraImageToImage(
+      request,
+      maxLongSide: _liveFrameMaxLongSide,
     );
 
     return _processImage(
       requestId: request.requestId,
       image: image,
       elapsed: stopwatch,
+      maxTextRegions: _maxLiveTextRegions,
+      isLive: true,
     );
   }
 
@@ -279,6 +291,8 @@ class _OcrWorker {
       requestId: request.requestId,
       image: image,
       elapsed: stopwatch,
+      maxTextRegions: _maxPhotoTextRegions,
+      isLive: false,
     );
   }
 
@@ -304,8 +318,10 @@ class _OcrWorker {
     required int requestId,
     required img.Image image,
     required Stopwatch elapsed,
+    required int maxTextRegions,
+    required bool isLive,
   }) {
-    final regions = _runDetection(image);
+    final regions = _runDetection(image, maxTextRegions: maxTextRegions);
 
     final results = <_OcrResult>[];
 
@@ -318,7 +334,7 @@ class _OcrWorker {
 
     for (final region in regions) {
       final cropped = _cropTextRegion(image, region);
-      final recognition = _runLineRecognition(cropped);
+      final recognition = _runLineRecognition(cropped, fastResize: isLive);
 
       if (!_hasMinimumRecognizedText(recognition.text)) {
         rejectedEmpty++;
@@ -462,92 +478,89 @@ class _OcrWorker {
     );
   }
 
-  img.Image _convertCameraImageToImage(_OcrFrameRequest request) {
+  img.Image _convertCameraImageToImage(
+    _OcrFrameRequest request, {
+    required int maxLongSide,
+  }) {
     final width = request.width;
     final height = request.height;
+    final scale = math.min(1.0, maxLongSide / math.max(width, height));
+    final outputWidth = math.max(1, (width * scale).round()).toInt();
+    final outputHeight = math.max(1, (height * scale).round()).toInt();
+    final sourceXs = List<int>.generate(
+      outputWidth,
+      (x) => x * width ~/ outputWidth,
+      growable: false,
+    );
+    final sourceYs = List<int>.generate(
+      outputHeight,
+      (y) => y * height ~/ outputHeight,
+      growable: false,
+    );
 
-    final rgbBytes = Uint8List(width * height * 3);
+    final grayBytes = Uint8List(outputWidth * outputHeight);
 
     if (request.formatGroup == ImageFormatGroup.nv21 &&
         request.planes.length == 1) {
       final plane = request.planes[0];
 
-      for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-          final yValue = plane.bytes[y * plane.bytesPerRow + x];
-          final uvIndex =
-              plane.bytesPerRow * height +
-              (y ~/ 2) * plane.bytesPerRow +
-              (x ~/ 2) * 2;
-          final v = plane.bytes[uvIndex] - 128;
-          final u = plane.bytes[uvIndex + 1] - 128;
-          final out = (y * width + x) * 3;
-          rgbBytes[out] = (yValue + 1.402 * v).round().clamp(0, 255);
-          rgbBytes[out + 1] = (yValue - 0.344136 * u - 0.714136 * v)
-              .round()
-              .clamp(0, 255);
-          rgbBytes[out + 2] = (yValue + 1.772 * u).round().clamp(0, 255);
+      for (int y = 0; y < outputHeight; y++) {
+        final sourceY = sourceYs[y];
+        for (int x = 0; x < outputWidth; x++) {
+          final sourceX = sourceXs[x];
+          final yValue = plane.bytes[sourceY * plane.bytesPerRow + sourceX];
+          // Live detection and recognition both operate on luminance, so
+          // avoid converting chroma that the pipeline immediately discards.
+          grayBytes[y * outputWidth + x] = yValue;
         }
       }
     } else if (request.formatGroup == ImageFormatGroup.yuv420) {
       final yPlane = request.planes[0];
 
-      for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-          final yIndex = y * yPlane.bytesPerRow + x;
-          final yValue = yPlane.bytes[yIndex];
-
-          int r = yValue;
-          int g = yValue;
-          int b = yValue;
-          if (request.planes.length > 2) {
-            final uvX = x ~/ 2;
-            final uvY = y ~/ 2;
-            final uPlane = request.planes[1];
-            final vPlane = request.planes[2];
-            final uIndex =
-                uvY * uPlane.bytesPerRow + uvX * (uPlane.bytesPerPixel ?? 1);
-            final vIndex =
-                uvY * vPlane.bytesPerRow + uvX * (vPlane.bytesPerPixel ?? 1);
-            final u = uPlane.bytes[uIndex] - 128;
-            final v = vPlane.bytes[vIndex] - 128;
-            r = (yValue + 1.402 * v).round().clamp(0, 255);
-            g = (yValue - 0.344136 * u - 0.714136 * v).round().clamp(0, 255);
-            b = (yValue + 1.772 * u).round().clamp(0, 255);
-          }
-          final out = (y * width + x) * 3;
-          rgbBytes[out] = r;
-          rgbBytes[out + 1] = g;
-          rgbBytes[out + 2] = b;
+      for (int y = 0; y < outputHeight; y++) {
+        final sourceY = sourceYs[y];
+        for (int x = 0; x < outputWidth; x++) {
+          final sourceX = sourceXs[x];
+          final yIndex = sourceY * yPlane.bytesPerRow + sourceX;
+          grayBytes[y * outputWidth + x] = yPlane.bytes[yIndex];
         }
       }
     } else if (request.formatGroup == ImageFormatGroup.bgra8888) {
       final plane = request.planes[0];
 
-      for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-          final src = y * plane.bytesPerRow + x * 4;
-          final out = (y * width + x) * 3;
-          rgbBytes[out] = plane.bytes[src + 2];
-          rgbBytes[out + 1] = plane.bytes[src + 1];
-          rgbBytes[out + 2] = plane.bytes[src];
+      for (int y = 0; y < outputHeight; y++) {
+        final sourceY = sourceYs[y];
+        for (int x = 0; x < outputWidth; x++) {
+          final sourceX = sourceXs[x];
+          final src = sourceY * plane.bytesPerRow + sourceX * 4;
+          final gray =
+              (0.299 * plane.bytes[src + 2] +
+                      0.587 * plane.bytes[src + 1] +
+                      0.114 * plane.bytes[src])
+                  .round()
+                  .clamp(0, 255);
+          grayBytes[y * outputWidth + x] = gray;
         }
       }
     } else {
       final bytes = request.planes[0].bytes;
 
-      for (int i = 0; i < width * height && i < bytes.length; i++) {
-        rgbBytes[i * 3] = bytes[i];
-        rgbBytes[i * 3 + 1] = bytes[i];
-        rgbBytes[i * 3 + 2] = bytes[i];
+      for (int y = 0; y < outputHeight; y++) {
+        final sourceY = sourceYs[y];
+        for (int x = 0; x < outputWidth; x++) {
+          final sourceX = sourceXs[x];
+          final sourceIndex = sourceY * request.planes[0].bytesPerRow + sourceX;
+          if (sourceIndex >= bytes.length) continue;
+          grayBytes[y * outputWidth + x] = bytes[sourceIndex];
+        }
       }
     }
 
     final image = img.Image.fromBytes(
-      width: width,
-      height: height,
-      bytes: rgbBytes.buffer,
-      numChannels: 3,
+      width: outputWidth,
+      height: outputHeight,
+      bytes: grayBytes.buffer,
+      numChannels: 1,
     );
 
     final rotation = request.rotationDegrees % 360;
@@ -572,23 +585,34 @@ class _OcrWorker {
     );
   }
 
-  List<_TextRegion> _runDetection(img.Image image) {
-    // The asset previously loaded as a detector outputs CTC scores with 25
-    // classes, so it cannot provide text coordinates. Detect line candidates
-    // from image ink projections, then send each crop to the recognizer.
+  List<_TextRegion> _runDetection(
+    img.Image image, {
+    required int maxTextRegions,
+  }) {
+    // The downloaded OCR model returns CTC text scores rather than boxes, so
+    // find line candidates with image projections before recognizing crops.
     final histogram = List<int>.filled(256, 0);
-    final gray = Uint8List(image.width * image.height);
-    var index = 0;
+    final pixelCount = image.width * image.height;
+    final gray = image.numChannels == 1
+        ? image.data!.toUint8List()
+        : Uint8List(pixelCount);
 
-    for (var y = 0; y < image.height; y++) {
-      for (var x = 0; x < image.width; x++) {
-        final pixel = image.getPixel(x, y);
-        final value = (0.299 * pixel.r + 0.587 * pixel.g + 0.114 * pixel.b)
-            .round()
-            .clamp(0, 255)
-            .toInt();
-        gray[index++] = value;
+    if (image.numChannels == 1) {
+      for (final value in gray) {
         histogram[value]++;
+      }
+    } else {
+      var index = 0;
+      for (var y = 0; y < image.height; y++) {
+        for (var x = 0; x < image.width; x++) {
+          final pixel = image.getPixel(x, y);
+          final value = (0.299 * pixel.r + 0.587 * pixel.g + 0.114 * pixel.b)
+              .round()
+              .clamp(0, 255)
+              .toInt();
+          gray[index++] = value;
+          histogram[value]++;
+        }
       }
     }
 
@@ -756,7 +780,7 @@ class _OcrWorker {
       );
     }
 
-    return regions.take(12).toList();
+    return regions.take(maxTextRegions).toList();
   }
 
   Rect _normalizeRegionBox(
@@ -792,6 +816,24 @@ class _OcrWorker {
     // Rectify the line so the recognizer always sees a horizontal text line.
     final outputWidth = math.max(1, region.cropWidth.round());
     final outputHeight = math.max(1, region.cropHeight.round());
+    final left = (region.cropCenterX - outputWidth / 2).round();
+    final top = (region.cropCenterY - outputHeight / 2).round();
+    final right = left + outputWidth;
+    final bottom = top + outputHeight;
+
+    if (region.angleRadians.abs() < 0.01 &&
+        left >= 0 &&
+        top >= 0 &&
+        right <= image.width &&
+        bottom <= image.height) {
+      return img.copyCrop(
+        image,
+        x: left,
+        y: top,
+        width: outputWidth,
+        height: outputHeight,
+      );
+    }
 
     final output = img.Image(
       width: outputWidth,
@@ -844,9 +886,12 @@ class _OcrWorker {
     return text.replaceAll(' ', '').runes.length >= _recMinChars;
   }
 
-  _RecognitionResult _runLineRecognition(img.Image image) {
+  _RecognitionResult _runLineRecognition(
+    img.Image image, {
+    required bool fastResize,
+  }) {
     // The exported model expects one cropped text line per inference.
-    return _runRecognition(image);
+    return _runRecognition(image, fastResize: fastResize);
   }
 
   int _otsuThreshold(List<int> histogram, int total) {
@@ -891,7 +936,10 @@ class _OcrWorker {
     return threshold;
   }
 
-  _RecognitionResult _runRecognition(img.Image image) {
+  _RecognitionResult _runRecognition(
+    img.Image image, {
+    bool fastResize = false,
+  }) {
     final inputShape = _recInterpreter!.getInputTensor(0).shape;
 
     late final int inputHeight;
@@ -926,7 +974,9 @@ class _OcrWorker {
         .toInt();
 
     final interpolation = scale < 1.0
-        ? img.Interpolation.average
+        ? fastResize
+              ? img.Interpolation.linear
+              : img.Interpolation.average
         : img.Interpolation.cubic;
 
     final resized = img.copyResize(
@@ -944,20 +994,27 @@ class _OcrWorker {
     // Align left and center vertically.
     final top = (inputHeight - resizedHeight) ~/ 2;
 
-    for (int y = 0; y < resizedHeight; y++) {
-      for (int x = 0; x < resizedWidth; x++) {
-        final pixel = resized.getPixel(x, y);
-
-        final gray =
-            (0.299 * pixel.r.toDouble() +
-                    0.587 * pixel.g.toDouble() +
-                    0.114 * pixel.b.toDouble())
-                .clamp(0.0, 255.0)
-                .toDouble();
-
-        final normalized = (gray / 255.0 - 0.5) / 0.5;
-
-        input[(top + y) * inputWidth + x] = normalized;
+    if (resized.numChannels == 1) {
+      final gray = resized.data!.toUint8List();
+      for (int y = 0; y < resizedHeight; y++) {
+        final inputRow = (top + y) * inputWidth;
+        final imageRow = y * resizedWidth;
+        for (int x = 0; x < resizedWidth; x++) {
+          input[inputRow + x] = gray[imageRow + x] / 127.5 - 1.0;
+        }
+      }
+    } else {
+      for (int y = 0; y < resizedHeight; y++) {
+        for (int x = 0; x < resizedWidth; x++) {
+          final pixel = resized.getPixel(x, y);
+          final gray =
+              (0.299 * pixel.r.toDouble() +
+                      0.587 * pixel.g.toDouble() +
+                      0.114 * pixel.b.toDouble())
+                  .clamp(0.0, 255.0)
+                  .toDouble();
+          input[(top + y) * inputWidth + x] = (gray / 255.0 - 0.5) / 0.5;
+        }
       }
     }
 

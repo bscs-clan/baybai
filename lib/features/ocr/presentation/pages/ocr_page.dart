@@ -10,6 +10,8 @@ import "package:baybai/features/ocr/domain/usecases/process_ocr_frame.dart";
 import "package:baybai/injection_container.dart";
 import "dart:async";
 
+const int _liveOcrFrameIntervalMicros = 166667;
+
 class OCRPage extends StatefulWidget {
   const OCRPage({super.key});
 
@@ -24,6 +26,7 @@ class _OCRPageState extends State<OCRPage> with WidgetsBindingObserver {
   late final ProcessOcrFrame _processOcrFrame;
   late final DisposeOcr _disposeOcr;
   bool _isProcessing = false;
+  DateTime? _lastProcessedAt;
   List<Detection> _detections = [];
   Timer? _processingTimer;
   ScanTranslationDirection _direction =
@@ -46,7 +49,7 @@ class _OCRPageState extends State<OCRPage> with WidgetsBindingObserver {
   }
 
   Future<void> _initializeCamera() async {
-    await _cameraService.init();
+    await _cameraService.init(resolutionPreset: ResolutionPreset.medium);
     _controller = _cameraService.controller;
 
     if (_controller != null) {
@@ -67,9 +70,16 @@ class _OCRPageState extends State<OCRPage> with WidgetsBindingObserver {
   }
 
   void _processImage(CameraImage image) async {
-    if (_isProcessing) return;
+    final now = DateTime.now();
+    if (_isProcessing ||
+        (_lastProcessedAt != null &&
+            now.difference(_lastProcessedAt!).inMicroseconds <
+                _liveOcrFrameIntervalMicros)) {
+      return;
+    }
 
     _isProcessing = true;
+    _lastProcessedAt = now;
     try {
       final controller = _controller;
       if (controller == null) {

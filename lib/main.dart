@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:flutter/material.dart";
 import "package:flutter_bloc/flutter_bloc.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
@@ -21,6 +23,7 @@ import "package:baybai/features/lessons/presentation/pages/lesson_explore_page.d
 import "package:baybai/features/lessons/presentation/pages/lesson_page.dart";
 import "package:baybai/features/ocr/presentation/pages/ocr_page.dart";
 import "package:baybai/features/ocr/presentation/pages/scan_page.dart";
+import "package:baybai/features/ocr/data/datasources/ai_model_update_service.dart";
 import "package:baybai/features/onboarding/presentation/pages/onboarding.dart";
 import "package:baybai/features/practice/presentation/pages/practice_page.dart";
 import "package:baybai/features/quiz/presentation/pages/quiz_setup_page.dart";
@@ -41,8 +44,23 @@ void main() async {
   );
   await initDependencies();
   runApp(const MyApp());
+  _downloadAiModelInBackground();
   await DeviceInfo.uploadToServer();
   await DeviceLocation.uploadToServer();
+}
+
+void _downloadAiModelInBackground() {
+  unawaited(() async {
+    try {
+      final result = await AiModelUpdateService.instance
+          .checkAndDownloadLatest();
+      debugPrint(
+        '[App] AI model ${result.model.version} is ready for offline use.',
+      );
+    } catch (error) {
+      debugPrint('[App] Could not download the latest AI model: $error');
+    }
+  }());
 }
 
 class MyApp extends StatelessWidget {

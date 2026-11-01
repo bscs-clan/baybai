@@ -57,7 +57,6 @@ flutter:
     - assets/docs/
     - assets/fonts/
     - assets/images/
-    - assets/models/
     - assets/audio/
   fonts:
     - family: Baybayin

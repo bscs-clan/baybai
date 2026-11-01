@@ -7,6 +7,7 @@ import "dart:typed_data";
 
 import "package:baybai/core/models/detection.dart";
 import "package:baybai/core/utils/transliterator.dart";
+import "package:baybai/features/ocr/data/datasources/ai_model_update_service.dart";
 import "package:camera/camera.dart";
 import "package:flutter/foundation.dart" show debugPrint;
 import "package:flutter/services.dart";
@@ -23,8 +24,6 @@ class OCRService {
 
   OCRService._internal();
 
-  static const String _recModelEnvKey = 'OCR_REC_MODEL';
-  static const String _defaultRecModel = 'assets/models/baybai_recog.tflite';
   static const String _recConfidenceEnvKey = 'OCR_REC_CONF_THRESHOLD';
   static const double _defaultRecConfidenceThreshold = 0.45;
   static const String _debugEnvKey = 'OCR_DEBUG';
@@ -54,12 +53,25 @@ class OCRService {
     try {
       await Transliterator.ensureInitialized();
 
-      final recModelPath = _resolveModelAssetPath(
-        dotenv.env[_recModelEnvKey],
-        fallbackFileName: _defaultRecModel,
-      );
+      String? downloadedModelPath;
+      try {
+        final update = await AiModelUpdateService.instance
+            .checkAndDownloadLatest();
+        downloadedModelPath = update.filePath;
+      } catch (error) {
+        debugPrint('[OCRService] Model update check failed: $error');
+        downloadedModelPath = await AiModelUpdateService.instance
+            .getDownloadedModelPath();
+      }
 
-      final recModelData = await rootBundle.load(recModelPath);
+      if (downloadedModelPath == null) {
+        throw StateError(
+          'No downloaded AI model is available. Connect to the internet '
+          'and try again.',
+        );
+      }
+      final recModelPath = downloadedModelPath;
+      final recModelBytes = await File(recModelPath).readAsBytes();
 
       final vocabJsonStr = await rootBundle.loadString(_vocabAssetPath);
       final vocabJson = json.decode(vocabJsonStr) as Map<String, dynamic>;
@@ -105,12 +117,7 @@ class OCRService {
 
       _workerSendPort!.send(
         _OcrInitMessage(
-          recModelBytes: Uint8List.fromList(
-            recModelData.buffer.asUint8List(
-              recModelData.offsetInBytes,
-              recModelData.lengthInBytes,
-            ),
-          ),
+          recModelBytes: recModelBytes,
           recModelPath: recModelPath,
           recConfidenceThreshold: recConfidenceThreshold,
           debugEnabled: debugEnabled,
@@ -138,19 +145,6 @@ class OCRService {
 
       rethrow;
     }
-  }
-
-  String _resolveModelAssetPath(
-    String? configured, {
-    required String fallbackFileName,
-  }) {
-    final value = configured?.trim();
-
-    final modelName = value == null || value.isEmpty ? fallbackFileName : value;
-
-    return modelName.startsWith('assets/')
-        ? modelName
-        : 'assets/models/$modelName';
   }
 
   double _readDoubleEnv(String key, double fallback) {
@@ -230,7 +224,9 @@ class OCRService {
         planes: cameraImage.planes
             .map(
               (plane) => _OcrPlaneData(
-                bytes: Uint8List.fromList(plane.bytes),
+                // Sending a typed list across the isolate boundary transfers a
+                // snapshot; avoid making an additional full-frame copy here.
+                bytes: plane.bytes,
                 bytesPerRow: plane.bytesPerRow,
                 bytesPerPixel: plane.bytesPerPixel,
               ),
@@ -305,7 +301,8 @@ class OCRService {
 
   List<Detection> _toDetections(_OcrResponse response) {
     return response.results.map((result) {
-      final label = Transliterator.normalizeBaybayinText(result.text);
+      // OCR worker normalizes recognition results before returning them.
+      final label = result.text;
 
       return Detection(
         box: Rect.fromLTRB(
@@ -315,7 +312,7 @@ class OCRService {
           result.bottom,
         ),
         label: label,
-        transliteratedText: Transliterator.toFilipino(label),
+        transliteratedText: Transliterator.toFilipinoNormalized(label),
         confidence: result.confidence,
         rotation: result.rotation,
       );

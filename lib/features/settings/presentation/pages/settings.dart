@@ -4,6 +4,7 @@ import "package:flutter_bloc/flutter_bloc.dart";
 import "package:flutter_custom_tabs/flutter_custom_tabs.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:baybai/core/theme/colors.dart";
+import "package:baybai/features/ocr/data/datasources/ai_model_update_service.dart";
 import "package:baybai/features/settings/presentation/view_models/scan_settings_cubit.dart";
 import "package:baybai/features/settings/presentation/view_models/theme_cubit.dart";
 
@@ -40,6 +41,7 @@ class SettingsScreen extends StatelessWidget {
           body: ListView(
             children: [
               _buildThemeTile(context, isDarkMode),
+              _AiModelTile(isDarkMode: isDarkMode),
               _buildDeveloperTile(context, isDarkMode),
               _buildCrashlyticsTile(context, isDarkMode),
               _buildLinkTile(
@@ -213,5 +215,95 @@ class SettingsScreen extends StatelessWidget {
         debugPrint('Could not launch $url: $e');
       }
     }
+  }
+}
+
+class _AiModelTile extends StatefulWidget {
+  final bool isDarkMode;
+
+  const _AiModelTile({required this.isDarkMode});
+
+  @override
+  State<_AiModelTile> createState() => _AiModelTileState();
+}
+
+class _AiModelTileState extends State<_AiModelTile> {
+  String _status = "Check for the latest server model";
+  bool _isChecking = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInstalledVersion();
+  }
+
+  Future<void> _loadInstalledVersion() async {
+    final version = await AiModelUpdateService.instance
+        .getDownloadedModelVersion();
+    if (!mounted || version == null) return;
+    setState(() => _status = "Installed version $version");
+  }
+
+  Future<void> _checkForUpdates() async {
+    setState(() {
+      _isChecking = true;
+      _status = "Checking for model updates…";
+    });
+
+    try {
+      final result = await AiModelUpdateService.instance
+          .checkAndDownloadLatest();
+      if (!mounted) return;
+      setState(() {
+        _status = result.downloaded
+            ? "Downloaded latest version ${result.model.version}"
+            : "You're using the latest version ${result.model.version}";
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _status = "Couldn't check for model updates");
+      debugPrint('[Settings] AI model update check failed: $error');
+    } finally {
+      if (mounted) setState(() => _isChecking = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(
+        Icons.cloud_download_outlined,
+        color: widget.isDarkMode ? AppColors.darkIcon : AppColors.icon,
+      ),
+      title: Text(
+        "AI Model",
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: widget.isDarkMode ? AppColors.darkText : AppColors.text,
+        ),
+      ),
+      subtitle: Text(
+        _status,
+        style: TextStyle(
+          color: widget.isDarkMode
+              ? AppColors.darkTextGrey
+              : AppColors.textGrey,
+        ),
+      ),
+      trailing: _isChecking
+          ? const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : IconButton(
+              tooltip: "Check for AI model updates",
+              onPressed: _checkForUpdates,
+              icon: Icon(
+                Icons.refresh,
+                color: widget.isDarkMode ? AppColors.darkIcon : AppColors.icon,
+              ),
+            ),
+    );
   }
 }

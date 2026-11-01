@@ -37,6 +37,12 @@ class Transliterator {
   static const int _maxFilipinoCacheEntries = 256;
   static final RegExp _tokenPattern = RegExp(r"\s+|\S+");
   static final RegExp _whitespacePattern = RegExp(r"^\s+$");
+  static final RegExp _invalidDictionaryCharacterPattern = RegExp(r"[^a-z\-]");
+  static final RegExp _digitsOnlyPattern = RegExp(r"^\d+$");
+  static final List<RegExp> _infixPatterns = [
+    for (final infix in kInfixes)
+      RegExp(r"^([bcdfghjklmnpqrstvwxyz]+)" + infix + r"(.+)$"),
+  ];
   static final LinkedHashMap<String, String> _filipinoCache =
       LinkedHashMap<String, String>();
 
@@ -92,9 +98,9 @@ class Transliterator {
             .replaceAll("\u200C", "")
             .replaceAll("\u200D", "")
             .replaceAll("\u2026", "")
-            .replaceAll(RegExp(r"[^a-z\-]"), "");
+            .replaceAll(_invalidDictionaryCharacterPattern, "");
 
-        if (word.isNotEmpty && !RegExp(r"^\d+$").hasMatch(word)) {
+        if (word.isNotEmpty && !_digitsOnlyPattern.hasMatch(word)) {
           dictionary.add(word);
         }
       }
@@ -246,7 +252,16 @@ class Transliterator {
     String text,
     Map<int, String> choices,
   ) {
-    text = normalizeBaybayinText(text);
+    return _transliterateNormalizedWithChoices(
+      normalizeBaybayinText(text),
+      choices,
+    );
+  }
+
+  static String _transliterateNormalizedWithChoices(
+    String text,
+    Map<int, String> choices,
+  ) {
     final buffer = StringBuffer();
     int i = 0;
     int ambigIdx = 0;
@@ -312,7 +327,10 @@ class Transliterator {
   // ===================================================================
 
   static List<String> getAmbigTypes(String text) {
-    text = normalizeBaybayinText(text);
+    return _getAmbigTypesNormalized(normalizeBaybayinText(text));
+  }
+
+  static List<String> _getAmbigTypesNormalized(String text) {
     final List<String> types = [];
     for (int i = 0; i < text.length; i++) {
       final c = text[i];
@@ -374,8 +392,7 @@ class Transliterator {
     }
 
     // Strip infixes (um, in)
-    for (final inf in infixes) {
-      final regex = RegExp(r"^([bcdfghjklmnpqrstvwxyz]+)" + inf + r"(.+)$");
+    for (final regex in _infixPatterns) {
       final match = regex.firstMatch(word);
       if (match != null) {
         candidates.add("${match.group(1)}${match.group(2)}");
@@ -436,7 +453,13 @@ class Transliterator {
   /// Currently set to auto-select the best option (non-interactive).
   static String toFilipino(String text) {
     ensureInitialized();
-    text = normalizeBaybayinText(text);
+    return toFilipinoNormalized(normalizeBaybayinText(text));
+  }
+
+  /// Converts text already normalized by [normalizeBaybayinText].
+  /// OCR uses this to avoid normalizing the same recognized text twice.
+  static String toFilipinoNormalized(String text) {
+    ensureInitialized();
     final cached = _filipinoCache.remove(text);
     if (cached != null) {
       _filipinoCache[text] = cached;
@@ -460,41 +483,100 @@ class Transliterator {
   }
 
   static String _toFilipinoWord(String text) {
-    final ambiguities = getAmbigTypes(text);
-    if (ambiguities.isEmpty) return transliterateWithChoices(text, const {});
+    final ambiguities = _getAmbigTypesNormalized(text);
+    if (ambiguities.isEmpty) {
+      return _transliterateNormalizedWithChoices(text, const {});
+    }
 
     // Keep dictionary-aware choice resolution bounded on the live camera path.
     if (ambiguities.length > _maxLiveAmbiguitiesPerWord) {
-      final direct = transliterateWithChoices(text, const {});
+      final direct = _transliterateNormalizedWithChoices(text, const {});
       return preferredSpelling[direct.toLowerCase()] ?? direct;
     }
 
-    final candidates = <String>{};
-    for (final choices in generateCombinations(ambiguities)) {
-      final candidate = transliterateWithChoices(text, choices);
-      candidates.add(preferredSpelling[candidate.toLowerCase()] ?? candidate);
+    String? firstCandidate;
+    String? firstKnownWord;
+    final combinationCount = 1 << ambiguities.length;
+
+    for (var mask = 0; mask < combinationCount; mask++) {
+      final candidate = _transliterateWithMask(text, ambiguities, mask);
+      final resolvedCandidate =
+          preferredSpelling[candidate.toLowerCase()] ?? candidate;
+      firstCandidate ??= resolvedCandidate;
+
+      final lower = resolvedCandidate.toLowerCase();
+      final matchesDictionary =
+          dictionary.contains(lower) ||
+          getStemCandidates(lower).any(dictionary.contains);
+      if (!matchesDictionary) continue;
+
+      firstKnownWord ??= resolvedCandidate;
+      // Combinations are visited in the same order as before, so the first
+      // built-in match is the same one the prior full candidate pass selected.
+      if (builtInWords.contains(lower)) return resolvedCandidate;
     }
 
-    final knownWords = <String>[];
-    for (final candidate in candidates) {
-      final lower = candidate.toLowerCase();
-      if (dictionary.contains(lower)) {
-        knownWords.add(candidate);
-      } else if (getStemCandidates(
-        lower,
-      ).any((stem) => dictionary.contains(stem))) {
-        knownWords.add(candidate);
+    return firstKnownWord ?? firstCandidate ?? text;
+  }
+
+  static String _transliterateWithMask(
+    String text,
+    List<String> ambiguities,
+    int mask,
+  ) {
+    final buffer = StringBuffer();
+    var i = 0;
+    var ambiguityIndex = 0;
+
+    String nextChoice() {
+      final isFirstChoice = ((mask >> ambiguityIndex) & 1) == 0;
+      final type = ambiguities[ambiguityIndex++];
+      if (type == "ie") return isFirstChoice ? "i" : "e";
+      return isFirstChoice ? "u" : "o";
+    }
+
+    while (i < text.length) {
+      final c = text[i];
+      if (c == " ") {
+        buffer.write(" ");
+        i++;
+        continue;
+      }
+
+      final latin = toLatin[c];
+      if (latin == null) {
+        buffer.write(c);
+        i++;
+        continue;
+      }
+
+      if (c == "\u1701" || c == "\u1702") {
+        buffer.write(nextChoice());
+        i++;
+        continue;
+      }
+
+      i++;
+      if (i < text.length) {
+        final next = text[i];
+        if (next == kudlitI || next == kudlitU) {
+          final vowel = nextChoice();
+          buffer.write(isLatinVowel(latin) ? vowel : "$latin$vowel");
+          i++;
+        } else if (next == virama) {
+          buffer.write(latin);
+          i++;
+        } else {
+          buffer.write(latin);
+          if (!isLatinVowel(latin)) buffer.write("a");
+        }
+      } else {
+        buffer.write(latin);
+        if (!isLatinVowel(latin)) buffer.write("a");
       }
     }
 
-    if (knownWords.length == 1) return knownWords.first;
-    if (knownWords.length > 1) {
-      for (final word in knownWords) {
-        if (builtInWords.contains(word.toLowerCase())) return word;
-      }
-      return knownWords.first;
-    }
-    return candidates.isEmpty ? text : candidates.first;
+    return buffer.toString();
   }
 
   // Helper methods
