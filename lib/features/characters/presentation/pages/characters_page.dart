@@ -5,6 +5,7 @@ import "dart:async";
 import "package:flutter/material.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
+import "package:hugeicons/hugeicons.dart";
 
 class CharactersPage extends StatefulWidget {
   const CharactersPage({super.key});
@@ -219,7 +220,7 @@ class _CharactersPageState extends State<CharactersPage> {
         centerTitle: true,
         title: Text(
           "Characters",
-          style: AppTextStyles.bigbody.copyWith(color: AppColors.grey12),
+          style: AppTextStyles.boldLg.copyWith(color: AppColors.gray100),
         ),
       ),
       body: SafeArea(
@@ -228,7 +229,7 @@ class _CharactersPageState extends State<CharactersPage> {
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
               child: Input(
-                leftIcon: Icons.search,
+                leftIcon: HugeIcons.strokeRoundedSearch01,
                 hintText: "Search",
                 onChanged: (value) {
                   setState(() {
@@ -258,7 +259,7 @@ class _CharactersPageState extends State<CharactersPage> {
                         _showCharacterBottomSheet(context, char, isDarkMode),
                     child: Container(
                       decoration: ShapeDecoration(
-                        color: AppColors.grey3,
+                        color: AppColors.gray10,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
@@ -270,24 +271,24 @@ class _CharactersPageState extends State<CharactersPage> {
                             left: 10,
                             child: Text(
                               char["label"]!,
-                              style: AppTextStyles.body.copyWith(
-                                color: AppColors.grey12,
+                              style: AppTextStyles.regularSm.copyWith(
+                                color: AppColors.gray100,
                               ),
                             ),
                           ),
                           Positioned(
                             top: 10,
                             right: 10,
-                            child: Icon(
-                              Icons.open_in_full,
+                            child: HugeIcon(
+                              icon:HugeIcons.strokeRoundedExpand,
                               size: 14,
-                              color: AppColors.grey7,
+                              color: AppColors.gray50,
                             ),
                           ),
                           Positioned(
                             left: 10,
                             bottom: 10,
-                            child: _buildCardSymbol(char, AppColors.grey12),
+                            child: _buildCardSymbol(char, AppColors.gray100),
                           ),
                         ],
                       ),
@@ -303,7 +304,7 @@ class _CharactersPageState extends State<CharactersPage> {
   }
 
   Widget _buildCardSymbol(Map<String, String> character, Color textColor) {
-    final symbolStyle = AppTextStyles.heading.copyWith(
+    final symbolStyle = AppTextStyles.bold3xl.copyWith(
       fontFamily: "Baybayin",
       fontSize: 42,
       color: textColor,
@@ -340,7 +341,7 @@ class _CharactersPageState extends State<CharactersPage> {
       isScrollControlled: true,
       constraints: const BoxConstraints(maxWidth: double.infinity),
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-      backgroundColor: AppColors.grey1,
+      backgroundColor: AppColors.gray10,
       builder: (context) => DraggableScrollableSheet(
         expand: false,
         initialChildSize: 1.0,
@@ -378,22 +379,27 @@ class _CharactersPageState extends State<CharactersPage> {
                   vertical: 10,
                 ),
                 decoration: ShapeDecoration(
-                  color: isSelected ? AppColors.blue9 : Colors.transparent,
+                  color: isSelected ? AppColors.primary60 : Colors.transparent,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(64),
                     side: isSelected
                         ? BorderSide.none
-                        : const BorderSide(color: AppColors.grey3),
+                        : const BorderSide(color: AppColors.gray20),
                   ),
                 ),
                 child: Text(
                   category,
-                  style: AppTextStyles.body.copyWith(
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                    color: isSelected
-                        ? Colors.white
-                        : (isDarkMode ? AppColors.darkText : AppColors.text),
-                  ),
+                  style:
+                      (isSelected
+                              ? AppTextStyles.boldSm
+                              : AppTextStyles.regularSm)
+                          .copyWith(
+                            color: isSelected
+                                ? Colors.white
+                                : (isDarkMode
+                                      ? AppColors.gray10
+                                      : AppColors.gray100),
+                          ),
                 ),
               ),
             ),
@@ -465,11 +471,11 @@ class _CharacterBottomSheetContentState
 
   @override
   Widget build(BuildContext context) {
-    final textColor = widget.isDarkMode ? AppColors.darkText : AppColors.text;
+    final textColor = widget.isDarkMode ? AppColors.gray10 : AppColors.gray100;
 
     final secondaryTextColor = widget.isDarkMode
-        ? AppColors.darkTextGrey
-        : AppColors.textGrey;
+        ? AppColors.gray50
+        : AppColors.gray60;
 
     return SingleChildScrollView(
       controller: widget.scrollController,
@@ -487,14 +493,15 @@ class _CharacterBottomSheetContentState
           const SizedBox(height: 20),
           Text(
             widget.character["symbol"]!,
-            style: AppTextStyles.heading.copyWith(
+            style: AppTextStyles.bold4xl.copyWith(
               fontSize: 124,
+              fontFamily: "Baybayin",
               color: textColor,
             ),
           ),
           Text(
             widget.character["label"]!,
-            style: AppTextStyles.body.copyWith(
+            style: AppTextStyles.regularMd.copyWith(
               color: secondaryTextColor,
               fontSize: 16,
               fontStyle: FontStyle.italic,
@@ -506,26 +513,28 @@ class _CharacterBottomSheetContentState
             children: [
               Text(
                 widget.character["category"]!,
-                style: AppTextStyles.body.copyWith(color: textColor),
+                style: AppTextStyles.regularMd.copyWith(color: textColor),
               ),
               if (widget.character["audio"] != null)
                 IconButton(
                   onPressed: _toggleSound,
                   tooltip: _isPlaying ? "Stop sound" : "Play sound",
-                  icon: Icon(
-                    _isPlaying ? Icons.stop : Icons.volume_up,
+                  icon: HugeIcon(
+                    icon: _isPlaying
+                        ? HugeIcons.strokeRoundedStop
+                        : HugeIcons.strokeRoundedVolume02,
                     color: textColor,
                   ),
                 ),
             ],
           ),
-          Divider(color: AppColors.grey6),
+          Divider(color: AppColors.gray40),
           const SizedBox(height: 16),
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
               "Examples",
-              style: AppTextStyles.title.copyWith(color: textColor),
+              style: AppTextStyles.boldMd.copyWith(color: textColor),
             ),
           ),
           const SizedBox(height: 16),
@@ -535,13 +544,13 @@ class _CharacterBottomSheetContentState
           ),
           if (widget.character["category"] == "Consonants") ...[
             const SizedBox(height: 20),
-            Divider(color: AppColors.grey6),
+            Divider(color: AppColors.gray40),
             const SizedBox(height: 16),
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 "With Marks",
-                style: AppTextStyles.title.copyWith(color: textColor),
+                style: AppTextStyles.boldMd.copyWith(color: textColor),
               ),
             ),
             const SizedBox(height: 16),
@@ -588,7 +597,7 @@ class _CharacterBottomSheetContentState
       children: [
         Text(
           meaning,
-          style: AppTextStyles.body.copyWith(color: AppColors.textGrey),
+          style: AppTextStyles.regularSm.copyWith(color: AppColors.gray60),
         ),
         Row(
           mainAxisSize: MainAxisSize.min,
@@ -613,12 +622,11 @@ class _CharacterBottomSheetContentState
                   const SizedBox(height: 4),
                   Text(
                     part.$2,
-                    style: AppTextStyles.body.copyWith(
-                      color: textColor,
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.w400,
-                    ),
+                    style:
+                        (isSelected
+                                ? AppTextStyles.boldSm
+                                : AppTextStyles.regularSm)
+                            .copyWith(color: textColor),
                   ),
                   const SizedBox(height: 12),
                 ],
@@ -646,7 +654,8 @@ class _CharacterBottomSheetContentState
       spans.add(
         TextSpan(
           text: current,
-          style: AppTextStyles.heading.copyWith(
+          style: AppTextStyles.bold2xl.copyWith(
+            fontFamily: "Baybayin",
             fontSize: 42,
             color: isKudlit
                 ? textColor
@@ -674,9 +683,10 @@ class _CharacterBottomSheetContentState
       spans.add(
         TextSpan(
           text: current,
-          style: AppTextStyles.heading.copyWith(
+          style: AppTextStyles.bold2xl.copyWith(
+            fontFamily: "Baybayin",
             fontSize: 42,
-            color: current == selectedSymbol ? AppColors.primary : textColor,
+            color: current == selectedSymbol ? AppColors.primary60 : textColor,
           ),
         ),
       );
@@ -855,14 +865,16 @@ class _CharacterBottomSheetContentState
               children: [
                 TextSpan(
                   text: symbol,
-                  style: AppTextStyles.heading.copyWith(
+                  style: AppTextStyles.bold2xl.copyWith(
+                    fontFamily: "Baybayin",
                     fontSize: 42,
                     color: textColor,
                   ),
                 ),
                 TextSpan(
                   text: mark,
-                  style: AppTextStyles.heading.copyWith(
+                  style: AppTextStyles.bold2xl.copyWith(
+                    fontFamily: "Baybayin",
                     fontSize: 42,
                     color: Colors.green,
                   ),
@@ -876,7 +888,7 @@ class _CharacterBottomSheetContentState
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.visible,
-            style: AppTextStyles.body.copyWith(color: textColor),
+            style: AppTextStyles.regularSm.copyWith(color: textColor),
           ),
         ],
       ),

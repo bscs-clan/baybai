@@ -254,7 +254,7 @@ class _TransliterateCardState extends State<TransliterateCard> {
       showDragHandle: true,
       builder: (context) {
         final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-        final textColor = isDarkMode ? AppColors.darkText : AppColors.text;
+        final textColor = isDarkMode ? AppColors.gray10 : AppColors.gray100;
 
         return SafeArea(
           child: Padding(
@@ -335,7 +335,7 @@ class _TransliterateCardState extends State<TransliterateCard> {
       showDragHandle: true,
       builder: (context) {
         final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-        final textColor = isDarkMode ? AppColors.darkText : AppColors.text;
+        final textColor = isDarkMode ? AppColors.gray10 : AppColors.gray100;
 
         return SafeArea(
           child: Padding(
@@ -804,13 +804,13 @@ class LanguageSwitch extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: ShapeDecoration(
-              color: AppColors.primary,
+              color: AppColors.primary60,
               shape: RoundedSuperellipseBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
               shadows: [
                 BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.12),
+                  color: AppColors.primary60.withValues(alpha: 0.12),
                   blurRadius: 16,
                   spreadRadius: 12,
                   offset: const Offset(0, 6),
@@ -821,7 +821,7 @@ class LanguageSwitch extends StatelessWidget {
               child: Icon(
                 Icons.swap_horiz,
                 size: 24,
-                color: isDarkMode ? AppColors.icon : AppColors.white,
+                color: isDarkMode ? AppColors.gray100 : AppColors.bg,
               ),
             ),
           ),
@@ -845,7 +845,7 @@ class _LangBox extends StatelessWidget {
     return Container(
       height: 48,
       decoration: ShapeDecoration(
-        color: isDarkMode ? AppColors.darkCompBg : AppColors.compBg,
+        color: isDarkMode ? AppColors.gray80 : AppColors.gray20,
         shape: RoundedSuperellipseBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -854,7 +854,7 @@ class _LangBox extends StatelessWidget {
       child: Text(
         label,
         style: AppTextStyles.body.copyWith(
-          color: isDarkMode ? AppColors.darkText : AppColors.text,
+          color: isDarkMode ? AppColors.gray10 : AppColors.gray100,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -902,19 +902,19 @@ class _TranslationCard extends StatelessWidget {
             fontFamily: "Baybayin",
             fontFamilyFallback: const ["Roboto", "NotoSans", "sans-serif"],
             height: 1.44,
-            color: isDarkMode ? AppColors.darkText : AppColors.text,
+            color: isDarkMode ? AppColors.gray10 : AppColors.gray100,
           )
         : baseStyle.copyWith(
             // Ensure good Latin rendering when showing Filipino text
             fontFamilyFallback: const ["Roboto", "NotoSans", "sans-serif"],
-            color: isDarkMode ? AppColors.darkText : AppColors.text,
+            color: isDarkMode ? AppColors.gray10 : AppColors.gray100,
           );
 
     return Container(
       height: 224,
       padding: const EdgeInsets.all(24),
       decoration: ShapeDecoration(
-        color: isDarkMode ? AppColors.darkBox : AppColors.grey3,
+        color: isDarkMode ? AppColors.gray90 : AppColors.gray20,
         shape: RoundedSuperellipseBorder(
           borderRadius: BorderRadius.circular(34),
         ),
@@ -925,7 +925,7 @@ class _TranslationCard extends StatelessWidget {
           Text(
             title,
             style: AppTextStyles.body.copyWith(
-              color: isDarkMode ? AppColors.darkTextGrey : AppColors.textGrey,
+              color: isDarkMode ? AppColors.gray50 : AppColors.gray60,
             ),
           ),
           const SizedBox(height: 8),
@@ -949,7 +949,7 @@ class _TranslationCard extends StatelessWidget {
                       decoration: InputDecoration(
                         hintText: "Type here",
                         hintStyle: AppTextStyles.bigbody.copyWith(
-                          color: AppColors.compGrey,
+                          color: AppColors.gray50,
                         ),
                         border: InputBorder.none,
                       ),
@@ -1132,7 +1132,7 @@ class _CardActionIcon extends StatelessWidget {
       width: 48,
       height: 48,
       decoration: ShapeDecoration(
-        color: isDarkMode ? AppColors.darkCompLight : AppColors.compLight,
+        color: isDarkMode ? AppColors.gray80 : AppColors.primary10,
         shape: RoundedSuperellipseBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -1142,7 +1142,7 @@ class _CardActionIcon extends StatelessWidget {
         icon: Icon(
           icon,
           size: 24,
-          color: isDarkMode ? AppColors.darkIcon : AppColors.icon,
+          color: isDarkMode ? AppColors.gray20 : AppColors.gray100,
         ),
         onPressed: onTap,
         splashColor: Colors.transparent,

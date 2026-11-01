@@ -6,8 +6,15 @@ import "package:baybai/core/theme/text.dart";
 
 class WordCard extends StatefulWidget {
   final String word;
+  final String audioAsset;
+  final bool showAudioButton;
 
-  const WordCard({super.key, required this.word});
+  const WordCard({
+    super.key,
+    required this.word,
+    this.audioAsset = "audio/f_bata.mp3",
+    this.showAudioButton = true,
+  });
 
   @override
   State<WordCard> createState() => _WordCardState();
@@ -32,7 +39,7 @@ class _WordCardState extends State<WordCard> {
   Future<void> _playSound() async {
     try {
       await _audioPlayer.stop();
-      await _audioPlayer.play(AssetSource("audio/f_bata.mp3"));
+      await _audioPlayer.play(AssetSource(widget.audioAsset));
     } catch (e) {
       debugPrint("Error playing audio: $e");
     }
@@ -55,33 +62,32 @@ class _WordCardState extends State<WordCard> {
           Center(
             child: Text(
               widget.word,
-              style: AppTextStyles.boldXl.copyWith(
-                color: textColor,
-              ),
+              style: AppTextStyles.boldXl.copyWith(color: textColor),
             ),
           ),
-          Positioned(
-            bottom: 12,
-            right: 12,
-            child: GestureDetector(
-              onTap: _playSound,
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.primary20,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedVolume02,
-                    size: 24,
-                    color: isDarkMode ? AppColors.bg : AppColors.primary60,
+          if (widget.showAudioButton)
+            Positioned(
+              bottom: 12,
+              right: 12,
+              child: GestureDetector(
+                onTap: _playSound,
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary20,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedVolume02,
+                      size: 24,
+                      color: isDarkMode ? AppColors.bg : AppColors.primary60,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

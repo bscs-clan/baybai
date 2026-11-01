@@ -1,3 +1,4 @@
+import "package:admonitions/admonitions.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
 import "package:baybai/features/auth/domain/exceptions/auth_exception.dart";
@@ -18,6 +19,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
   bool _isSubmitting = false;
+  bool _isContinuingAsGuest = false;
   String? _errorMessage;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -31,6 +33,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _signIn() async {
     FocusScope.of(context).unfocus();
+    if (_emailController.text.trim().isEmpty) {
+      setState(() => _errorMessage = "Enter your email address to log in.");
+      return;
+    }
+    if (_passwordController.text.isEmpty) {
+      setState(() => _errorMessage = "Enter your password to log in.");
+      return;
+    }
     setState(() {
       _isSubmitting = true;
       _errorMessage = null;
@@ -56,7 +66,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _continueAsGuest() {
     FocusScope.of(context).unfocus();
-    Navigator.pushNamedAndRemoveUntil(context, "/home", (_) => false);
+    setState(() => _isContinuingAsGuest = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        Navigator.pushNamedAndRemoveUntil(context, "/home", (_) => false);
+      }
+    });
   }
 
   @override
@@ -78,6 +93,30 @@ class _LoginScreenState extends State<LoginScreen> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
+                        SizedBox(
+                          width: double.infinity,
+                          height: 68,
+                          child: _errorMessage == null
+                              ? null
+                              : Align(
+                                  alignment: Alignment.topCenter,
+                                  child: SolidAdmonition.danger(
+                                    icon: const HugeIcon(
+                                      icon: HugeIcons.strokeRoundedAlertCircle,
+                                      size: 18,
+                                      color: AppColors.white,
+                                    ),
+                                    child: Flexible(
+                                      child: Text(
+                                        _errorMessage!,
+                                        style: AppTextStyles.regularSm.copyWith(
+                                          color: AppColors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                        ),
                         const Spacer(),
                         const SizedBox(height: 56),
                         Text(
@@ -137,20 +176,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           ],
                         ),
                         const SizedBox(height: 24),
-                        if (_errorMessage != null) ...[
-                          Text(
-                            _errorMessage!,
-                            style: AppTextStyles.regularSm.copyWith(
-                              color: Colors.red,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 12),
-                        ],
                         Button(
                           onTap: _isSubmitting ? null : _signIn,
                           width: double.infinity,
                           label: "Log In",
+                          isLoading: _isSubmitting,
                           size: ButtonSize.md,
                           height: 48,
                           customBackgroundColor: AppColors.primary60,
@@ -159,9 +189,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 12),
                         Button(
-                          onTap: _isSubmitting ? null : _continueAsGuest,
+                          onTap: (_isSubmitting || _isContinuingAsGuest)
+                              ? null
+                              : _continueAsGuest,
                           width: double.infinity,
                           label: "Continue as Guest",
+                          isLoading: _isContinuingAsGuest,
                           size: ButtonSize.md,
                           height: 48,
                           type: ButtonType.primary,

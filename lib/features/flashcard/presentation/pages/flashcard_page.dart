@@ -246,17 +246,17 @@ class _FlashcardPageState extends State<FlashcardPage>
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: currentStatus == 'Correct'
-            ? const Color(0xFFDFF7E5)
+            ? AppColors.bgSuccess
             : currentStatus == 'Wrong'
-            ? const Color(0xFFFDECEC)
-            : (isShowingBack ? null : AppColors.grey5),
+            ? AppColors.bgError
+            : (isShowingBack ? null : AppColors.gray40),
         borderRadius: BorderRadius.circular(24),
         border: isShowingBack
             ? (currentStatus == 'Correct'
-                  ? Border.all(color: const Color(0xFF0B5F3C))
+                  ? Border.all(color: AppColors.bgSuccessContrast)
                   : currentStatus == 'Wrong'
-                  ? Border.all(color: const Color(0xFFB42318))
-                  : Border.all(color: AppColors.grey6))
+                  ? Border.all(color: AppColors.bgErrorContrast)
+                  : Border.all(color: AppColors.gray40))
             : null,
       ),
       child: Stack(
@@ -265,7 +265,7 @@ class _FlashcardPageState extends State<FlashcardPage>
             alignment: Alignment.topLeft,
             child: Text(
               "${safeIndex + 1}/$totalCards",
-              style: AppTextStyles.body.copyWith(color: AppColors.grey11),
+              style: AppTextStyles.body.copyWith(color: AppColors.gray90),
             ),
           ),
           if (currentStatus == 'Correct')
@@ -274,7 +274,7 @@ class _FlashcardPageState extends State<FlashcardPage>
               child: Text(
                 "Got It",
                 style: AppTextStyles.body.copyWith(
-                  color: const Color(0xFF0B5F3C),
+                  color: AppColors.bgSuccessContrast,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -285,7 +285,7 @@ class _FlashcardPageState extends State<FlashcardPage>
               child: Text(
                 "Missed",
                 style: AppTextStyles.body.copyWith(
-                  color: const Color(0xFFB42318),
+                  color: AppColors.bgErrorContrast,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -311,7 +311,7 @@ class _FlashcardPageState extends State<FlashcardPage>
     final currentCard = activeCards[safeIndex];
     final currentStatus = _cardStatuses[safeIndex];
     final cardTextStyle = AppTextStyles.body.copyWith(
-      color: _isShowingBack ? AppColors.grey12 : AppColors.grey12,
+      color: _isShowingBack ? AppColors.gray100 : AppColors.gray100,
       fontSize: 24,
     );
 
@@ -339,7 +339,7 @@ class _FlashcardPageState extends State<FlashcardPage>
                 child: Text(
                   "Tap the Card to Flip",
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.body.copyWith(color: AppColors.grey8),
+                  style: AppTextStyles.body.copyWith(color: AppColors.gray60),
                 ),
               ),
               const SizedBox(height: 12),
@@ -393,41 +393,41 @@ class _FlashcardPageState extends State<FlashcardPage>
                     size: 64,
                     color: Colors.transparent,
                     iconColor: _currentIndex > 0
-                        ? AppColors.blue9
-                        : AppColors.grey7,
+                        ? AppColors.primary60
+                        : AppColors.gray50,
                     borderColor: _currentIndex > 0
-                        ? AppColors.blue9
-                        : AppColors.grey3,
+                        ? AppColors.primary60
+                        : AppColors.gray20,
                   ),
                   CustomIconButton(
                     icon: Icons.check,
                     onTap: _markCorrect,
                     color: currentStatus == 'Correct'
-                        ? const Color(0xFFDFF7E5)
+                        ? AppColors.bgSuccess
                         : Colors.transparent,
-                    iconColor: const Color(0xFF0B5F3C),
+                    iconColor: AppColors.bgSuccessContrast,
                     borderColor: currentStatus == 'Correct'
-                        ? const Color(0xFF0B5F3C)
-                        : AppColors.grey3,
+                        ? AppColors.bgSuccessContrast
+                        : AppColors.gray20,
                   ),
                   CustomIconButton(
                     icon: Icons.close,
                     onTap: _markWrong,
                     color: currentStatus == 'Wrong'
-                        ? const Color(0xFFFDECEC)
+                        ? AppColors.bgError
                         : Colors.transparent,
-                    iconColor: const Color(0xFFB42318),
+                    iconColor: AppColors.bgErrorContrast,
                     borderColor: currentStatus == 'Wrong'
-                        ? const Color(0xFFB42318)
-                        : AppColors.grey3,
+                        ? AppColors.bgErrorContrast
+                        : AppColors.gray20,
                   ),
                   CustomIconButton(
                     icon: Icons.arrow_forward,
                     onTap: () => _nextCard(activeCards, cardCountSelection),
                     size: 64,
                     color: Colors.transparent,
-                    iconColor: AppColors.blue9,
-                    borderColor: AppColors.blue9,
+                    iconColor: AppColors.primary60,
+                    borderColor: AppColors.primary60,
                   ),
                 ],
               ),

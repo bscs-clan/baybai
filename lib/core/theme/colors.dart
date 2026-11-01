@@ -34,65 +34,6 @@ class AppColors {
   static const Color darkListSeparator = Color(0xFF35363B);
   static const Color darkInputBackground = Color(0xFF1C1E25);
 
-  //light theme v2
-
-  //Blue Colors
-  static const Color blue12 = Color(0xFF242E5C);
-  static const Color blue11 = Color(0xFF4D63CB);
-  static const Color blue10 = Color(0xFF536AD7);
-  static const Color blue9 = Color(0xFF5E77E8);
-  static const Color blue8 = Color(0xFF90A5EA);
-  static const Color blue7 = Color(0xFFAEBEF3);
-  static const Color blue6 = Color(0xFFC3D1FB);
-  static const Color blue5 = Color(0xFFD4DFFF);
-  static const Color blue4 = Color(0xFFE2E9FF);
-  static const Color blue3 = Color(0xFFEEF2FD);
-  static const Color blue2 = Color(0xFFF7F9FF);
-  static const Color blue1 = Color(0xFFFCFDFE);
-
-  //Gray Colors
-  static const Color grey12 = Color(0xFF1E1F24);
-  static const Color grey11 = Color(0xFF62636C);
-  static const Color grey10 = Color(0xFF80828D);
-  static const Color grey9 = Color(0xFF8B8D98);
-  static const Color grey8 = Color(0xFFB9BBC6);
-  static const Color grey7 = Color(0xFFCDCED7);
-  static const Color grey6 = Color(0xFFD8D9E0);
-  static const Color grey5 = Color(0xFFE0E1E6);
-  static const Color grey4 = Color(0xFFE7E8EC);
-  static const Color grey3 = Color(0xFFEFF0F3);
-  static const Color grey2 = Color(0xFFF9F9FB);
-  static const Color grey1 = Color(0xFFFCFCFD);
-
-  //Dark theme v2
-
-  //blue color
-  static const Color darkblue1 = Color(0xFF0D101C);
-  static const Color darkblue2 = Color(0xFF121725);
-  static const Color darkblue3 = Color(0xFF1B2348);
-  static const Color darkblue4 = Color(0xFF222D61);
-  static const Color darkblue5 = Color(0xFF2A3773);
-  static const Color darkblue6 = Color(0xFF344282);
-  static const Color darkblue7 = Color(0xFF3E4F96);
-  static const Color darkblue8 = Color(0xFF495CB0);
-  static const Color darkblue9 = Color(0xFF5E77E8);
-  static const Color darkblue10 = Color(0xFF536AD9);
-  static const Color darkblue11 = Color(0xFF9AB2FF);
-  static const Color darkblue12 = Color(0xFFD7E1FF);
-
-  //grey color
-  static const Color darkgrey1 = Color(0xFF111113);
-  static const Color darkgrey2 = Color(0xFF19191B);
-  static const Color darkgrey3 = Color(0xFF222325);
-  static const Color darkgrey4 = Color(0xFF292A2E);
-  static const Color darkgrey5 = Color(0xFF303136);
-  static const Color darkgrey6 = Color(0xFF393A40);
-  static const Color darkgrey7 = Color(0xFF46484F);
-  static const Color darkgrey8 = Color(0xFF5F606A);
-  static const Color darkgrey9 = Color(0xFF6C6E79);
-  static const Color darkgrey10 = Color(0xFF797B86);
-  static const Color darkgrey11 = Color(0xFFB2B3BD);
-  static const Color darkgrey12 = Color(0xFFEEEEF0);
 
   //Latest Color
 
@@ -130,4 +71,5 @@ class AppColors {
   static const Color error = bgErrorContrast;
   static const Color bgWarning = Color(0xFFFFF9E6);
   static const Color bgWarningContrast = Color(0xFFFFD84D);
+
 }

@@ -1,3 +1,4 @@
+import "package:admonitions/admonitions.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
 import "package:baybai/shared/components/buttons/button.dart";
@@ -19,13 +20,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _isPasswordVisible = false;
   bool _isSubmitting = false;
   String? _errorMessage;
-  final _nameController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -33,9 +36,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   Future<void> _signUp() async {
     FocusScope.of(context).unfocus();
-    final nameParts = _nameController.text.trim().split(RegExp(r"\s+"));
-    if (nameParts.length < 2 || nameParts.any((part) => part.isEmpty)) {
+    if (_firstNameController.text.trim().isEmpty ||
+        _lastNameController.text.trim().isEmpty) {
       setState(() => _errorMessage = "Enter your first and last name.");
+      return;
+    }
+    if (_emailController.text.trim().isEmpty) {
+      setState(() => _errorMessage = "Enter your email address to sign up.");
+      return;
+    }
+    if (_passwordController.text.isEmpty) {
+      setState(() => _errorMessage = "Create a password for your account.");
       return;
     }
     setState(() {
@@ -44,8 +55,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
     try {
       await serviceLoc<SignUp>()(
-        firstName: nameParts.first,
-        lastName: nameParts.skip(1).join(" "),
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
         email: _emailController.text,
         password: _passwordController.text,
       );
@@ -83,6 +94,30 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
+                        SizedBox(
+                          width: double.infinity,
+                          height: 68,
+                          child: _errorMessage == null
+                              ? null
+                              : Align(
+                                  alignment: Alignment.topCenter,
+                                  child: SolidAdmonition.danger(
+                                    icon: const HugeIcon(
+                                      icon: HugeIcons.strokeRoundedAlertCircle,
+                                      size: 18,
+                                      color: AppColors.white,
+                                    ),
+                                    child: Flexible(
+                                      child: Text(
+                                        _errorMessage!,
+                                        style: AppTextStyles.regularSm.copyWith(
+                                          color: AppColors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                        ),
                         const Spacer(),
                         const SizedBox(height: 56),
                         Text(
@@ -104,8 +139,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ),
                         const SizedBox(height: 56),
                         Input(
-                          hintText: "Name",
-                          controller: _nameController,
+                          hintText: "First Name",
+                          controller: _firstNameController,
+                          textInputAction: TextInputAction.next,
+                        ),
+                        const SizedBox(height: 8),
+                        Input(
+                          hintText: "Last Name",
+                          controller: _lastNameController,
                           textInputAction: TextInputAction.next,
                         ),
                         const SizedBox(height: 8),
@@ -131,20 +172,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           },
                         ),
                         const SizedBox(height: 24),
-                        if (_errorMessage != null) ...[
-                          Text(
-                            _errorMessage!,
-                            style: AppTextStyles.regularSm.copyWith(
-                              color: Colors.red,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 12),
-                        ],
                         Button(
                           onTap: _isSubmitting ? null : _signUp,
                           width: double.infinity,
                           label: "Sign Up",
+                          isLoading: _isSubmitting,
                           size: ButtonSize.md,
                           height: 48,
                           customBackgroundColor: AppColors.primary60,

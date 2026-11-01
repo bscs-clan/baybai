@@ -3,7 +3,7 @@ import "package:hugeicons/hugeicons.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
 
-class KudlitPracticeCard extends StatelessWidget {
+class KudlitPracticeCard extends StatefulWidget {
   final String baseSymbol;
   final String baseSound;
   final String targetSound;
@@ -17,17 +17,22 @@ class KudlitPracticeCard extends StatelessWidget {
     this.selectedOption,
   });
 
+  @override
+  State<KudlitPracticeCard> createState() => _KudlitPracticeCardState();
+}
+
+class _KudlitPracticeCardState extends State<KudlitPracticeCard> {
   String get _previewSymbol {
-    final normalizedOption = selectedOption?.trim().toLowerCase() ?? "";
+    final normalizedOption = widget.selectedOption?.trim().toLowerCase() ?? "";
 
     if (normalizedOption.contains("top")) {
-      return "$baseSymbol\u1712";
+      return "${widget.baseSymbol}\u1712";
     }
     if (normalizedOption.contains("bottom")) {
-      return "$baseSymbol\u1713";
+      return "${widget.baseSymbol}\u1713";
     }
 
-    return baseSymbol;
+    return widget.baseSymbol;
   }
 
   @override
@@ -55,7 +60,7 @@ class KudlitPracticeCard extends StatelessWidget {
               Expanded(
                 child: _SoundTile(
                   label: "Start",
-                  sound: baseSound,
+                  sound: widget.baseSound,
                   color: pillColor,
                 ),
               ),
@@ -70,7 +75,7 @@ class KudlitPracticeCard extends StatelessWidget {
               Expanded(
                 child: _SoundTile(
                   label: "Target",
-                  sound: targetSound,
+                  sound: widget.targetSound,
                   color: pillColor,
                 ),
               ),
@@ -91,7 +96,7 @@ class KudlitPracticeCard extends StatelessWidget {
                   "Preview",
                   style: AppTextStyles.regularXs.copyWith(
                     color: AppColors.gray60,
-                ),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 SizedBox(
@@ -120,7 +125,6 @@ class _SoundTile extends StatelessWidget {
   final String label;
   final String sound;
   final Color color;
-
   const _SoundTile({
     required this.label,
     required this.sound,
@@ -143,16 +147,17 @@ class _SoundTile extends StatelessWidget {
         children: [
           Text(
             label,
-            style: AppTextStyles.regularXs.copyWith(
-              color: AppColors.gray60,
-            ),
+            style: AppTextStyles.regularXs.copyWith(color: AppColors.gray60),
           ),
           const SizedBox(height: 8),
-          Text(
-            sound,
-            style: AppTextStyles.boldLg.copyWith(
-              color: textColor,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                sound,
+                style: AppTextStyles.boldLg.copyWith(color: textColor),
+              ),
+            ],
           ),
         ],
       ),

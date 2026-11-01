@@ -1,4 +1,3 @@
-import "package:baybai/core/theme/colors.dart";
 import "package:baybai/shared/components/inputs/input.dart";
 import "package:flutter/material.dart";
 
@@ -48,14 +47,6 @@ class _LessonTextAnswerInputState extends State<LessonTextAnswerInput> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(
-            color: AppColors.gray60.withValues(alpha: 0.3),
-            width: 1.5,
-          ),
-        ),
-      ),
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
       child: Input(
         hintText: "Type your answer",

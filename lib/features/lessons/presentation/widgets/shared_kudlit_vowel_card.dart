@@ -6,7 +6,7 @@ class SharedKudlitVowelCard extends StatelessWidget {
   const SharedKudlitVowelCard({super.key});
 
   static const _examples = [
-    _SharedKudlitExample(symbol: "\u170A\u1712", sounds: ["bi", "be"]),
+    _SharedKudlitExample(symbol: "\u170A\u1712", sounds: ["be", "bi"]),
     _SharedKudlitExample(symbol: "\u170A\u1713", sounds: ["bo", "bu"]),
   ];
 

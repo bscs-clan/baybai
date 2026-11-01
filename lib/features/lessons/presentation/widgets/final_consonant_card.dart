@@ -8,11 +8,15 @@ class FinalConsonantCard extends StatelessWidget {
   static const List<_FinalConsonantExplanation> _explanations = [
     _FinalConsonantExplanation(
       title: "Traditional Baybayin",
-      description: "Some final consonants may be left unwritten.",
+      description: "uses the original writing system, where consonants have an inherent “a” vowel sound.",
+      example: "BATA",
+      baybayin: "\u170A\u1706",
     ),
     _FinalConsonantExplanation(
       title: "Modern Baybayin",
-      description: "Virama can indicate the final consonant.",
+      description: "uses added marks, such as the virama, to represent consonants without a vowel.",
+      example: "BUNDOK",
+      baybayin: "\u170A\u1713\u1708\u1714\u1707\u1713\u1703\u1714",
     ),
   ];
 
@@ -50,9 +54,8 @@ class FinalConsonantCard extends StatelessWidget {
                     children: [
                       Text(
                         explanation.title,
-                        style: AppTextStyles.regularSm.copyWith(
+                        style: AppTextStyles.boldSm.copyWith(
                           color: textColor,
-                          fontWeight: FontWeight.w600,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -61,6 +64,28 @@ class FinalConsonantCard extends StatelessWidget {
                         style: AppTextStyles.regularSm.copyWith(
                           color: textColor,
                         ),
+                      ),
+                      const SizedBox(height: 32),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            explanation.example,
+                            style: AppTextStyles.boldSm.copyWith(
+                              color: AppColors.gray80,
+                            ),
+                          ),
+                          Text(
+                            explanation.baybayin,
+                            textAlign: TextAlign.left,
+                            style: AppTextStyles.regularSm.copyWith(
+                              color: textColor,
+                              fontSize: 28,
+                              fontFamily: "Baybayin",
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -78,9 +103,13 @@ class FinalConsonantCard extends StatelessWidget {
 class _FinalConsonantExplanation {
   final String title;
   final String description;
+  final String example;
+  final String baybayin;
 
   const _FinalConsonantExplanation({
     required this.title,
     required this.description,
+    required this.example,
+    required this.baybayin,
   });
 }

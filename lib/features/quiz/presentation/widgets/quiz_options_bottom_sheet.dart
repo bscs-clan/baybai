@@ -23,7 +23,7 @@ Future<void> showQuizOptionsBottomSheet(BuildContext context) {
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
               decoration: ShapeDecoration(
-                color: isDarkMode ? AppColors.darkBox : AppColors.grey1,
+                color: isDarkMode ? AppColors.gray90 : AppColors.gray10,
                 shape: const RoundedRectangleBorder(),
               ),
               child: Column(
@@ -35,9 +35,7 @@ Future<void> showQuizOptionsBottomSheet(BuildContext context) {
                       width: 44,
                       height: 5,
                       decoration: BoxDecoration(
-                        color: isDarkMode
-                            ? AppColors.darkTextGrey
-                            : AppColors.textGrey,
+                        color: isDarkMode ? AppColors.gray50 : AppColors.gray60,
                         borderRadius: BorderRadius.circular(999),
                       ),
                     ),
@@ -46,7 +44,7 @@ Future<void> showQuizOptionsBottomSheet(BuildContext context) {
                   Text(
                     "Quiz",
                     style: AppTextStyles.bigbody.copyWith(
-                      color: isDarkMode ? AppColors.darkText : AppColors.text,
+                      color: isDarkMode ? AppColors.gray10 : AppColors.gray100,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -54,7 +52,7 @@ Future<void> showQuizOptionsBottomSheet(BuildContext context) {
                     "Difficulty",
                     style: AppTextStyles.body.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: isDarkMode ? AppColors.darkText : AppColors.grey11,
+                      color: isDarkMode ? AppColors.gray10 : AppColors.gray90,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -85,20 +83,17 @@ Future<void> showQuizOptionsBottomSheet(BuildContext context) {
                         backgroundColor:
                             WidgetStateProperty.resolveWith<Color?>(
                               (states) => states.contains(WidgetState.selected)
-                                  ? AppColors.blue4
+                                  ? AppColors.primary20
                                   : null,
                             ),
                         foregroundColor:
                             WidgetStateProperty.resolveWith<Color?>(
                               (states) => states.contains(WidgetState.selected)
-                                  ? AppColors.dark
+                                  ? AppColors.gray100
                                   : null,
                             ),
                         side: const WidgetStatePropertyAll(
-                          BorderSide(
-                            color: AppColors.grey9,
-                            width: 1,
-                          ),
+                          BorderSide(color: AppColors.gray70, width: 1),
                         ),
                       ),
                       onSelectionChanged: (selection) {
@@ -113,7 +108,7 @@ Future<void> showQuizOptionsBottomSheet(BuildContext context) {
                     "Number of Questions",
                     style: AppTextStyles.body.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: isDarkMode ? AppColors.darkText : AppColors.grey11,
+                      color: isDarkMode ? AppColors.gray10 : AppColors.gray90,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -144,20 +139,17 @@ Future<void> showQuizOptionsBottomSheet(BuildContext context) {
                         backgroundColor:
                             WidgetStateProperty.resolveWith<Color?>(
                               (states) => states.contains(WidgetState.selected)
-                                  ? AppColors.blue4
+                                  ? AppColors.primary20
                                   : null,
                             ),
                         foregroundColor:
                             WidgetStateProperty.resolveWith<Color?>(
                               (states) => states.contains(WidgetState.selected)
-                                  ? AppColors.dark
+                                  ? AppColors.gray100
                                   : null,
                             ),
                         side: const WidgetStatePropertyAll(
-                          BorderSide(
-                            color: AppColors.grey9,
-                            width: 1,
-                          ),
+                          BorderSide(color: AppColors.gray70, width: 1),
                         ),
                       ),
                       onSelectionChanged: (selection) {
@@ -172,7 +164,7 @@ Future<void> showQuizOptionsBottomSheet(BuildContext context) {
                     "Time Limit",
                     style: AppTextStyles.body.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: isDarkMode ? AppColors.darkText : AppColors.grey11,
+                      color: isDarkMode ? AppColors.gray10 : AppColors.gray90,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -203,20 +195,17 @@ Future<void> showQuizOptionsBottomSheet(BuildContext context) {
                         backgroundColor:
                             WidgetStateProperty.resolveWith<Color?>(
                               (states) => states.contains(WidgetState.selected)
-                                  ? AppColors.blue4
+                                  ? AppColors.primary20
                                   : null,
                             ),
                         foregroundColor:
                             WidgetStateProperty.resolveWith<Color?>(
                               (states) => states.contains(WidgetState.selected)
-                                  ? AppColors.dark
+                                  ? AppColors.gray100
                                   : null,
                             ),
                         side: const WidgetStatePropertyAll(
-                          BorderSide(
-                            color: AppColors.grey9,
-                            width: 1,
-                          ),
+                          BorderSide(color: AppColors.gray70, width: 1),
                         ),
                       ),
                       onSelectionChanged: (selection) {
@@ -230,7 +219,7 @@ Future<void> showQuizOptionsBottomSheet(BuildContext context) {
                   Button(
                     label: "Start Quiz",
                     width: double.infinity,
-                    customBackgroundColor: AppColors.blue9,
+                    customBackgroundColor: AppColors.primary60,
                     onTap: () {
                       final questionLimit = questionLimitForSelection(
                         selectedQuestionCount,

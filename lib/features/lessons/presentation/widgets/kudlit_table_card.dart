@@ -1,9 +1,11 @@
+import "package:audioplayers/audioplayers.dart";
 import "package:flutter/material.dart";
+import "package:hugeicons/hugeicons.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
 import "package:baybai/features/lessons/domain/entities/lesson_content.dart";
 
-class KudlitTableCard extends StatelessWidget {
+class KudlitTableCard extends StatefulWidget {
   final List<KudlitTableItem> examples;
 
   const KudlitTableCard({super.key, List<KudlitTableItem>? examples})
@@ -15,15 +17,46 @@ class KudlitTableCard extends StatelessWidget {
       baseSymbol: "\u170A",
       kudlit: "\u1712",
       mark: "Top kudlit",
-      sound: "bi / be",
+      sound: "be / bi",
     ),
     KudlitTableItem(
       baseSymbol: "\u170A",
       kudlit: "\u1713",
       mark: "Bottom kudlit",
-      sound: "bu / bo",
+      sound: "bo / bu",
     ),
   ];
+
+  @override
+  State<KudlitTableCard> createState() => _KudlitTableCardState();
+}
+
+class _KudlitTableCardState extends State<KudlitTableCard> {
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  Future<void> _playSound(String sound) async {
+    final normalized = sound.toLowerCase().replaceAll(" ", "");
+    final asset = switch (normalized) {
+      "ba" => "audio/ba.mp3",
+      "bi/be" || "be/bi" || "ki/ke" || "ke/ki" => "audio/be_bi.mp3",
+      "bu/bo" || "bo/bu" || "ku/ko" || "ko/ku" => "audio/bo_bu.mp3",
+      "ka" => "audio/ka.mp3",
+      _ => null,
+    };
+    if (asset == null) return;
+    try {
+      await _audioPlayer.stop();
+      await _audioPlayer.play(AssetSource(asset));
+    } catch (error) {
+      debugPrint("Error playing kudlit sound: $error");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,9 +87,9 @@ class KudlitTableCard extends StatelessWidget {
             ),
           ),
           Divider(height: 1, thickness: 1.5, color: borderColor),
-          ...List.generate(examples.length, (index) {
-            final example = examples[index];
-            final isLast = index == examples.length - 1;
+          ...List.generate(widget.examples.length, (index) {
+            final example = widget.examples[index];
+            final isLast = index == widget.examples.length - 1;
 
             return Column(
               mainAxisSize: MainAxisSize.min,
@@ -85,8 +118,17 @@ class KudlitTableCard extends StatelessWidget {
                       Container(width: 1.5, color: borderColor),
                       Expanded(
                         child: Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: _Pill(label: example.sound, color: pillColor),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 10,
+                          ),
+                          child: _SoundAudioButton(
+                            label: example.sound,
+                            onTap: () => _playSound(example.sound),
+                            textColor: isDarkMode
+                                ? AppColors.gray10
+                                : AppColors.gray100,
+                          ),
                         ),
                       ),
                     ],
@@ -98,6 +140,56 @@ class KudlitTableCard extends StatelessWidget {
             );
           }),
         ],
+      ),
+    );
+  }
+}
+
+class _SoundAudioButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  final Color textColor;
+
+  const _SoundAudioButton({
+    required this.label,
+    required this.onTap,
+    required this.textColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 38,
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        decoration: BoxDecoration(
+          color: AppColors.gray10,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: AppTextStyles.regularSm.copyWith(color: textColor),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: AppColors.primary30,
+                shape: BoxShape.circle,
+              ),
+              child: const HugeIcon(
+                icon: HugeIcons.strokeRoundedVolume02,
+                size: 20,
+                color: AppColors.primary60,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -134,9 +226,7 @@ class _HighlightedKudlitGlyph extends StatelessWidget {
           TextSpan(text: baseSymbol),
           TextSpan(
             text: kudlit,
-            style: TextStyle(
-              color: AppColors.bgSuccessContrast,
-            ),
+            style: TextStyle(color: AppColors.bgSuccessContrast),
           ),
         ],
       ),
@@ -160,9 +250,7 @@ class _HeaderCell extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
         child: Text(
           label,
-          style: AppTextStyles.boldSm.copyWith(
-            color: textColor,
-          ),
+          style: AppTextStyles.boldSm.copyWith(color: textColor),
           textAlign: TextAlign.center,
         ),
       ),
@@ -192,9 +280,7 @@ class _Pill extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: AppTextStyles.regularSm.copyWith(
-          color: textColor,
-        ),
+        style: AppTextStyles.regularSm.copyWith(color: textColor),
         textAlign: TextAlign.center,
       ),
     );

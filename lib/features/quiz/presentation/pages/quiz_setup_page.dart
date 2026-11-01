@@ -516,13 +516,13 @@ class _QuizSetupPageState extends State<QuizSetupPage> {
                 children: [
                   Text(
                     '$questionNumber/${_questions.length}',
-                    style: AppTextStyles.body.copyWith(color: AppColors.grey10),
+                    style: AppTextStyles.body.copyWith(color: AppColors.gray80),
                   ),
                   if (widget.timeLimit != 'No limit')
                     Text(
                       _timerText(),
                       style: AppTextStyles.body.copyWith(
-                        color: AppColors.grey10,
+                        color: AppColors.gray80,
                       ),
                     ),
                 ],
@@ -531,7 +531,7 @@ class _QuizSetupPageState extends State<QuizSetupPage> {
               _baybayinText(
                 currentQuestion.question,
                 AppTextStyles.bigbody.copyWith(
-                  color: isDarkMode ? AppColors.darkText : AppColors.text,
+                  color: isDarkMode ? AppColors.gray10 : AppColors.gray100,
                 ),
               ),
               const SizedBox(height: 12),
@@ -563,7 +563,7 @@ class _QuizSetupPageState extends State<QuizSetupPage> {
                             width: double.infinity,
                             onTap: _goToPreviousQuestion,
                             type: ButtonType.outline,
-                            customBorderColor: AppColors.grey3,
+                            customBorderColor: AppColors.gray20,
                             size: ButtonSize.md,
                           )
                         : const SizedBox.shrink(),
@@ -580,8 +580,8 @@ class _QuizSetupPageState extends State<QuizSetupPage> {
                           : _goToNextQuestion,
                       type: ButtonType.primary,
                       size: ButtonSize.md,
-                      customBackgroundColor: AppColors.blue9,
-                      customForegroundColor: AppColors.white,
+                      customBackgroundColor: AppColors.primary60,
+                      customForegroundColor: AppColors.bg,
                     ),
                   ),
                 ],
@@ -643,12 +643,12 @@ class _QuizSetupPageState extends State<QuizSetupPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          foregroundColor: AppColors.text,
+          foregroundColor: AppColors.gray100,
           backgroundColor: showCorrectState
-              ? const Color(0xFFDFF7E5)
+              ? AppColors.bgSuccess
               : showWrongState
-              ? const Color(0xFFFDECEC)
-              : AppColors.grey3,
+              ? AppColors.bgError
+              : AppColors.gray20,
         ),
         child: Row(
           children: [
@@ -675,7 +675,7 @@ class _QuizSetupPageState extends State<QuizSetupPage> {
                   Text(
                     showCorrectFeedback ? 'That\'s right!' : 'Correct Answer',
                     style: AppTextStyles.body.copyWith(
-                      color: const Color(0xFF0B5F3C),
+                      color: AppColors.bgSuccessContrast,
                     ),
                   ),
                 ],
@@ -689,7 +689,7 @@ class _QuizSetupPageState extends State<QuizSetupPage> {
                   Text(
                     'Not Quite!',
                     style: AppTextStyles.body.copyWith(
-                      color: const Color(0xFFB42318),
+                      color: AppColors.bgErrorContrast,
                     ),
                   ),
                 ],
@@ -731,9 +731,7 @@ class _QuizCompletePageState extends State<QuizCompletePage> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDarkMode
-        ? AppColors.darkBackground
-        : AppColors.background;
+    final backgroundColor = isDarkMode ? AppColors.gray100 : AppColors.gray10;
     final wrongAnswers =
         widget.totalQuestions - widget.correctAnswers - widget.skippedAnswers;
     final scorePercentage = widget.totalQuestions == 0
@@ -757,7 +755,7 @@ class _QuizCompletePageState extends State<QuizCompletePage> {
                 children: [
                   Text(
                     'Your Score',
-                    style: AppTextStyles.body.copyWith(color: AppColors.grey10),
+                    style: AppTextStyles.body.copyWith(color: AppColors.gray80),
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -798,7 +796,7 @@ class _QuizCompletePageState extends State<QuizCompletePage> {
                             Text(
                               '$scorePercentage%',
                               style: AppTextStyles.bigbody.copyWith(
-                                color: AppColors.grey11,
+                                color: AppColors.gray90,
                               ),
                             ),
                           ],
@@ -814,17 +812,17 @@ class _QuizCompletePageState extends State<QuizCompletePage> {
                       runSpacing: 8,
                       children: [
                         _ScoreLegendItem(
-                          color: AppColors.blue9,
+                          color: AppColors.primary60,
                           label: 'Correct',
                           count: widget.correctAnswers,
                         ),
                         _ScoreLegendItem(
-                          color: AppColors.blue5,
+                          color: AppColors.primary40,
                           label: 'Wrong',
                           count: wrongAnswers,
                         ),
                         _ScoreLegendItem(
-                          color: AppColors.grey4,
+                          color: AppColors.gray30,
                           label: 'Skipped',
                           count: widget.skippedAnswers,
                         ),
@@ -835,7 +833,7 @@ class _QuizCompletePageState extends State<QuizCompletePage> {
                   const Divider(
                     height: 1,
                     thickness: 1,
-                    color: AppColors.grey6,
+                    color: AppColors.gray40,
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -843,7 +841,7 @@ class _QuizCompletePageState extends State<QuizCompletePage> {
                       Text(
                         selectedQuestionType,
                         style: AppTextStyles.body.copyWith(
-                          color: AppColors.grey12,
+                          color: AppColors.gray100,
                         ),
                       ),
                       PopupMenuButton<String>(
@@ -854,11 +852,11 @@ class _QuizCompletePageState extends State<QuizCompletePage> {
                           minWidth: 24,
                           minHeight: 24,
                         ),
-                        color: AppColors.grey1,
+                        color: AppColors.gray10,
                         elevation: 1,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(6),
-                          side: const BorderSide(color: AppColors.grey3),
+                          side: const BorderSide(color: AppColors.gray20),
                         ),
                         tooltip: 'Select question type',
                         onSelected: (value) {
@@ -874,7 +872,7 @@ class _QuizCompletePageState extends State<QuizCompletePage> {
                               children: [
                                 const Icon(
                                   Icons.remove,
-                                  color: AppColors.grey9,
+                                  color: AppColors.gray70,
                                 ),
                                 const SizedBox(width: 12),
                                 Text('Skipped', style: AppTextStyles.body),
@@ -886,7 +884,10 @@ class _QuizCompletePageState extends State<QuizCompletePage> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.check, color: AppColors.grey9),
+                                const Icon(
+                                  Icons.check,
+                                  color: AppColors.gray70,
+                                ),
                                 const SizedBox(width: 12),
                                 Text('Correct', style: AppTextStyles.body),
                               ],
@@ -897,7 +898,10 @@ class _QuizCompletePageState extends State<QuizCompletePage> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.close, color: AppColors.grey9),
+                                const Icon(
+                                  Icons.close,
+                                  color: AppColors.gray70,
+                                ),
                                 const SizedBox(width: 12),
                                 Text('Wrong', style: AppTextStyles.body),
                               ],
@@ -925,7 +929,7 @@ class _QuizCompletePageState extends State<QuizCompletePage> {
                               child: Text(
                                 '${result.questionNumber ?? index + 1}.',
                                 style: AppTextStyles.body.copyWith(
-                                  color: AppColors.grey12,
+                                  color: AppColors.gray100,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -935,7 +939,7 @@ class _QuizCompletePageState extends State<QuizCompletePage> {
                               child: Text(
                                 result.question,
                                 style: AppTextStyles.body.copyWith(
-                                  color: AppColors.grey12,
+                                  color: AppColors.gray100,
                                 ),
                               ),
                             ),
@@ -960,7 +964,7 @@ class _QuizCompletePageState extends State<QuizCompletePage> {
                             ),
                           ),
                           type: ButtonType.outline,
-                          customBorderColor: AppColors.grey5,
+                          customBorderColor: AppColors.gray40,
                           size: ButtonSize.md,
                         ),
                       ),
@@ -974,8 +978,8 @@ class _QuizCompletePageState extends State<QuizCompletePage> {
                           ).pushNamedAndRemoveUntil('/home', (route) => false),
                           type: ButtonType.primary,
                           size: ButtonSize.md,
-                          customBackgroundColor: AppColors.blue9,
-                          customForegroundColor: AppColors.white,
+                          customBackgroundColor: AppColors.primary60,
+                          customForegroundColor: AppColors.bg,
                         ),
                       ),
                     ],
@@ -1006,7 +1010,7 @@ class _ScoreLegendItem extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.grey3,
+        color: AppColors.gray20,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
@@ -1020,7 +1024,7 @@ class _ScoreLegendItem extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             '$label ($count)',
-            style: AppTextStyles.body.copyWith(color: AppColors.grey12),
+            style: AppTextStyles.body.copyWith(color: AppColors.gray100),
           ),
         ],
       ),
@@ -1056,20 +1060,20 @@ class ScoreCirclePainter extends CustomPainter {
     final rect = Rect.fromCircle(center: center, radius: radius);
 
     final backgroundPaint = Paint()
-      ..color = AppColors.grey4
+      ..color = AppColors.gray30
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth;
 
     canvas.drawCircle(center, radius, backgroundPaint);
 
     final blue9Paint = Paint()
-      ..color = AppColors.blue9
+      ..color = AppColors.primary60
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.butt;
 
     final blue5Paint = Paint()
-      ..color = AppColors.blue5
+      ..color = AppColors.primary40
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.butt;

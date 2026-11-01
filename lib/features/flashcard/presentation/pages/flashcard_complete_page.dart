@@ -43,9 +43,7 @@ class _FlashcardCompletePageState extends State<FlashcardCompletePage> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDarkMode
-        ? AppColors.darkBackground
-        : AppColors.background;
+    final backgroundColor = isDarkMode ? AppColors.gray100 : AppColors.gray10;
     final wrongAnswers =
         widget.totalQuestions - widget.correctAnswers - widget.skippedAnswers;
     final scorePercentage = widget.totalQuestions == 0
@@ -69,7 +67,7 @@ class _FlashcardCompletePageState extends State<FlashcardCompletePage> {
                 children: [
                   Text(
                     'Your Result',
-                    style: AppTextStyles.body.copyWith(color: AppColors.grey10),
+                    style: AppTextStyles.body.copyWith(color: AppColors.gray80),
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -106,7 +104,7 @@ class _FlashcardCompletePageState extends State<FlashcardCompletePage> {
                             Text(
                               '$scorePercentage%',
                               style: AppTextStyles.bigbody.copyWith(
-                                color: AppColors.grey11,
+                                color: AppColors.gray90,
                               ),
                             ),
                           ],
@@ -122,17 +120,17 @@ class _FlashcardCompletePageState extends State<FlashcardCompletePage> {
                       runSpacing: 8,
                       children: [
                         _ScoreLegendItem(
-                          color: AppColors.blue9,
+                          color: AppColors.primary60,
                           label: 'Got It',
                           count: widget.correctAnswers,
                         ),
                         _ScoreLegendItem(
-                          color: AppColors.blue5,
+                          color: AppColors.primary40,
                           label: 'Missed',
                           count: wrongAnswers,
                         ),
                         _ScoreLegendItem(
-                          color: AppColors.grey4,
+                          color: AppColors.gray30,
                           label: 'Skipped',
                           count: widget.skippedAnswers,
                         ),
@@ -143,7 +141,7 @@ class _FlashcardCompletePageState extends State<FlashcardCompletePage> {
                   const Divider(
                     height: 1,
                     thickness: 1,
-                    color: AppColors.grey6,
+                    color: AppColors.gray40,
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -151,7 +149,7 @@ class _FlashcardCompletePageState extends State<FlashcardCompletePage> {
                       Text(
                         selectedQuestionType,
                         style: AppTextStyles.body.copyWith(
-                          color: AppColors.grey12,
+                          color: AppColors.gray100,
                         ),
                       ),
                       PopupMenuButton<String>(
@@ -162,11 +160,11 @@ class _FlashcardCompletePageState extends State<FlashcardCompletePage> {
                           minWidth: 24,
                           minHeight: 24,
                         ),
-                        color: AppColors.grey1,
+                        color: AppColors.gray10,
                         elevation: 1,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(6),
-                          side: const BorderSide(color: AppColors.grey3),
+                          side: const BorderSide(color: AppColors.gray20),
                         ),
                         tooltip: 'Select question type',
                         onSelected: (value) {
@@ -182,7 +180,7 @@ class _FlashcardCompletePageState extends State<FlashcardCompletePage> {
                               children: [
                                 const Icon(
                                   Icons.remove,
-                                  color: AppColors.grey9,
+                                  color: AppColors.gray70,
                                 ),
                                 const SizedBox(width: 12),
                                 Text('Skipped', style: AppTextStyles.body),
@@ -194,7 +192,10 @@ class _FlashcardCompletePageState extends State<FlashcardCompletePage> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.check, color: AppColors.grey9),
+                                const Icon(
+                                  Icons.check,
+                                  color: AppColors.gray70,
+                                ),
                                 const SizedBox(width: 12),
                                 Text('Got It', style: AppTextStyles.body),
                               ],
@@ -205,7 +206,10 @@ class _FlashcardCompletePageState extends State<FlashcardCompletePage> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.close, color: AppColors.grey9),
+                                const Icon(
+                                  Icons.close,
+                                  color: AppColors.gray70,
+                                ),
                                 const SizedBox(width: 12),
                                 Text('Missed', style: AppTextStyles.body),
                               ],
@@ -233,7 +237,7 @@ class _FlashcardCompletePageState extends State<FlashcardCompletePage> {
                               child: Text(
                                 '${result.questionNumber ?? index + 1}.',
                                 style: AppTextStyles.body.copyWith(
-                                  color: AppColors.grey12,
+                                  color: AppColors.gray100,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -243,7 +247,7 @@ class _FlashcardCompletePageState extends State<FlashcardCompletePage> {
                               child: Text(
                                 result.question,
                                 style: AppTextStyles.body.copyWith(
-                                  color: AppColors.grey12,
+                                  color: AppColors.gray100,
                                 ),
                               ),
                             ),
@@ -266,7 +270,7 @@ class _FlashcardCompletePageState extends State<FlashcardCompletePage> {
                             ),
                           ),
                           type: ButtonType.outline,
-                          customBorderColor: AppColors.grey5,
+                          customBorderColor: AppColors.gray40,
                           size: ButtonSize.md,
                         ),
                       ),
@@ -280,8 +284,8 @@ class _FlashcardCompletePageState extends State<FlashcardCompletePage> {
                           ).pushNamedAndRemoveUntil('/home', (route) => false),
                           type: ButtonType.primary,
                           size: ButtonSize.md,
-                          customBackgroundColor: AppColors.blue9,
-                          customForegroundColor: AppColors.white,
+                          customBackgroundColor: AppColors.primary60,
+                          customForegroundColor: AppColors.bg,
                         ),
                       ),
                     ],
@@ -312,7 +316,7 @@ class _ScoreLegendItem extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.grey3,
+        color: AppColors.gray20,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
@@ -326,7 +330,7 @@ class _ScoreLegendItem extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             '$label ($count)',
-            style: AppTextStyles.body.copyWith(color: AppColors.grey12),
+            style: AppTextStyles.body.copyWith(color: AppColors.gray100),
           ),
         ],
       ),
@@ -350,20 +354,20 @@ class ScoreCirclePainter extends CustomPainter {
     final rect = Rect.fromCircle(center: center, radius: radius);
 
     final backgroundPaint = Paint()
-      ..color = AppColors.grey4
+      ..color = AppColors.gray30
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth;
 
     canvas.drawCircle(center, radius, backgroundPaint);
 
     final blue9Paint = Paint()
-      ..color = AppColors.blue9
+      ..color = AppColors.primary60
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.butt;
 
     final blue5Paint = Paint()
-      ..color = AppColors.blue5
+      ..color = AppColors.primary40
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.butt;

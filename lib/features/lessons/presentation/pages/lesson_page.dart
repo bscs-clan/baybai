@@ -209,6 +209,7 @@ class _LessonPageState extends State<LessonPage> {
                     return LessonSlide(
                       key: ValueKey('lesson-slide-$index'),
                       lesson: _lessons[index],
+                      lessonId: _lessonId,
                       selectedOption: _selectedOptions[index],
                       hasChecked: _userAnswers.containsKey(index),
                       onOptionSelected: (option) {

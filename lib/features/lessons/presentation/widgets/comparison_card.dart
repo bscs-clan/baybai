@@ -5,7 +5,9 @@ import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
 
 class ComparisonCard extends StatefulWidget {
-  const ComparisonCard({super.key});
+  final String audioAsset;
+
+  const ComparisonCard({super.key, this.audioAsset = "audio/f_bata.mp3"});
 
   @override
   State<ComparisonCard> createState() => _ComparisonCardState();
@@ -29,7 +31,7 @@ class _ComparisonCardState extends State<ComparisonCard> {
   Future<void> _playBaSound() async {
     try {
       await _audioPlayer.stop();
-      await _audioPlayer.play(AssetSource("audio/f_bata.mp3"));
+      await _audioPlayer.play(AssetSource(widget.audioAsset));
     } catch (e) {
       debugPrint("Error playing audio: $e");
     }
@@ -123,7 +125,7 @@ class _ComparisonCardState extends State<ComparisonCard> {
                 children: [
                   TableCell(
                     child: Padding(
-                      padding: const EdgeInsets.only(top: 8 , bottom: 8),
+                      padding: const EdgeInsets.only(top: 8, bottom: 8),
                       child: HugeIcon(
                         icon: HugeIcons.strokeRoundedArrowBigDownDash,
                         color: AppColors.gray30,

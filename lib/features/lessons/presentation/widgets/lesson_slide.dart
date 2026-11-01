@@ -29,6 +29,7 @@ import "package:baybai/shared/components/buttons/button.dart";
 
 class LessonSlide extends StatefulWidget {
   final LessonContent lesson;
+  final int? lessonId;
   final String? selectedOption;
   final bool hasChecked;
   final ValueChanged<String?>? onOptionSelected;
@@ -36,6 +37,7 @@ class LessonSlide extends StatefulWidget {
   const LessonSlide({
     super.key,
     required this.lesson,
+    this.lessonId,
     this.selectedOption,
     this.hasChecked = false,
     this.onOptionSelected,
@@ -98,7 +100,7 @@ class _LessonSlideState extends State<LessonSlide> {
     };
   }
 
-  Widget _buildDescription(String text, bool isDarkMode) {
+  Widget _buildTextWithBoldMarkers(String text, bool isDarkMode) {
     final baseColor = isDarkMode ? AppColors.gray10 : AppColors.gray100;
     final baseStyle = AppTextStyles.regularSm.copyWith(color: baseColor);
 
@@ -156,9 +158,7 @@ class _LessonSlideState extends State<LessonSlide> {
           ),
           child: Container(
             width: double.infinity,
-            constraints: BoxConstraints(
-              minHeight: optionButtonHeight + 28,
-            ),
+            constraints: BoxConstraints(minHeight: optionButtonHeight + 28),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
               color: Colors.transparent,
@@ -243,21 +243,21 @@ class _LessonSlideState extends State<LessonSlide> {
                           const SizedBox(width: 8),
                         ],
                         Expanded(
-                          child: Text(
+                          child: _buildTextWithBoldMarkers(
                             lessonTitle,
-                            style: AppTextStyles.regularSm.copyWith(
-                              color: isDarkMode
-                                  ? AppColors.gray10
-                                  : AppColors.gray100,
-                            ),
-                            textAlign: TextAlign.left,
+                            isDarkMode,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 24),
                   ],
-                  if (widget.lesson.showComparisonCard) const ComparisonCard(),
+                  if (widget.lesson.showComparisonCard)
+                    ComparisonCard(
+                      audioAsset: widget.lessonId == 1
+                          ? "audio/ba.mp3"
+                          : "audio/f_bata.mp3",
+                    ),
                   if (widget.lesson.showSyllableTableCard)
                     const SyllableTableCard(),
                   if (widget.lesson.showWordSoundTableCard)
@@ -277,6 +277,30 @@ class _LessonSlideState extends State<LessonSlide> {
                       rightTitle:
                           widget.lesson.wordSoundTableSecondColumnTitle ??
                           "Sounds Like",
+                      soundHorizontalMargin:
+                          widget.lesson.wordSoundTableFirstColumnTitle ==
+                                  "Words with V" &&
+                              widget.lesson.wordSoundTableSecondColumnTitle ==
+                                  "Adapted Form"
+                          ? 4
+                          : 16,
+                      boldFP:
+                          widget.lesson.wordSoundTableFirstColumnTitle ==
+                              "Words with F" &&
+                          widget.lesson.wordSoundTableSecondColumnTitle ==
+                              "Changes to P",
+                      boldCharacters:
+                          widget.lesson.wordSoundTableFirstColumnTitle ==
+                                  "Words with V" &&
+                              widget.lesson.wordSoundTableSecondColumnTitle ==
+                                  "Adapted Form"
+                          ? const {"V", "B"}
+                          : widget.lesson.wordSoundTableFirstColumnTitle ==
+                                    "Words with Z" &&
+                                widget.lesson.wordSoundTableSecondColumnTitle ==
+                                    "Adapted Form"
+                          ? const {"Z", "S"}
+                          : const {},
                     ),
                   if (widget.lesson.showCharacterSoundTableCard)
                     CharacterSoundTableCard(
@@ -287,6 +311,25 @@ class _LessonSlideState extends State<LessonSlide> {
                       title: widget.lesson.soundTableTitle,
                       mappings: widget.lesson.soundTableMappings ?? const [],
                       examples: widget.lesson.soundTableExamples ?? const [],
+                      playMappings:
+                          !widget.lesson.soundTableExamplesOnlyAudio &&
+                          (widget.lesson.playSoundTableMappings ||
+                              (widget.lessonId != null &&
+                                  widget.lessonId! >= 7 &&
+                                  widget.lessonId! <= 12)),
+                      playExamples: widget.lesson.playSoundTableExamples,
+                      boldFP: widget.lesson.boldSoundTableFP,
+                      boldVBExamples: widget.lesson.boldSoundTableVBExamples,
+                      boldMappings: widget.lesson.boldSoundTableMappings,
+                      boldMappingPrefixLength:
+                          widget.lesson.boldSoundTableMappingPrefixLength,
+                      boldMappingSoundPrefixLength:
+                          widget.lesson.boldSoundTableMappingSoundPrefixLength,
+                      boldExampleMappings:
+                          widget.lesson.boldSoundTableExampleMappings,
+                      boldXKSExamples: widget.lesson.boldSoundTableXKSExamples,
+                      boldNYExamples: widget.lesson.boldSoundTableNYExamples,
+                      boldAudioP: widget.lesson.boldSoundTableAudioP,
                     ),
                   if (widget.lesson.showFinalConsonantCard)
                     const FinalConsonantCard(),
@@ -298,7 +341,10 @@ class _LessonSlideState extends State<LessonSlide> {
                     KudlitTableCard(examples: widget.lesson.kudlitTableItems),
                   if (widget.lesson.showViramaTableCard)
                     ViramaTableCard(
-                      showExplanations: widget.lesson.showViramaExplanations,
+                      showQuestionMark: widget.lesson.showViramaQuestionMark,
+                      playAudio: widget.lesson.playViramaAudio,
+                      baseSymbol: widget.lesson.viramaBaseSymbol ?? "\u170A",
+                      baseSound: widget.lesson.viramaBaseSound ?? "Ba",
                     ),
                   if (widget.lesson.showSharedKudlitVowelCard)
                     const SharedKudlitVowelCard(),
@@ -318,7 +364,12 @@ class _LessonSlideState extends State<LessonSlide> {
                   if (widget.lesson.showWordCard &&
                       widget.lesson.wordCardText != null) ...[
                     const SizedBox(height: 12),
-                    WordCard(word: widget.lesson.wordCardText!),
+                    WordCard(
+                      word: widget.lesson.wordCardText!,
+                      audioAsset:
+                          widget.lesson.audioAsset ?? "audio/f_bata.mp3",
+                      showAudioButton: widget.lesson.showWordCardAudio,
+                    ),
                   ],
                   if (widget.lesson.wordToBreak != null) ...[
                     WordToBreakCard(word: widget.lesson.wordToBreak!),
@@ -363,7 +414,10 @@ class _LessonSlideState extends State<LessonSlide> {
                     LessonCardItems(cardItems: widget.lesson.cardItems!),
                   if (widget.lesson.description != null) ...[
                     const SizedBox(height: 24),
-                    _buildDescription(widget.lesson.description!, isDarkMode),
+                    _buildTextWithBoldMarkers(
+                      widget.lesson.description!,
+                      isDarkMode,
+                    ),
                   ],
                   if (widget.lesson.showQuizTable &&
                       widget.lesson.baybayinText.isNotEmpty)
@@ -403,12 +457,7 @@ class _LessonSlideState extends State<LessonSlide> {
         if (widget.lesson.showTextInput) ...[
           _buildTextAnswerInput(),
         ] else if (widget.lesson.options != null &&
-            widget.lesson.options!.isNotEmpty &&
-            (!widget.hasChecked ||
-                (widget.lesson.showWordCard &&
-                    const {"CAKE", "PHOTO", "COFFEE", "BE", "KO"}.contains(
-                      widget.lesson.wordCardText?.toUpperCase(),
-                    )))) ...[
+            widget.lesson.options!.isNotEmpty) ...[
           _buildOptionsBox(isDarkMode),
         ],
       ],
@@ -432,7 +481,9 @@ class _LessonSlideState extends State<LessonSlide> {
 
     Widget grid = GridView(
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: isKudlitPractice ? 1 : 2,
+        crossAxisCount: isKudlitPractice || _shuffledOptions.length == 3
+            ? 1
+            : 2,
         crossAxisSpacing: 4,
         mainAxisSpacing: 4,
         mainAxisExtent: optionButtonHeight,
@@ -585,23 +636,60 @@ class _LessonSlideState extends State<LessonSlide> {
         }
 
         final isWordCardOption = widget.lesson.showWordCard;
-        final isLessonOneSoundQuiz = const {"CAKE", "PHOTO", "COFFEE"}
-            .contains(widget.lesson.wordCardText?.toUpperCase());
+        final isBaybayinWordQuiz =
+            isWordCardOption && widget.lesson.optionFontFamily == "Baybayin";
+        final isLessonOneSoundQuiz = const {
+          "CAKE",
+          "PHOTO",
+          "COFFEE",
+        }.contains(widget.lesson.wordCardText?.toUpperCase());
+        final isLessonFiveSoundQuiz = const {
+          "F",
+          "FAMILY",
+          "FORK",
+        }.contains(widget.lesson.wordCardText?.toUpperCase());
+        final isLessonsSixToTwelve =
+            widget.lessonId != null &&
+            widget.lessonId! >= 6 &&
+            widget.lessonId! <= 12;
+        final isBaybayinPromptSoundQuiz =
+            isWordCardOption &&
+            (widget.lesson.wordCardText?.runes.any(
+                  (rune) => rune >= 0x1700 && rune <= 0x171f,
+                ) ??
+                false) &&
+            !isBaybayinWordQuiz;
         final isQuizTableOption = widget.lesson.showQuizTable;
+        final isViramaQuiz = widget.lesson.showViramaQuestionMark;
         final isLessonThreeBaybayinQuiz =
             isWordCardOption &&
             widget.lesson.optionFontFamily == "Baybayin" &&
-            const {"BE", "KO"}.contains(
-              widget.lesson.wordCardText?.toUpperCase(),
-            );
-        final useSoundQuizStyle = isLessonOneSoundQuiz ||
+            const {
+              "BE",
+              "KO",
+            }.contains(widget.lesson.wordCardText?.toUpperCase());
+        final useSoundQuizStyle =
+            isLessonOneSoundQuiz ||
+            isLessonFiveSoundQuiz ||
+            isLessonsSixToTwelve ||
+            isBaybayinPromptSoundQuiz ||
             isQuizTableOption ||
             isKudlitPractice ||
-            isLessonThreeBaybayinQuiz;
+            isLessonThreeBaybayinQuiz ||
+            isBaybayinWordQuiz ||
+            isViramaQuiz;
         final isWordCardSelected = isWordCardOption && isSelected;
+        final useRoundedOptionStyle =
+            isWordCardOption ||
+            isLessonsSixToTwelve ||
+            isQuizTableOption ||
+            isKudlitPractice ||
+            isViramaQuiz;
         final buttonWidget = Button(
           label: option,
-          size: isLessonThreeBaybayinQuiz ? ButtonSize.sm : ButtonSize.md,
+          size: isLessonThreeBaybayinQuiz || isBaybayinWordQuiz
+              ? ButtonSize.sm
+              : ButtonSize.md,
           type: useSoundQuizStyle || isWordCardSelected
               ? ButtonType.secondary
               : isWordCardOption
@@ -609,32 +697,34 @@ class _LessonSlideState extends State<LessonSlide> {
               : ButtonType.secondary,
           height: optionButtonHeight,
           iconSize: 24.0,
-          borderRadius:
-              isWordCardOption || isQuizTableOption || isKudlitPractice
+          borderRadius: useRoundedOptionStyle
               ? BorderRadius.circular(16)
               : null,
-          customBorderColor:
-              isWordCardOption || isQuizTableOption || isKudlitPractice
-              ? AppColors.gray20
-              : null,
-          textStyle: (useSoundQuizStyle
-                  ? AppTextStyles.boldSm
-                  : AppTextStyles.regularSm)
-              .copyWith(
-            fontFamily: widget.lesson.optionFontFamily,
-            fontSize: widget.lesson.optionFontSize,
-          ),
-          customBackgroundColor: useSoundQuizStyle
+          customBorderColor: useRoundedOptionStyle ? AppColors.gray20 : null,
+          textStyle:
+              (useSoundQuizStyle
+                      ? AppTextStyles.boldSm
+                      : AppTextStyles.regularSm)
+                  .copyWith(
+                    fontFamily: widget.lesson.optionFontFamily,
+                    fontSize: widget.lesson.optionFontSize,
+                    height: widget.lesson.optionFontFamily == "Baybayin"
+                        ? 1.3
+                        : null,
+                  ),
+          customBackgroundColor: isBaybayinWordQuiz
+              ? (isSelected ? AppColors.primary20 : AppColors.gray10)
+              : useSoundQuizStyle
               ? (isSelected ? AppColors.primary20 : AppColors.gray10)
               : isWordCardSelected
               ? AppColors.gray20
               : isWordCardOption
               ? (customBg ?? Colors.transparent)
               : customBg,
-          customForegroundColor: useSoundQuizStyle
-              ? (isSelected
-                    ? AppColors.primary100
-                    : AppColors.gray100)
+          customForegroundColor: isBaybayinWordQuiz
+              ? (isSelected ? AppColors.primary100 : AppColors.gray100)
+              : useSoundQuizStyle
+              ? (isSelected ? AppColors.primary100 : AppColors.gray100)
               : isWordCardOption
               ? (customFg ?? AppColors.gray100)
               : customFg,

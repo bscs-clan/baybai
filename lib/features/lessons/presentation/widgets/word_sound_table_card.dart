@@ -9,6 +9,9 @@ class WordSoundTableCard extends StatefulWidget {
   final List<WordSoundTableItem> examples;
   final String leftTitle;
   final String rightTitle;
+  final double soundHorizontalMargin;
+  final bool boldFP;
+  final Set<String> boldCharacters;
 
   const WordSoundTableCard({
     super.key,
@@ -21,6 +24,9 @@ class WordSoundTableCard extends StatefulWidget {
     ],
     this.leftTitle = "Words",
     this.rightTitle = "Sounds Like",
+    this.soundHorizontalMargin = 16,
+    this.boldFP = false,
+    this.boldCharacters = const {},
   });
 
   @override
@@ -57,7 +63,9 @@ class _WordSoundTableCardState extends State<WordSoundTableCard> {
         setState(() {});
       }
 
-      await _audioPlayer.play(AssetSource("audio/f_bata.mp3"));
+      await _audioPlayer.play(
+        AssetSource(widget.examples[index].audioAsset ?? "audio/f_bata.mp3"),
+      );
     } catch (e) {
       debugPrint("Error playing audio: $e");
 
@@ -133,12 +141,7 @@ class _WordSoundTableCardState extends State<WordSoundTableCard> {
                                 horizontal: 12,
                                 vertical: 4,
                               ),
-                              child: Text(
-                                example.word,
-                                style: AppTextStyles.regularSm.copyWith(
-                                  color: textColor,
-                                ),
-                              ),
+                              child: _buildWordText(example.word, textColor),
                             ),
                           ),
                         ),
@@ -153,8 +156,8 @@ class _WordSoundTableCardState extends State<WordSoundTableCard> {
                             child: GestureDetector(
                               onTap: () => _playSound(index),
                               child: Container(
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 16,
+                                margin: EdgeInsets.symmetric(
+                                  horizontal: widget.soundHorizontalMargin,
                                 ),
                                 height: 38,
                                 decoration: BoxDecoration(
@@ -169,11 +172,10 @@ class _WordSoundTableCardState extends State<WordSoundTableCard> {
                                     children: [
                                       const SizedBox(width: 28),
                                       Expanded(
-                                        child: Text(
+                                        child: _buildWordText(
                                           example.sound,
+                                          textColor,
                                           textAlign: TextAlign.center,
-                                          style: AppTextStyles.regularSm
-                                              .copyWith(color: textColor),
                                         ),
                                       ),
                                       Container(
@@ -206,6 +208,28 @@ class _WordSoundTableCardState extends State<WordSoundTableCard> {
           }),
         ],
       ),
+    );
+  }
+
+  Widget _buildWordText(String value, Color color, {TextAlign? textAlign}) {
+    final spans = value.runes.map((rune) {
+      final character = String.fromCharCode(rune);
+      final characterUpper = character.toUpperCase();
+      final isBoldCharacter =
+          (widget.boldFP && const {"F", "P"}.contains(characterUpper)) ||
+          widget.boldCharacters.contains(characterUpper);
+      return TextSpan(
+        text: character,
+        style: isBoldCharacter
+            ? AppTextStyles.boldSm.copyWith(color: color)
+            : null,
+      );
+    }).toList();
+
+    return Text.rich(
+      TextSpan(children: spans),
+      textAlign: textAlign,
+      style: AppTextStyles.regularSm.copyWith(color: color),
     );
   }
 }

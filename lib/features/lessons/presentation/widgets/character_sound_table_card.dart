@@ -1,10 +1,11 @@
+import "package:audioplayers/audioplayers.dart";
 import "package:flutter/material.dart";
 import "package:hugeicons/hugeicons.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
 import "package:baybai/features/lessons/domain/entities/lesson_content.dart";
 
-class CharacterSoundTableCard extends StatelessWidget {
+class CharacterSoundTableCard extends StatefulWidget {
   final List<LessonCardItem> examples;
 
   const CharacterSoundTableCard({super.key, List<LessonCardItem>? examples})
@@ -25,6 +26,42 @@ class CharacterSoundTableCard extends StatelessWidget {
   }
 
   @override
+  State<CharacterSoundTableCard> createState() =>
+      _CharacterSoundTableCardState();
+}
+
+class _CharacterSoundTableCardState extends State<CharacterSoundTableCard> {
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  Future<void> _playSound(String sound) async {
+    final asset = switch (sound.toLowerCase()) {
+      "ba" => "audio/ba.mp3",
+      "ka" => "audio/ka.mp3",
+      "ma" => "audio/ma.mp3",
+      "sa" => "audio/sa.mp3",
+      "da" => "audio/da.mp3",
+      "ra" => "audio/da_ra.mp3",
+      "ga" => "audio/ga.mp3",
+      "ha" => "audio/ha.mp3",
+      "la" => "audio/La.mp3",
+      _ => null,
+    };
+    if (asset == null) return;
+    try {
+      await _audioPlayer.stop();
+      await _audioPlayer.play(AssetSource(asset));
+    } catch (error) {
+      debugPrint("Error playing character sound: $error");
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final borderColor = isDarkMode ? AppColors.gray80 : AppColors.gray20;
@@ -38,9 +75,9 @@ class CharacterSoundTableCard extends StatelessWidget {
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: List.generate(examples.length, (index) {
-          final example = examples[index];
-          final isLast = index == examples.length - 1;
+        children: List.generate(widget.examples.length, (index) {
+          final example = widget.examples[index];
+          final isLast = index == widget.examples.length - 1;
 
           return Column(
             mainAxisSize: MainAxisSize.min,
@@ -59,7 +96,7 @@ class CharacterSoundTableCard extends StatelessWidget {
                       alignment: Alignment.center,
                       child: Text(
                         example.baybayinSymbol,
-                        style: _isBaybayinGlyph(example.baybayinSymbol)
+                        style: widget._isBaybayinGlyph(example.baybayinSymbol)
                             ? AppTextStyles.boldXl.copyWith(
                                 fontFamily: "Baybayin",
                                 fontSize: 30,
@@ -79,14 +116,41 @@ class CharacterSoundTableCard extends StatelessWidget {
                         size: 24,
                       ),
                     ),
-                    Container(
-                      width: 64,
-                      height: 48,
-                      alignment: Alignment.center,
-                      child: Text(
-                        example.text,
-                        style: AppTextStyles.boldLg.copyWith(
-                          color: textColor,
+                    GestureDetector(
+                      onTap: () => _playSound(example.text),
+                      child: Container(
+                        width: 112,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: AppColors.gray10,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Row(
+                          children: [
+                            const SizedBox(width: 18),
+                            Expanded(
+                              child: Text(
+                                example.text,
+                                textAlign: TextAlign.center,
+                                style: AppTextStyles.regularSm.copyWith(
+                                  color: textColor,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: AppColors.primary30,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const HugeIcon(
+                                icon: HugeIcons.strokeRoundedVolume02,
+                                size: 24,
+                                color: AppColors.primary60,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),

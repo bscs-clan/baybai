@@ -21,6 +21,7 @@ class Button extends StatelessWidget {
   final TextStyle? textStyle;
   final BorderRadius? borderRadius;
   final bool showShadow;
+  final bool isLoading;
 
   final Color? customBackgroundColor;
   final Color? customForegroundColor;
@@ -41,6 +42,7 @@ class Button extends StatelessWidget {
     this.textStyle,
     this.borderRadius,
     this.showShadow = false,
+    this.isLoading = false,
     this.customBackgroundColor,
     this.customForegroundColor,
     this.customBorderColor,
@@ -63,36 +65,47 @@ class Button extends StatelessWidget {
         onPressed: onTap,
         enabled: _isEnabled,
         child: Center(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (leftIcon != null) ...[
-                Icon(
-                  leftIcon,
-                  size: iconSize ?? metrics.iconSize,
-                  color: _foregroundColor(context),
+          child: isLoading
+              ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      _foregroundColor(context),
+                    ),
+                  ),
+                )
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (leftIcon != null) ...[
+                      Icon(
+                        leftIcon,
+                        size: iconSize ?? metrics.iconSize,
+                        color: _foregroundColor(context),
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+                    Text(
+                      label,
+                      textAlign: TextAlign.center,
+                      style: (textStyle ?? metrics.textStyle).copyWith(
+                        height: textStyle?.height ?? 1,
+                        color: _foregroundColor(context),
+                      ),
+                    ),
+                    if (rightIcon != null) ...[
+                      const SizedBox(width: 6),
+                      Icon(
+                        rightIcon,
+                        size: iconSize ?? metrics.iconSize,
+                        color: _foregroundColor(context),
+                      ),
+                    ],
+                  ],
                 ),
-                const SizedBox(width: 6),
-              ],
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: (textStyle ?? metrics.textStyle).copyWith(
-                  height: 1,
-                  color: _foregroundColor(context),
-                ),
-              ),
-              if (rightIcon != null) ...[
-                const SizedBox(width: 6),
-                Icon(
-                  rightIcon,
-                  size: iconSize ?? metrics.iconSize,
-                  color: _foregroundColor(context),
-                ),
-              ],
-            ],
-          ),
         ),
       ),
     );
