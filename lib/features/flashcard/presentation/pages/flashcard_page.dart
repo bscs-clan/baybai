@@ -249,14 +249,14 @@ class _FlashcardPageState extends State<FlashcardPage>
             ? AppColors.bgSuccess
             : currentStatus == 'Wrong'
             ? AppColors.bgError
-            : (isShowingBack ? null : AppColors.gray40),
+            : (isShowingBack ? null : AppColors.gray10),
         borderRadius: BorderRadius.circular(24),
         border: isShowingBack
             ? (currentStatus == 'Correct'
                   ? Border.all(color: AppColors.bgSuccessContrast)
                   : currentStatus == 'Wrong'
                   ? Border.all(color: AppColors.bgErrorContrast)
-                  : Border.all(color: AppColors.gray40))
+                  : Border.all(color: AppColors.gray20))
             : null,
       ),
       child: Stack(
@@ -405,10 +405,10 @@ class _FlashcardPageState extends State<FlashcardPage>
                     color: currentStatus == 'Correct'
                         ? AppColors.bgSuccess
                         : Colors.transparent,
-                    iconColor: AppColors.bgSuccessContrast,
                     borderColor: currentStatus == 'Correct'
                         ? AppColors.bgSuccessContrast
                         : AppColors.gray20,
+                    iconColor: AppColors.bgSuccessContrast,
                   ),
                   CustomIconButton(
                     icon: Icons.close,
@@ -416,10 +416,10 @@ class _FlashcardPageState extends State<FlashcardPage>
                     color: currentStatus == 'Wrong'
                         ? AppColors.bgError
                         : Colors.transparent,
-                    iconColor: AppColors.bgErrorContrast,
                     borderColor: currentStatus == 'Wrong'
                         ? AppColors.bgErrorContrast
                         : AppColors.gray20,
+                    iconColor: AppColors.bgErrorContrast,
                   ),
                   CustomIconButton(
                     icon: Icons.arrow_forward,
