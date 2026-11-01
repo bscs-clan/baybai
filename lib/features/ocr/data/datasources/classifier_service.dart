@@ -1,4 +1,5 @@
 import "dart:io";
+import "dart:ui" show Rect;
 import "package:camera/camera.dart";
 import "package:flutter/foundation.dart";
 import "package:tflite_flutter/tflite_flutter.dart";
@@ -7,7 +8,6 @@ import "package:baybai/core/models/detection.dart";
 import "dart:async";
 import "dart:isolate";
 import "dart:math" as math;
-import "dart:typed_data";
 
 // ─── Constants (matching Python script) ───────────────────────────────────────
 
