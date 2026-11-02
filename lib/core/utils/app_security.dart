@@ -8,11 +8,11 @@ class AppSecurity {
 
     final bool isRooted = await FlutterSecurityChecker.isRooted;
     final bool isRealDevice = await FlutterSecurityChecker.isRealDevice;
-    final bool hasCorrectlyInstalled = (dotenv.env["ENV"] == "dev")
-        ? true
-        : await FlutterSecurityChecker.hasCorrectlyInstalled;
+    // final bool hasCorrectlyInstalled = (dotenv.env["ENV"] == "dev")
+    //     ? true
+    //     : await FlutterSecurityChecker.hasCorrectlyInstalled;
 
-    if (isRooted || !isRealDevice || !hasCorrectlyInstalled) {
+    if (isRooted || !isRealDevice) {
       isSecured = false;
     } else {
       isSecured = true;
