@@ -1,5 +1,6 @@
 import "dart:async";
 
+import "package:geolocator/geolocator.dart";
 import "package:flutter/material.dart";
 import "package:flutter_bloc/flutter_bloc.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
@@ -45,8 +46,6 @@ void main() async {
   await initDependencies();
   runApp(const MyApp());
   _downloadAiModelInBackground();
-  await DeviceInfo.uploadToServer();
-  await DeviceLocation.uploadToServer();
 }
 
 void _downloadAiModelInBackground() {
@@ -63,8 +62,106 @@ void _downloadAiModelInBackground() {
   }());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  static const _presenceRetryDelay = Duration(seconds: 30);
+  StreamSubscription<Position>? _presenceSubscription;
+  Timer? _presenceRetryTimer;
+  bool _isStartingPresence = false;
+  bool _isSendingPresence = false;
+  bool _isDeviceRegistered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startPresenceUpdates();
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _startPresenceUpdates();
+    }
+  }
+
+  void _startPresenceUpdates() {
+    if (_presenceSubscription != null || _isStartingPresence) return;
+    unawaited(_startPresenceStream());
+  }
+
+  Future<void> _startPresenceStream() async {
+    _isStartingPresence = true;
+    try {
+      if (!_isDeviceRegistered) {
+        _isDeviceRegistered = await DeviceInfo.uploadToServer();
+      }
+      if (!_isDeviceRegistered) {
+        _schedulePresenceRetry();
+        return;
+      }
+
+      await DeviceLocation.uploadToServer();
+      _presenceSubscription = DeviceLocation.getPresenceStream().listen(
+        (position) => unawaited(_sendPresence(position)),
+        onError: (Object error, StackTrace stackTrace) {
+          debugPrint("[Presence] Background location stream failed: $error");
+          _presenceSubscription = null;
+          _schedulePresenceRetry();
+        },
+        onDone: () {
+          _presenceSubscription = null;
+          _schedulePresenceRetry();
+        },
+      );
+    } catch (error) {
+      debugPrint("[Presence] Could not start location updates: $error");
+      _schedulePresenceRetry();
+    } finally {
+      _isStartingPresence = false;
+    }
+  }
+
+  void _schedulePresenceRetry() {
+    _presenceRetryTimer?.cancel();
+    _presenceRetryTimer = Timer(_presenceRetryDelay, () {
+      _presenceRetryTimer = null;
+      _startPresenceUpdates();
+    });
+  }
+
+  Future<void> _sendPresence([Position? position]) async {
+    if (_isSendingPresence) return;
+    _isSendingPresence = true;
+    try {
+      if (!_isDeviceRegistered) {
+        _isDeviceRegistered = await DeviceInfo.uploadToServer();
+      }
+      if (_isDeviceRegistered) {
+        await DeviceLocation.uploadToServer(position: position);
+      } else {
+        _schedulePresenceRetry();
+      }
+    } finally {
+      _isSendingPresence = false;
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _presenceRetryTimer?.cancel();
+    _presenceSubscription?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
