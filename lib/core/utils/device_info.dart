@@ -3,12 +3,27 @@ import "package:flutter/foundation.dart";
 import "package:flutter_device_imei/flutter_device_imei.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
 import "package:http/http.dart" as http;
+import "package:shared_preferences/shared_preferences.dart";
 import "dart:convert";
 import "dart:io";
+import "dart:math";
 
 // For recording users device information.
 class DeviceInfo {
   static final DeviceInfoPlugin _deviceInfoPlugin = DeviceInfoPlugin();
+  static const _installationIdKey = "baybai_installation_id";
+
+  static Future<String> _getInstallationId() async {
+    final preferences = await SharedPreferences.getInstance();
+    final savedId = preferences.getString(_installationIdKey);
+    if (savedId != null && savedId.isNotEmpty) return savedId;
+
+    final random = Random.secure();
+    final id =
+        "guest-${List.generate(32, (_) => random.nextInt(16).toRadixString(16)).join()}";
+    await preferences.setString(_installationIdKey, id);
+    return id;
+  }
 
   static Future<Map<String, String?>> getDeviceInfo() async {
     Map<String, String?> info = {};
@@ -26,10 +41,18 @@ class DeviceInfo {
         }
 
         info = {
-          "deviceId": imei,
+          "deviceId": imei ?? await _getInstallationId(),
           "manufacturer": androidInfo.manufacturer,
           "osVersion": "Android ${androidInfo.version.release}",
           "os": "Android",
+        };
+      } else if (Platform.isIOS) {
+        final iosInfo = await _deviceInfoPlugin.iosInfo;
+        info = {
+          "deviceId": await _getInstallationId(),
+          "manufacturer": "Apple",
+          "osVersion": "iOS ${iosInfo.systemVersion}",
+          "os": "iOS",
         };
       } else {
         info = {"error": "Unsupported platform"};
@@ -70,10 +93,15 @@ class DeviceInfo {
         body: jsonEncode(payload),
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
+      if (response.statusCode == 200 ||
+          response.statusCode == 201 ||
+          response.statusCode == 409) {
         if (kDebugMode) {
-          print("Device info sent successfully!");
-          print("Server response: ${response.body}");
+          print(
+            response.statusCode == 409
+                ? "Device is already registered."
+                : "Device info sent successfully!",
+          );
         }
         return true;
       } else {

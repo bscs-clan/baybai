@@ -6,6 +6,29 @@ import "package:baybai/core/utils/device_info.dart";
 import "dart:convert";
 
 class DeviceLocation {
+  static Stream<Position> getPresenceStream() {
+    final LocationSettings settings =
+        defaultTargetPlatform == TargetPlatform.android
+        ? AndroidSettings(
+            accuracy: LocationAccuracy.medium,
+            distanceFilter: 0,
+            intervalDuration: const Duration(minutes: 2),
+            foregroundNotificationConfig: const ForegroundNotificationConfig(
+              notificationTitle: "BaybAI is online",
+              notificationText:
+                  "Location updates keep your device status current while the app is in the background.",
+              notificationChannelName: "BaybAI online status",
+              setOngoing: true,
+            ),
+          )
+        : const LocationSettings(
+            accuracy: LocationAccuracy.medium,
+            distanceFilter: 0,
+          );
+
+    return Geolocator.getPositionStream(locationSettings: settings);
+  }
+
   // Get device location
   static Future<Position?> getCurrentLocation() async {
     bool serviceEnabled;
@@ -30,9 +53,9 @@ class DeviceLocation {
   }
 
   // Upload device location to server.
-  static Future<bool> uploadToServer() async {
+  static Future<bool> uploadToServer({Position? position}) async {
     try {
-      final deviceLocation = await getCurrentLocation();
+      final deviceLocation = position ?? await getCurrentLocation();
       final deviceInfo = await DeviceInfo.getDeviceInfo();
 
       final Map<String, dynamic> payload = {
@@ -50,13 +73,12 @@ class DeviceLocation {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (kDebugMode) {
-          print("Device location sent successfully!");
-          print("Server response: ${response.body}");
+          print("Device location updated successfully.");
         }
         return true;
       } else {
         if (kDebugMode) {
-          print("Server error: ${response.statusCode} - ${response.body}");
+          print("Device location update failed: HTTP ${response.statusCode}.");
         }
         return false;
       }
