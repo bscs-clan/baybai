@@ -43,28 +43,28 @@ const List<QuizQuestion> quizQuestionBank = [
   ),
   QuizQuestion(
     difficulty: "Easy",
-    question: "How is the Baybayin character with Unicode escape \\u170A read?",
+    question: "How is the Baybayin character with \u170A read?",
     options: ["Ka", "Ma", "Ba", "Sa"],
     answer: "C",
   ),
   QuizQuestion(
     difficulty: "Easy",
     question:
-        "Which sound does the character with Unicode escape \\u1703 represent?",
+        "Which sound does the character with \u1703 represent?",
     options: ["Ba", "Ka", "Pa", "Ta"],
     answer: "B",
   ),
   QuizQuestion(
     difficulty: "Easy",
     question:
-        "Which sound does the character with Unicode escape \\u170B represent?",
+        "Which sound does the character with \u170B represent?",
     options: ["Ma", "Na", "La", "Ya"],
     answer: "A",
   ),
   QuizQuestion(
     difficulty: "Easy",
     question:
-        "Which sound does the character with Unicode escape \\u1710 represent?",
+        "Which sound does the character with \u1710 represent?",
     options: ["Ha", "Sa", "Wa", "Ra"],
     answer: "B",
   ),
@@ -240,14 +240,14 @@ const List<QuizQuestion> quizQuestionBank = [
   QuizQuestion(
     difficulty: "Medium",
     question:
-        "Which Unicode escape represents the top kudlit mark used for the I or E sound?",
+        "Which baybayin represents the top kudlit mark used for the I or E sound?",
     options: ["\u1712", "\u1713", "\u1714", "\u1700"],
     answer: "A",
   ),
   QuizQuestion(
     difficulty: "Medium",
     question:
-        "Which Unicode escape represents the bottom kudlit mark used for the O or U sound?",
+        "Which baybayin represents the bottom kudlit mark used for the O or U sound?",
     options: ["\u1712", "\u1713", "\u1714", "\u1701"],
     answer: "B",
   ),
@@ -282,7 +282,7 @@ const List<QuizQuestion> quizQuestionBank = [
   ),
   QuizQuestion(
     difficulty: "Medium",
-    question: "Which Unicode escape represents the virama or pamudpod?",
+    question: "Which baybayin represents the virama or pamudpod?",
     options: ["\u1712", "\u1713", "\u1714", "\u1702"],
     answer: "C",
   ),

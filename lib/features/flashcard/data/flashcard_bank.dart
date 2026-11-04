@@ -173,12 +173,12 @@ const List<FlashcardData> flashcardBank = [
   ),
   FlashcardData(
     difficulty: "Medium",
-    front: "What is the Unicode for the top kudlit?",
+    front: "What is the baybayin for the top kudlit?",
     back: "\u1712",
   ),
   FlashcardData(
     difficulty: "Medium",
-    front: "What is the Unicode for the bottom kudlit?",
+    front: "What is the baybayin for the bottom kudlit?",
     back: "\u1713",
   ),
   FlashcardData(
@@ -203,7 +203,7 @@ const List<FlashcardData> flashcardBank = [
   ),
   FlashcardData(
     difficulty: "Medium",
-    front: "What is the Unicode for the virama?",
+    front: "What is the baybayin for the virama?",
     back: "\u1714",
   ),
   FlashcardData(
@@ -308,7 +308,7 @@ const List<FlashcardData> flashcardBank = [
   ),
   FlashcardData(
     difficulty: "Medium",
-    front: "Which Unicode sequence represents Ba with a bottom kudlit?",
+    front: "What is the baybayin for Ba with a bottom kudlit?",
     back: "\u170A\u1713",
   ),
   FlashcardData(
