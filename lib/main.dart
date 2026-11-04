@@ -106,16 +106,28 @@ class MyApp extends StatelessWidget {
             "/lesson": (context) => const LessonPage(),
             "/characters": (context) => const CharactersPage(),
             "/practice": (context) => const PracticePage(),
-            "/flashcard": (context) => const FlashcardPage(),
+            "/flashcard": (context) {
+              final args =
+                  ModalRoute.of(context)?.settings.arguments as Map? ?? {};
+              final difficulty = args["difficulty"] as String? ?? "Easy";
+              final cardCount = args["cardCount"] as String?;
+
+              return FlashcardPage(
+                difficulty: difficulty,
+                cardCount: cardCount,
+              );
+            },
             "/quiz-setup": (context) {
               final args =
                   ModalRoute.of(context)?.settings.arguments as Map? ?? {};
               final questionLimit = args["questionLimit"] as int? ?? 10;
               final timeLimit = args["timeLimit"] as String? ?? "No limit";
+              final difficulty = args["difficulty"] as String? ?? "Easy";
 
               return QuizSetupPage(
                 questionLimit: questionLimit,
                 timeLimit: timeLimit,
+                difficulty: difficulty,
               );
             },
             "/ocr": (context) => const OCRPage(),

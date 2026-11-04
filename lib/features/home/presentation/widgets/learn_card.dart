@@ -13,6 +13,8 @@ class LearnCard extends StatefulWidget {
   final VoidCallback? onTap;
   final List<List<dynamic>>? icon;
   final bool isExpandable;
+  final bool isCompleted;
+  final VoidCallback? onTryAgain;
 
   const LearnCard({
     super.key,
@@ -24,6 +26,8 @@ class LearnCard extends StatefulWidget {
     this.onTap,
     this.icon,
     this.isExpandable = false,
+    this.isCompleted = false,
+    this.onTryAgain,
   });
 
   @override
@@ -78,7 +82,7 @@ class _LearnCardState extends State<LearnCard> {
                                       : AppColors.gray60,
                                 ),
                               ),
-                              SizedBox(height: 8,),
+                              SizedBox(height: 8),
                               Text(
                                 widget.title,
                                 style: AppTextStyles.boldMd.copyWith(
@@ -112,23 +116,36 @@ class _LearnCardState extends State<LearnCard> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    Align(
-                      alignment: Alignment.bottomRight,
-                      child: IntrinsicWidth(
-                        child: Button(
-                          borderRadius: BorderRadius.circular(64),
-                          label: "Start Lesson",
-                          textStyle: AppTextStyles.boldSm,
-                          onTap: effectiveTap,
-                          customBackgroundColor: isDarkMode
-                              ? AppColors.primary80
-                              : AppColors.primary60,
-                          customForegroundColor: isDarkMode
-                              ? AppColors.gray10
-                              : AppColors.gray10,
+                    if (widget.isCompleted)
+                      Align(
+                        alignment: Alignment.bottomRight,
+                        child: IntrinsicWidth(
+                          child: Button(
+                            label: "Try Again",
+                            type: ButtonType.outline,
+                            borderRadius: BorderRadius.circular(64),
+                            textStyle: AppTextStyles.boldSm,
+                            onTap: widget.onTryAgain ?? effectiveTap,
+                            customBorderColor: AppColors.gray30,
+                          ),
+                        ),
+                      )
+                    else
+                      Align(
+                        alignment: Alignment.bottomRight,
+                        child: IntrinsicWidth(
+                          child: Button(
+                            borderRadius: BorderRadius.circular(64),
+                            label: "Start Lesson",
+                            textStyle: AppTextStyles.boldSm,
+                            onTap: effectiveTap,
+                            customBackgroundColor: isDarkMode
+                                ? AppColors.primary80
+                                : AppColors.primary60,
+                            customForegroundColor: AppColors.gray10,
+                          ),
                         ),
                       ),
-                    ),
                   ],
                 ],
               ),

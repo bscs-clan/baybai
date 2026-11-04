@@ -233,6 +233,7 @@ Future<void> showQuizOptionsBottomSheet(BuildContext context) {
                           arguments: {
                             "questionLimit": questionLimit,
                             "timeLimit": selectedTimeLimit,
+                            "difficulty": selectedDifficulty,
                           },
                         ),
                       );

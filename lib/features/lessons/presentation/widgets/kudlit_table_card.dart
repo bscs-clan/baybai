@@ -44,8 +44,10 @@ class _KudlitTableCardState extends State<KudlitTableCard> {
     final normalized = sound.toLowerCase().replaceAll(" ", "");
     final asset = switch (normalized) {
       "ba" => "audio/ba.mp3",
-      "bi/be" || "be/bi" || "ki/ke" || "ke/ki" => "audio/be_bi.mp3",
-      "bu/bo" || "bo/bu" || "ku/ko" || "ko/ku" => "audio/bo_bu.mp3",
+      "bi/be" || "be/bi" => "audio/be_bi.mp3",
+      "ki/ke" || "ke/ki" => "audio/ke_ki.mp3",
+      "bu/bo" || "bo/bu" => "audio/bo_bu.mp3",
+      "ku/ko" || "ko/ku" => "audio/ko_ku.mp3",
       "ka" => "audio/ka.mp3",
       _ => null,
     };

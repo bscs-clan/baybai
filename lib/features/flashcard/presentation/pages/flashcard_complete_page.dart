@@ -22,6 +22,7 @@ class FlashcardCompletePage extends StatefulWidget {
   final int totalQuestions;
   final int skippedAnswers;
   final String? cardCount;
+  final String difficulty;
   final List<FlashcardQuestionResult> questionResults;
 
   const FlashcardCompletePage({
@@ -30,6 +31,7 @@ class FlashcardCompletePage extends StatefulWidget {
     this.totalQuestions = 30,
     this.skippedAnswers = 0,
     this.cardCount,
+    this.difficulty = 'Easy',
     this.questionResults = const [],
   });
 
@@ -265,8 +267,10 @@ class _FlashcardCompletePageState extends State<FlashcardCompletePage> {
                           width: double.infinity,
                           onTap: () => Navigator.of(context).pushReplacement(
                             MaterialPageRoute<void>(
-                              builder: (_) =>
-                                  FlashcardPage(cardCount: widget.cardCount),
+                              builder: (_) => FlashcardPage(
+                                cardCount: widget.cardCount,
+                                difficulty: widget.difficulty,
+                              ),
                             ),
                           ),
                           type: ButtonType.outline,

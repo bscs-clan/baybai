@@ -3,6 +3,7 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 
 import "package:baybai/features/lessons/data/datasources/lesson_data_source.dart";
+import "package:baybai/features/lessons/data/datasources/lesson_progress.dart";
 import "package:baybai/features/lessons/domain/entities/lesson_content.dart";
 import "package:baybai/features/lessons/presentation/widgets/lesson_back_button.dart";
 import "package:baybai/features/lessons/presentation/widgets/lesson_navigation_bar.dart";
@@ -52,10 +53,12 @@ class _LessonPageState extends State<LessonPage> {
     super.dispose();
   }
 
-  void _nextPage() {
+  Future<void> _nextPage() async {
     if (_currentIndex < _lessons.length - 1) {
       _pageController.jumpToPage(_currentIndex + 1);
     } else {
+      await LessonProgress.markCompleted(_lessonId);
+      if (!mounted) return;
       final questionResults = _buildQuestionResults();
       final correctAnswers = questionResults
           .where((result) => result.status == "Correct")

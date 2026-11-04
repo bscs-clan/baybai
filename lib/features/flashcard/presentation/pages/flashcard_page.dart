@@ -2,14 +2,16 @@ import "dart:math" as math;
 import "package:flutter/material.dart";
 import "package:baybai/core/theme/colors.dart";
 import "package:baybai/core/theme/text.dart";
+import "package:baybai/features/flashcard/data/flashcard_bank.dart";
 import "package:baybai/features/lessons/presentation/widgets/lesson_back_button.dart";
 import "package:baybai/features/flashcard/presentation/pages/flashcard_complete_page.dart";
 import "package:baybai/shared/components/buttons/icon_button.dart";
 
 class FlashcardPage extends StatefulWidget {
   final String? cardCount;
+  final String difficulty;
 
-  const FlashcardPage({super.key, this.cardCount});
+  const FlashcardPage({super.key, this.cardCount, this.difficulty = "Easy"});
 
   @override
   State<FlashcardPage> createState() => _FlashcardPageState();
@@ -17,87 +19,10 @@ class FlashcardPage extends StatefulWidget {
 
 class _FlashcardPageState extends State<FlashcardPage>
     with SingleTickerProviderStateMixin {
-  static const List<_Flashcard> _flashcards = [
-    _Flashcard(front: "What sound does \u170A represent?", back: "ba"),
-    _Flashcard(front: "What sound does \u1703 represent?", back: "ka"),
-    _Flashcard(front: "What sound does \u170B represent?", back: "ma"),
-    _Flashcard(front: "What sound does \u1710 represent?", back: "sa"),
-    _Flashcard(front: "What sound does \u1700 represent?", back: "a"),
-    _Flashcard(front: "What sound does \u1701 represent?", back: "i/e"),
-    _Flashcard(front: "What sound does \u1702 represent?", back: "o/u"),
-    _Flashcard(front: "What does \u170A\u1712 represent?", back: "bi/be"),
-    _Flashcard(front: "What does \u170A\u1713 represent?", back: "bo/bu"),
-    _Flashcard(front: "What does \u170A\u1714 represent?", back: "b"),
-    _Flashcard(
-      front: "What is the default vowel sound of a basic consonant?",
-      back: "a",
-    ),
-    _Flashcard(
-      front: "What does the top kudlit do?",
-      back: "Changes the default \"a\" sound to i/e",
-    ),
-    _Flashcard(
-      front: "What does the bottom kudlit do?",
-      back: "Changes the default \"a\" sound to o/u",
-    ),
-    _Flashcard(
-      front: "What does the virama do?",
-      back: "Removes the default \"a\" sound",
-    ),
-    _Flashcard(
-      front: "What type of writing system is Baybayin?",
-      back: "An abugida",
-    ),
-    _Flashcard(
-      front:
-          "Does each Baybayin symbol represent a single letter or a syllable?",
-      back: "A syllable",
-    ),
-    _Flashcard(
-      front: "How should Baybayin words primarily be written?",
-      back: "Based on pronunciation or sounds",
-    ),
-    _Flashcard(
-      front: "How is \"BAHAY\" broken down using the syllabic approach?",
-      back: "ba-ha-y",
-    ),
-    _Flashcard(front: "How is \"BATA\" broken down?", back: "ba-ta"),
-    _Flashcard(front: "How is \"KAMUSTA\" broken down?", back: "ka-mus-ta"),
-    _Flashcard(
-      front: "How would \"CITY\" be adapted based on pronunciation?",
-      back: "siti",
-    ),
-    _Flashcard(
-      front: "How would \"PHOTO\" be adapted based on pronunciation?",
-      back: "poto",
-    ),
-    _Flashcard(
-      front: "How would \"KNIGHT\" be adapted based on pronunciation?",
-      back: "nayt",
-    ),
-    _Flashcard(front: "How is the F sound commonly adapted?", back: "F -> P"),
-    _Flashcard(front: "How is the V sound commonly adapted?", back: "V -> B"),
-    _Flashcard(front: "How is the Z sound commonly adapted?", back: "Z -> S"),
-    _Flashcard(
-      front: "How is a hard C sound commonly adapted?",
-      back: "C -> K",
-    ),
-    _Flashcard(
-      front: "How is an English-style J sound commonly adapted?",
-      back: "J -> DY",
-    ),
-    _Flashcard(front: "How is the PH sound commonly adapted?", back: "PH -> P"),
-    _Flashcard(
-      front:
-          "What is the main principle of Baybayin emphasized in the lessons?",
-      back: "Write what you hear based on pronunciation",
-    ),
-  ];
-
   int _currentIndex = 0;
   bool _isShowingBack = false;
   final Map<int, String> _cardStatuses = {};
-  late final List<_Flashcard> _shuffledFlashcards;
+  late final List<FlashcardData> _shuffledFlashcards;
   late final AnimationController _flipController = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 180),
@@ -110,7 +35,11 @@ class _FlashcardPageState extends State<FlashcardPage>
   @override
   void initState() {
     super.initState();
-    _shuffledFlashcards = List<_Flashcard>.from(_flashcards)..shuffle();
+    _shuffledFlashcards =
+        flashcardBank
+            .where((card) => card.difficulty == widget.difficulty)
+            .toList()
+          ..shuffle();
   }
 
   @override
@@ -141,7 +70,7 @@ class _FlashcardPageState extends State<FlashcardPage>
     }
   }
 
-  List<_Flashcard> _getActiveCards(BuildContext context) {
+  List<FlashcardData> _getActiveCards(BuildContext context) {
     final limit = _getCardLimit(context);
     return _shuffledFlashcards.take(limit).toList();
   }
@@ -188,7 +117,7 @@ class _FlashcardPageState extends State<FlashcardPage>
     });
   }
 
-  void _nextCard(List<_Flashcard> activeCards, String? cardCountSelection) {
+  void _nextCard(List<FlashcardData> activeCards, String? cardCountSelection) {
     if (_currentIndex < activeCards.length - 1) {
       _flipController.value = 0.0;
       setState(() {
@@ -215,6 +144,7 @@ class _FlashcardPageState extends State<FlashcardPage>
             totalQuestions: activeCards.length,
             skippedAnswers: skippedCount,
             cardCount: cardCountSelection,
+            difficulty: widget.difficulty,
             questionResults: activeCards
                 .asMap()
                 .entries
@@ -470,11 +400,4 @@ class _FlashcardText extends StatelessWidget {
       textAlign: textAlign,
     );
   }
-}
-
-class _Flashcard {
-  final String front;
-  final String back;
-
-  const _Flashcard({required this.front, required this.back});
 }

@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:baybai/core/theme/colors.dart';
 import 'package:baybai/core/theme/text.dart';
+import 'package:baybai/features/quiz/data/quiz_question_bank.dart';
 import 'package:baybai/features/lessons/presentation/widgets/lesson_back_button.dart';
 import 'package:baybai/shared/components/buttons/button.dart';
 
@@ -84,11 +85,13 @@ String elapsedTimeDisplay(Duration duration) {
 class QuizSetupPage extends StatefulWidget {
   final int questionLimit;
   final String timeLimit;
+  final String difficulty;
 
   const QuizSetupPage({
     super.key,
     this.questionLimit = 10,
     this.timeLimit = 'No limit',
+    this.difficulty = 'Easy',
   });
 
   @override
@@ -98,11 +101,6 @@ class QuizSetupPage extends StatefulWidget {
 class _QuizSetupPageState extends State<QuizSetupPage> {
   static const double _baybayinFontSize = 28;
   static const double _answerBaybayinFontSize = 22;
-  static const String _ba = '\u170A';
-  static const String _virama = '\u1714';
-  static const String _iKudlit = '\u1712';
-  static const String _oKudlit = '\u1713';
-  static const String _ma = '\u170B';
 
   static const List<String> _answerKeys = ['A', 'B', 'C', 'D'];
 
@@ -112,235 +110,24 @@ class _QuizSetupPageState extends State<QuizSetupPage> {
   Duration _elapsedTime = Duration.zero;
   bool _hasFinished = false;
 
-  late final List<_QuizQuestion> _questions;
+  late final List<QuizQuestion> _questions;
   late final List<List<String>> _shuffledAnswerKeysByQuestion;
   final List<String?> _selectedAnswersByQuestion = <String?>[];
-
-  static const List<_QuizQuestion> _allQuestions = [
-    _QuizQuestion(
-      question: 'What type of writing system is Baybayin?',
-      options: ['Alphabet', 'Abugida', 'Number system', 'Symbolic language'],
-      answer: 'B',
-    ),
-    _QuizQuestion(
-      question: 'What does $_ba represent?',
-      options: ['B', 'Ba', 'Be', 'Ma'],
-      answer: 'B',
-    ),
-    _QuizQuestion(
-      question: 'How does Baybayin primarily write words?',
-      options: [
-        'Based on English spelling',
-        'Based on individual letters',
-        'Based on pronunciation or sounds',
-        'Based on word length',
-      ],
-      answer: 'C',
-    ),
-    _QuizQuestion(
-      question:
-          "How would “BAHAY” be broken down using Baybayin's syllabic approach?",
-      options: ['B-A-H-A-Y', 'BA-HA-Y', 'BA-HAY', 'BAH-AY'],
-      answer: 'B',
-    ),
-    _QuizQuestion(
-      question: 'Which Baybayin character represents the sound “a”?',
-      options: ['\u1700', '\u1701', '\u1702', '\u170A'],
-      answer: 'A',
-    ),
-    _QuizQuestion(
-      question:
-          'What is the default vowel sound of a basic consonant character?',
-      options: ['i', 'o', 'u', 'a'],
-      answer: 'D',
-    ),
-    _QuizQuestion(
-      question: 'What does the top kudlit change the vowel sound to?',
-      options: ['a', 'i/e', 'o/u', 'No vowel'],
-      answer: 'B',
-    ),
-    _QuizQuestion(
-      question: 'What does the bottom kudlit change the vowel sound to?',
-      options: ['a', 'i/e', 'o/u', 'No vowel'],
-      answer: 'C',
-    ),
-    _QuizQuestion(
-      question: 'What does $_ba$_iKudlit represent?',
-      options: ['ba', 'bi/be', 'bo/bu', 'b'],
-      answer: 'B',
-    ),
-    _QuizQuestion(
-      question: 'What is the purpose of the virama?',
-      options: [
-        'Changes a to i/e',
-        'Changes a to o/u',
-        'Removes the default “a” sound',
-        'Adds another vowel',
-      ],
-      answer: 'C',
-    ),
-    _QuizQuestion(
-      question: 'Which is the correct transformation using a virama?',
-      options: [
-        '$_ba = ba → $_ba$_virama = b',
-        '$_ba = ba → $_ba$_iKudlit = b',
-        '$_ba = ba → $_ba$_oKudlit = b',
-        '$_ba = ba → \u1700 = b',
-      ],
-      answer: 'A',
-    ),
-    _QuizQuestion(
-      question:
-          'How should foreign sounds be handled when writing in Baybayin?',
-      options: [
-        'Preserve the original spelling',
-        'Adapt them based on pronunciation',
-        'Remove all foreign letters',
-        'Translate them into English',
-      ],
-      answer: 'B',
-    ),
-    _QuizQuestion(
-      question: 'How is the “F” sound commonly adapted?',
-      options: ['F → B', 'F → K', 'F → P', 'F → S'],
-      answer: 'C',
-    ),
-    _QuizQuestion(
-      question: 'How is “city” represented based on its pronunciation?',
-      options: ['kati', 'siti', 'city', 'sity'],
-      answer: 'B',
-    ),
-    _QuizQuestion(
-      question:
-          'What is the main principle of Baybayin emphasized in the lessons?',
-      options: [
-        'Write exactly how English words are spelled',
-        'Replace every English letter with a Baybayin symbol',
-        'Write what you hear based on pronunciation',
-        'Avoid using syllables',
-      ],
-      answer: 'C',
-    ),
-    _QuizQuestion(
-      question: 'Which statement about Baybayin symbols is correct?',
-      options: [
-        'Each symbol represents a single letter',
-        'Each symbol represents a syllable',
-        'Each symbol represents a whole sentence',
-        'Each symbol represents a number',
-      ],
-      answer: 'B',
-    ),
-    _QuizQuestion(
-      question: 'What sound does \u1703 naturally represent?',
-      options: ['ka', 'ki', 'ko', 'k'],
-      answer: 'A',
-    ),
-    _QuizQuestion(
-      question: 'Which pair shares the same sound family?',
-      options: ['a and o', 'i/e and o/u', 'a and i', 'b and p'],
-      answer: 'B',
-    ),
-    _QuizQuestion(
-      question:
-          'Which word is an example of syllabic thinking from the lesson?',
-      options: [
-        'bahay → ba-ha-y',
-        'bahay → b-a-h-a-y',
-        'bahay → b-h-y',
-        'bahay → bah-ay',
-      ],
-      answer: 'A',
-    ),
-    _QuizQuestion(
-      question: 'What does the top kudlit do to $_ba ?',
-      options: [
-        'Changes ba to bi/be',
-        'Changes ba to bo/bu',
-        'Changes ba to b',
-        'Changes ba to ka',
-      ],
-      answer: 'A',
-    ),
-    _QuizQuestion(
-      question: 'What does the bottom kudlit do to $_ba ?',
-      options: [
-        'Changes ba to bi/be',
-        'Changes ba to bo/bu',
-        'Changes ba to b',
-        'Changes ba to ma',
-      ],
-      answer: 'B',
-    ),
-    _QuizQuestion(
-      question: 'Which one represents “bo/bu”?',
-      options: [_ba, '$_ba$_iKudlit', '$_ba$_oKudlit', '$_ba$_virama'],
-      answer: 'C',
-    ),
-    _QuizQuestion(
-      question: 'What happens when a virama is added to $_ma ?',
-      options: [
-        'ma becomes mi/me',
-        'ma becomes mo/mu',
-        'ma becomes m',
-        'ma becomes na',
-      ],
-      answer: 'C',
-    ),
-    _QuizQuestion(
-      question: 'Which pair correctly shows the effect of a virama?',
-      options: ['ba → b', 'ba → bi', 'ba → bo', 'ba → be'],
-      answer: 'A',
-    ),
-    _QuizQuestion(
-      question: 'How is the “V” sound commonly adapted in the lesson?',
-      options: ['V → P', 'V → B', 'V → S', 'V → K'],
-      answer: 'A',
-    ),
-    _QuizQuestion(
-      question: 'How is the “Z” sound commonly adapted?',
-      options: ['Z → S', 'Z → B', 'Z → P', 'Z → T'],
-      answer: 'A',
-    ),
-    _QuizQuestion(
-      question: 'How is a hard “C” sound commonly adapted?',
-      options: ['C → S', 'C → P', 'C → K', 'C → T'],
-      answer: 'C',
-    ),
-    _QuizQuestion(
-      question: 'How is an English-style “J” sound commonly adapted?',
-      options: ['J → H', 'J → DY', 'J → K', 'J → S'],
-      answer: 'B',
-    ),
-    _QuizQuestion(
-      question: 'How is “PH” commonly adapted in the lesson?',
-      options: ['PH → F', 'PH → B', 'PH → P', 'PH → H'],
-      answer: 'A',
-    ),
-    _QuizQuestion(
-      question:
-          'What happens to silent letters when writing based on pronunciation?',
-      options: [
-        'They are always pronounced',
-        'They are ignored',
-        'They become vowels',
-        'They become kudlit',
-      ],
-      answer: 'B',
-    ),
-  ];
 
   @override
   void initState() {
     super.initState();
 
+    final difficultyQuestions = quizQuestionBank
+        .where((question) => question.difficulty == widget.difficulty)
+        .toList(growable: false);
     final randomizedIndexes = pickRandomQuestionIndexes(
-      _allQuestions.length,
+      difficultyQuestions.length,
       limit: widget.questionLimit,
     );
 
     _questions = randomizedIndexes
-        .map((index) => _allQuestions[index])
+        .map((index) => difficultyQuestions[index])
         .toList(growable: false);
 
     _shuffledAnswerKeysByQuestion = _questions
@@ -401,7 +188,7 @@ class _QuizSetupPageState extends State<QuizSetupPage> {
     return '$minutes:$seconds';
   }
 
-  _QuizQuestion get currentQuestion => _questions[_currentQuestionIndex];
+  QuizQuestion get currentQuestion => _questions[_currentQuestionIndex];
 
   List<String> get currentAnswerKeys =>
       _shuffledAnswerKeysByQuestion[_currentQuestionIndex];
@@ -480,6 +267,7 @@ class _QuizSetupPageState extends State<QuizSetupPage> {
           questionResults: questionResults,
           questionLimit: widget.questionLimit,
           timeLimit: widget.timeLimit,
+          difficulty: widget.difficulty,
         ),
       ),
     );
@@ -709,6 +497,7 @@ class QuizCompletePage extends StatefulWidget {
   final List<_QuizQuestionResult> questionResults;
   final int questionLimit;
   final String timeLimit;
+  final String difficulty;
 
   const QuizCompletePage({
     super.key,
@@ -719,6 +508,7 @@ class QuizCompletePage extends StatefulWidget {
     required this.questionResults,
     required this.questionLimit,
     required this.timeLimit,
+    required this.difficulty,
   });
 
   @override
@@ -960,6 +750,7 @@ class _QuizCompletePageState extends State<QuizCompletePage> {
                               builder: (_) => QuizSetupPage(
                                 questionLimit: widget.questionLimit,
                                 timeLimit: widget.timeLimit,
+                                difficulty: widget.difficulty,
                               ),
                             ),
                           ),
@@ -1098,16 +889,4 @@ class ScoreCirclePainter extends CustomPainter {
     return correctFraction != oldDelegate.correctFraction ||
         wrongFraction != oldDelegate.wrongFraction;
   }
-}
-
-class _QuizQuestion {
-  final String question;
-  final List<String> options;
-  final String answer;
-
-  const _QuizQuestion({
-    required this.question,
-    required this.options,
-    required this.answer,
-  });
 }

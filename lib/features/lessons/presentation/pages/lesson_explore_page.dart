@@ -3,11 +3,20 @@ import "package:baybai/core/theme/text.dart";
 import "package:baybai/features/home/presentation/widgets/learn_card.dart";
 import "package:baybai/features/lessons/domain/entities/lesson_content.dart";
 import "package:baybai/features/lessons/data/datasources/lesson_data_source.dart";
+import "package:baybai/features/lessons/data/datasources/lesson_progress.dart";
 import "package:baybai/features/lessons/presentation/widgets/lesson_back_button.dart";
 import "package:flutter/material.dart";
 
-class LessonLibraryPage extends StatelessWidget {
+class LessonLibraryPage extends StatefulWidget {
   const LessonLibraryPage({super.key});
+
+  @override
+  State<LessonLibraryPage> createState() => _LessonLibraryPageState();
+}
+
+class _LessonLibraryPageState extends State<LessonLibraryPage> {
+  late final Future<Set<int>> _completedLessons =
+      LessonProgress.getCompletedLessonIds();
 
   @override
   Widget build(BuildContext context) {
@@ -38,10 +47,22 @@ class LessonLibraryPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              for (final lesson in LessonData.lessonList) ...[
-                _LessonCardItem(lesson: lesson),
-                const SizedBox(height: 8),
-              ],
+              FutureBuilder<Set<int>>(
+                future: _completedLessons,
+                builder: (context, snapshot) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (final lesson in LessonData.lessonList) ...[
+                      _LessonCardItem(
+                        lesson: lesson,
+                        isCompleted:
+                            snapshot.data?.contains(lesson.id) ?? false,
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -52,8 +73,9 @@ class LessonLibraryPage extends StatelessWidget {
 
 class _LessonCardItem extends StatelessWidget {
   final LessonMetadata lesson;
+  final bool isCompleted;
 
-  const _LessonCardItem({required this.lesson});
+  const _LessonCardItem({required this.lesson, required this.isCompleted});
 
   @override
   Widget build(BuildContext context) {
@@ -63,6 +85,7 @@ class _LessonCardItem extends StatelessWidget {
       description: lesson.description,
       lessonId: lesson.id,
       isExpandable: true,
+      isCompleted: isCompleted,
       onTap: () =>
           Navigator.pushNamed(context, "/lesson", arguments: lesson.id),
     );
