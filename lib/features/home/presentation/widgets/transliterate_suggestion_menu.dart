@@ -8,6 +8,11 @@ Future<String?> showTransliterationSuggestionMenu({
   required List<String> suggestions,
   required bool isBaybayin,
 }) {
+  final isDarkMode = Theme.of(anchorContext).brightness == Brightness.dark;
+  final menuBackground = isDarkMode ? AppColors.gray90 : AppColors.bg;
+  final menuForeground = isDarkMode ? AppColors.gray10 : AppColors.gray100;
+  final separatorColor = isDarkMode ? AppColors.gray80 : AppColors.gray10;
+  final borderColor = isDarkMode ? AppColors.gray70 : AppColors.gray20;
   final overlay =
       Overlay.of(anchorContext).context.findRenderObject() as RenderBox;
   final localPosition = overlay.globalToLocal(globalPosition);
@@ -26,6 +31,7 @@ Future<String?> showTransliterationSuggestionMenu({
             fontSize: isBaybayin ? 24 : null,
             fontFamily: isBaybayin ? "Baybayin" : null,
             fontFamilyFallback: const ["Roboto", "NotoSans", "sans-serif"],
+            color: menuForeground,
           ),
         ),
       ),
@@ -33,11 +39,11 @@ Future<String?> showTransliterationSuggestionMenu({
 
     if (index < suggestions.length - 1) {
       items.add(
-        const PopupMenuItem<String>(
+        PopupMenuItem<String>(
           enabled: false,
           height: 1,
           padding: EdgeInsets.zero,
-          child: Divider(height: 1, thickness: 1, color: AppColors.gray10),
+          child: Divider(height: 1, thickness: 1, color: separatorColor),
         ),
       );
     }
@@ -51,7 +57,7 @@ Future<String?> showTransliterationSuggestionMenu({
       overlay.size.width - localPosition.dx,
       overlay.size.height - localPosition.dy,
     ),
-    color: AppColors.bg,
+    color: menuBackground,
     elevation: 1,
     constraints: const BoxConstraints(
       minWidth: 112,
@@ -60,7 +66,7 @@ Future<String?> showTransliterationSuggestionMenu({
     ),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(6),
-      side: const BorderSide(color: AppColors.gray20),
+      side: BorderSide(color: borderColor),
     ),
     items: items,
   );

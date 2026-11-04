@@ -526,7 +526,26 @@ List<String> findFilipinoSuggestions(
           return Transliterator.transliterateWithChoices(baybayinWord, choices);
         }).toSet();
 
-  final suggestions = possibleWords
+  // The Baybayin da character is also commonly read as ra in Filipino.
+  // Include those spellings as selectable suggestions for every vowel choice,
+  // including a consonant with virama where the output is just d/r.
+  final candidatesWithDToR = <String>{...possibleWords};
+  for (final word in possibleWords) {
+    var variants = <String>{word};
+    for (var index = 0; index < word.length; index++) {
+      if (word[index] != "d") continue;
+      if (variants.length >= 256) break;
+      variants = {
+        ...variants,
+        for (final variant in variants)
+          "${variant.substring(0, index)}r${variant.substring(index + 1)}",
+      };
+    }
+    candidatesWithDToR.addAll(variants);
+    candidatesWithDToR.add(word.replaceAll("d", "r"));
+  }
+
+  final suggestions = candidatesWithDToR
       .map((word) => word.toLowerCase())
       .where(wordlist.contains)
       .toSet()

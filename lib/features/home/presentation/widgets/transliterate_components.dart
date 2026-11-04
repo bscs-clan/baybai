@@ -21,8 +21,6 @@ class LanguageSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
     return Row(
       children: [
         Expanded(child: _LangBox(label: sourceLanguage)),
@@ -40,7 +38,7 @@ class LanguageSwitch extends StatelessWidget {
               child: HugeIcon(
                 icon: HugeIcons.strokeRoundedArrowDataTransferHorizontal,
                 size: 24,
-                color: isDarkMode ? AppColors.gray100 : AppColors.bg,
+                color: AppColors.bg,
               ),
             ),
           ),
@@ -118,6 +116,10 @@ class TransliterationTextCard extends StatelessWidget {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     final TextStyle baseStyle = AppTextStyles.regularLg;
+    final cardBackground = isInput
+        ? (isDarkMode ? AppColors.gray90 : AppColors.bg)
+        : (isDarkMode ? AppColors.primary100 : AppColors.primary10);
+    final cardBorder = isDarkMode ? AppColors.gray80 : AppColors.gray20;
 
     final TextStyle displayStyle = isBaybayin
         ? baseStyle.copyWith(
@@ -137,8 +139,8 @@ class TransliterationTextCard extends StatelessWidget {
       height: 224,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: isInput ? AppColors.bg : AppColors.primary10,
-        border: isInput ? Border.all(color: AppColors.gray20) : null,
+        color: cardBackground,
+        border: isInput ? Border.all(color: cardBorder) : null,
         borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
@@ -188,7 +190,9 @@ class TransliterationTextCard extends StatelessWidget {
                       decoration: InputDecoration(
                         hintText: "Type here",
                         hintStyle: AppTextStyles.regularLg.copyWith(
-                          color: AppColors.gray40,
+                          color: isDarkMode
+                              ? AppColors.gray60
+                              : AppColors.gray40,
                         ),
                         border: InputBorder.none,
                       ),
